@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Review Builder - v6.7</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Edu+NSW+ACT+Foundation:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Quicksand', sans-serif; background-color: #f1f5f9; }
+        .bento-box { background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); border: 1px solid #e2e8f0; }
+        .drag-ghost { opacity: 0.4; background-color: #eff6ff; border: 2px dashed #3b82f6; }
+        .drag-chosen { background-color: #f8fafc; transform: scale(1.02); transition: all 0.2s; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
+        .timeline-item.active { border: 2px solid #3b82f6; background-color: #eff6ff; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .edu-font { font-family: 'Edu NSW ACT Foundation', cursive; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-slate-800">
+
+    <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shrink-0 z-10 relative shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 text-white p-2 rounded-lg"><i class="fa-solid fa-layer-group"></i></div>
+            <h1 class="text-xl font-bold text-slate-800">Review<span class="text-blue-600">Builder</span> <span class="text-xs text-slate-400 font-normal ml-2">v6.7</span></h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <button id="btn-open-folder-header" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2 border border-blue-200">
+                <i class="fa-solid fa-folder-open"></i> Open Drive Folder
+            </button>
+            <button id="btn-assemble" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold transition-colors shadow-md flex items-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Assemble Deck
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex overflow-hidden p-4 gap-4">
+        
+        <!-- Library Panel -->
+        <div class="w-1/4 bento-box flex flex-col overflow-hidden">
+            <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 font-bold text-slate-700 flex justify-between items-center shrink-0">
+                <span><i class="fa-solid fa-book-open text-blue-500 mr-2"></i> Section Library</span>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1">
+                <div id="library-list" class="flex flex-col gap-2">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline Panel -->
+        <div class="w-2/4 bento-box flex flex-col overflow-hidden bg-white border-2 border-blue-200 shadow-lg relative z-10">
+            <div id="timeline-header" class="bg-slate-50 border-b border-blue-100 px-4 py-3 flex justify-between items-center shrink-0 cursor-pointer hover:bg-slate-100 transition-colors" title="Click to view Global Settings">
+                <span class="font-bold text-slate-700"><i class="fa-solid fa-route text-emerald-500 mr-2"></i> Timeline: <span class="font-normal text-slate-500" id="timeline-filename">Term 1, Week 1 Review</span></span>
+                <div class="flex items-center gap-2">
+                    <button id="btn-add-all" class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-md transition-colors border border-blue-100"><i class="fa-solid fa-list-check"></i> Include All</button>
+                    <button id="btn-reset" class="text-xs font-semibold text-rose-500 hover:text-rose-600 flex items-center gap-1 bg-rose-50 hover:bg-rose-100 px-2 py-1 rounded-md transition-colors border border-rose-100"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+                </div>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1 relative bg-slate-50/50" id="timeline-container">
+                <div id="timeline-list" class="flex flex-col gap-3 min-h-[50vh] pb-20">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Inspector Panel -->
+        <div class="w-1/4 bento-box flex flex-col overflow-hidden shadow-sm border-blue-100">
+            <div id="inspector-header" class="bg-blue-50 border-b border-blue-100 px-4 py-3 font-bold text-blue-800 shrink-0 transition-colors">
+                <i class="fa-solid fa-sliders mr-2"></i> <span id="inspector-title">Global Settings</span>
+            </div>
+            <div id="inspector-content" class="p-4 overflow-y-auto flex-1 bg-white relative">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </main>
+
+    <div id="json-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-8 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-full max-h-[80vh] flex flex-col overflow-hidden transform scale-95 transition-transform" id="json-modal-content">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <h2 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-code text-blue-500 mr-2"></i> Assembly Recipe (JSON)</h2>
+                <button id="btn-close-modal" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="flex-1 p-4 bg-slate-900 overflow-y-auto">
+                <pre id="json-output" class="text-green-400 font-mono text-sm whitespace-pre-wrap break-words"></pre>
+            </div>
+            <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
+                <button id="btn-open-folder-modal" class="text-blue-600 hover:text-blue-800 font-semibold text-sm flex items-center gap-2 transition-colors">
+                    <i class="fa-solid fa-folder-open"></i> Open Destination Folder
+                </button>
+                <div class="flex items-center gap-4">
+                    <span id="api-status" class="text-sm font-semibold text-slate-500 hidden">Sending...</span>
+                    <button id="btn-send-api" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-semibold transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> Send to Google Slides
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE ---
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwSv0rkt0iPDpxwivv50h5wNOptx6ELvULyAkliPY6xbB7-XPhixAOU3qNJ0nSKvQ0/exec"; 
+        
+        let currentRecipe = null;
+
+        const SOUNDS_WRITE_LEVELS = [
+            "IC1 (a, i, m, s, t)",
+            "IC2 (n, o, p)",
+            "IC3 (b, c, g, h)",
+            "IC4 (d, e, f, v)",
+            "IC5 (k, l, r, u)",
+            "IC6 (j, w, z)",
+            "IC7 (x, y, ff, ll, ss, zz)",
+            "IC11 (sh, ch, tch, th, ck, wh, ng, qu)"
+        ];
+
+        // Mapping graphemes for logic generator
+        const phonicsData = {
+            "IC1 (a, i, m, s, t)": ["a", "i", "m", "s", "t"],
+            "IC2 (n, o, p)": ["n", "o", "p"],
+            "IC3 (b, c, g, h)": ["b", "c", "g", "h"],
+            "IC4 (d, e, f, v)": ["d", "e", "f", "v"],
+            "IC5 (k, l, r, u)": ["k", "l", "r", "u"],
+            "IC6 (j, w, z)": ["j", "w", "z"],
+            "IC7 (x, y, ff, ll, ss, zz)": ["x", "y", "ff", "ll", "ss", "zz"],
+            "IC11 (sh, ch, tch, th, ck, wh, ng, qu)": ["sh", "ch", "tch", "th", "ck", "wh", "ng", "qu"]
+        };
+
+        const SECTION_DEFS = {
+            'mainIntro': { 
+                title: 'Intro Slide', shortDesc: 'Introduction slide', icon: 'fa-door-open', color: 'text-purple-500', bg: 'bg-purple-100', type: 'static', runOnce: true,
+                description: 'This slide appears once in the weekly deck, before the daily sets. It includes key information such as Term, Week, Class.' 
+            },
+            'expectations': { 
+                title: 'General Instructions', shortDesc: 'Expectations and instructions', icon: 'fa-list-check', color: 'text-indigo-500', bg: 'bg-indigo-100', type: 'weekly',
+                description: 'The reminder of Daily Review expectations. Options for use of whiteboards and transition music.',
+                fields: [{ id: 'style', label: 'Style', type: 'select', options: ['Basic', 'Whiteboards', 'Whiteboards and Music'] }]
+            },
+            'dayDivider': { 
+                title: 'Day of the Week', shortDesc: 'Day of the week - acts as a visual separator of each day\'s slide set.', icon: 'fa-calendar-day', color: 'text-pink-500', bg: 'bg-pink-100', type: 'static',
+                description: 'A day of the week slide. Note this is also a visual divider to help you locate each day\'s slide set.'
+            },
+            'sectA': { 
+                title: 'Talk About the Picture', shortDesc: 'Students talk about picture prompt.', icon: 'fa-image', color: 'text-blue-500', bg: 'bg-blue-100', type: 'daily', hasTitleSlideOptions: true,
+                description: 'This section includes a picture placeholder for students to practise oral language. Pictures will be inserted in PowerPoint or Google Slides. Write prompts below, which will be inserted in the speakers notes section for reference.',
+                fields: [{ id: 'prompt', label: 'Teacher Prompt', type: 'textarea' }]
+            },
+            'sectB': { 
+                title: 'Say the Sound', shortDesc: 'Grapheme recognition', icon: 'fa-bolt', color: 'text-amber-500', bg: 'bg-amber-100', type: 'weekly', hasTitleSlideOptions: true,
+                description: 'This section includes a single grapheme on each slide. Students can recite the phoneme. The pool of graphemes used will depend on the level set in Global Settings. There will be one slide per grapheme from the pool, unless you choose to restrict the number of slides below. The most recent phoneme set will always be included.',
+                fields: [{ id: 'limit', label: 'Slide Limit (Optional)', type: 'number' }]
+            },
+            'sectC': { 
+                title: 'Read the lines', shortDesc: 'Reading lines of graphemes', icon: 'fa-align-left', color: 'text-emerald-500', bg: 'bg-emerald-100', type: 'weekly', hasTitleSlideOptions: true,
+                description: 'Two lines of graphemes based on your current phonics level. They will be randomised for each day of the week.',
+                fields: []
+            },
+            'sectD': {
+                title: 'Heart Words', shortDesc: 'High-frequency words', icon: 'fa-heart', color: 'text-red-500', bg: 'bg-red-100', type: 'mixed', hasTitleSlideOptions: true,
+                description: 'This section includes slides with a single high frequency word (aka \'heart word\') on each slide. Students say the word. Include your set of heart words in the text box below, separated by commas. Optionally, the final heart word(s) can be on the "write it" slide for students to write on their whiteboards.',
+                weeklyFields: [
+                    { id: 'words', label: 'Heart Words (comma separated)', type: 'textarea', default: 'a, the, is, are, I, am, and, to, we, me, my, she, he, has, have, you, they, was, that, this, for' }
+                ],
+                dailyFields: [
+                    { id: 'writeIt', label: 'Include "Write It" slide', type: 'checkbox' },
+                    { id: 'writeItWords', label: 'Word(s) for Write It slide(s)', type: 'text' }
+                ]
+            },
+            'sectE': {
+                title: 'Read the Word', shortDesc: 'Say the sounds and read the word.', icon: 'fa-comment-dots', color: 'text-cyan-500', bg: 'bg-cyan-100', type: 'daily', hasTitleSlideOptions: true,
+                description: 'This section shows a single word for students to decode. Write a few words below, comma separated. If the word is a "non-word" add an asterisk to use the alien word slide, e.g. hat, dog, fen*.',
+                fields: [{ id: 'words', label: 'Words (comma separated)', type: 'text' }]
+            },
+            'sectF': {
+                title: 'Discriminate the Similar Sounds', shortDesc: 'Build auditory discrimination, e.g. pen/pan', icon: 'fa-ear-listen', color: 'text-teal-500', bg: 'bg-teal-100', type: 'daily', hasTitleSlideOptions: true,
+                description: 'This section shows minimal pairs (e.g. pen/pan) for students to practise hearing and saying commonly confused sounds.',
+                fields: [{ id: 'pair', label: 'Word Pair', type: 'select', options: ['Pen/Pan', 'Pat/Pet', 'Marry/Merry', 'Axe/Ex', 'Al/L'] }]
+            },
+            'sectG': {
+                title: 'Write a letter', shortDesc: 'Handwriting practice', icon: 'fa-pen', color: 'text-orange-500', bg: 'bg-orange-100', type: 'daily', hasTitleSlideOptions: true,
+                description: 'This section shows a letter formation slide for students to practice handwriting.',
+                fields: [{ id: 'letter', label: 'Target Letter', type: 'text' }]
+            },
+            'sectH': {
+                title: 'Long content', shortDesc: 'Vocabulary or building the field.', icon: 'fa-book', color: 'text-rose-500', bg: 'bg-rose-100', type: 'daily', hasTitleSlideOptions: true,
+                description: 'A multi-purpose slide with title, body text and image placeholder to be used to teach or review a concept. Use for reviewing vocab or building the field.',
+                fields: [{ id: 'title', label: 'Title', type: 'text' }, { id: 'body', label: 'Body Text', type: 'textarea' }]
+            },
+            'sectI': {
+                title: 'Read the sentence', shortDesc: 'Read a simple sentence', icon: 'fa-glasses', color: 'text-violet-500', bg: 'bg-violet-100', type: 'daily', hasTitleSlideOptions: true,
+                description: 'This section shows a simple sentence for students to read. The "Picture" type features a picture placeholder for visual prompt above the sentence. The "Pyramid" type breaks down the sentence into a triangle, adding a word each line.',
+                fields: [{ id: 'sent', label: 'Sentence', type: 'text', default: '' }, { id: 'style', label: 'Style', type: 'select', options: ['Picture', 'Pyramid'] }]
+            },
+            'sectJ': {
+                title: 'Sentences', shortDesc: 'Multipurpose sentence slide', icon: 'fa-pen-to-square', color: 'text-fuchsia-500', bg: 'bg-fuchsia-100', type: 'daily', hasTitleSlideOptions: true,
+                description: 'This multipurpose section features a simple sentence slide. Use underscores as a "fill the blank" option, e.g. "The ___ sat on ___."',
+                fields: [{ id: 'sent', label: 'Sentence', type: 'text' }]
+            },
+            'sectK': {
+                title: 'Label and write a sentence', shortDesc: 'Add labels to picture then write a sentence.', icon: 'fa-tags', color: 'text-sky-500', bg: 'bg-sky-100', type: 'daily', hasTitleSlideOptions: true,
+                description: 'This section features a picture placeholder, space to add labels and space to write a sentence. Picture will need to be added in PowerPoint/Google Slides. Prompts below will be inserted in the speaker notes section.',
+                fields: [{ id: 'prompt', label: 'Teacher Prompt', type: 'textarea' }]
+            },
+            'generic': {
+                title: 'Generic Section', shortDesc: 'Multipurpose placeholder', icon: 'fa-cube', color: 'text-slate-500', bg: 'bg-slate-200', type: 'daily', hasTitleSlideOptions: true,
+                description: 'This section can be used as a placeholder or general purpose slide for sections not included in this builder. Add short text below, include prompt to be inserted in the speakers notes.',
+                fields: [{ id: 'word', label: 'Content', type: 'text' }, { id: 'notes', label: 'Speaker\'s notes', type: 'textarea' }]
+            },
+            'finished': { 
+                title: 'Finished', shortDesc: 'A finished slide.', icon: 'fa-flag-checkered', color: 'text-stone-500', bg: 'bg-stone-200', type: 'static',
+                description: 'A simple slide to indicate the day\'s set of slides is done.' 
+            }
+        };
+
+        const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+        let globalSettings = {
+            deckName: "Term 1, Week 1 Review",
+            preparedBy: "",
+            phonicsLevel: "IC11 (sh, ch, tch, th, ck, wh, ng, qu)",
+            yearLevel: "Kindergarten",
+            term: 1,
+            week: 1,
+            activeDays: { 'Monday': true, 'Tuesday': true, 'Wednesday': true, 'Thursday': true, 'Friday': true },
+            templateId: "12f9hl__t2nghjPeZSO1Ag1P-dLmJXXDKzCSVejT2QbY",
+            folderId: "1wbKRkTXB6M6szi-yeCYiU1kyKJgTfIdK"
+        };
+
+        let timelineItems = []; 
+        let selectedItemId = null;
+        let selectedLibraryKey = null;
+
+        const STATE_KEY = 'reviewBuilder_v6_state';
+
+        function saveState() {
+            const state = {
+                settings: globalSettings,
+                timeline: timelineItems
+            };
+            localStorage.setItem(STATE_KEY, JSON.stringify(state));
+        }
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STATE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.settings) globalSettings = { ...globalSettings, ...parsed.settings };
+                    if (parsed.timeline) timelineItems = parsed.timeline;
+                    return true;
+                }
+            } catch (e) {
+                console.warn("Could not load state:", e);
+            }
+            return false;
+        }
+
+        function updateLibrarySelection() {
+            const items = document.getElementById('library-list').children;
+            for (let i = 0; i < items.length; i++) {
+                const el = items[i];
+                if (el.dataset.key === selectedLibraryKey) {
+                    el.classList.add('border-blue-500', 'shadow-md', 'ring-2', 'ring-blue-100');
+                    el.classList.remove('border-slate-200');
+                } else {
+                    el.classList.remove('border-blue-500', 'shadow-md', 'ring-2', 'ring-blue-100');
+                    el.classList.add('border-slate-200');
+                }
+            }
+        }
+
+        function init() {
+            // Populate Library
+            const libraryList = document.getElementById('library-list');
+            Object.keys(SECTION_DEFS).forEach(key => {
+                const def = SECTION_DEFS[key];
+                const el = document.createElement('div');
+                el.className = 'p-3 bg-white border border-slate-200 rounded-xl cursor-grab hover:border-blue-300 hover:shadow-sm transition-all flex items-center gap-3 group';
+                el.dataset.key = key;
+                el.onclick = () => selectItem(key, true);
+                el.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg ${def.bg} ${def.color} flex items-center justify-center shrink-0">
+                        <i class="fa-solid ${def.icon}"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-semibold text-slate-700 text-sm group-hover:text-blue-600 transition-colors truncate">${def.title}</div>
+                        <div class="text-[10px] text-slate-400 truncate">${def.shortDesc}</div>
+                    </div>
+                    <i class="fa-solid fa-grip-vertical ml-auto text-slate-300 shrink-0 pl-2"></i>
+                `;
+                libraryList.appendChild(el);
+            });
+
+            // Preload Timeline OR Load State
+            if (!loadState()) {
+                addTimelineItem('mainIntro');
+                addTimelineItem('expectations');
+                addTimelineItem('dayDivider');
+                addTimelineItem('finished');
+            } else {
+                document.getElementById('timeline-filename').textContent = globalSettings.deckName;
+                renderTimeline();
+            }
+            
+            // Default to having nothing selected so Global Settings are shown on first load
+            selectItem(null);
+
+            // Setup Drag and Drop
+            new Sortable(libraryList, {
+                group: { name: 'shared', pull: 'clone', put: false },
+                animation: 150,
+                sort: false,
+                ghostClass: 'drag-ghost'
+            });
+
+            new Sortable(document.getElementById('timeline-list'), {
+                group: 'shared',
+                animation: 150,
+                ghostClass: 'drag-ghost',
+                chosenClass: 'drag-chosen',
+                onAdd: function (evt) {
+                    const key = evt.item.dataset.key;
+                    evt.item.remove(); // Remove the DOM element clone
+                    addTimelineItem(key, evt.newIndex); // Rebuild via state
+                },
+                onUpdate: function (evt) {
+                    const item = timelineItems.splice(evt.oldIndex, 1)[0];
+                    timelineItems.splice(evt.newIndex, 0, item);
+                    saveState();
+                }
+            });
+
+            document.getElementById('timeline-container').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('timeline-container') || e.target === document.getElementById('timeline-list')) {
+                    selectItem(null);
+                }
+            });
+
+            document.getElementById('timeline-header').addEventListener('click', () => {
+                selectItem(null);
+            });
+
+            document.getElementById('btn-reset').addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                timelineItems = [];
+                ['mainIntro', 'expectations', 'dayDivider', 'finished'].forEach(k => addTimelineItem(k));
+                selectItem(null);
+                saveState();
+            });
+
+            document.getElementById('btn-add-all').addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                timelineItems = [];
+                Object.keys(SECTION_DEFS).forEach(k => addTimelineItem(k));
+                selectItem(null);
+                saveState();
+            });
+
+            renderInspector();
+        }
+
+        function addTimelineItem(defKey, index = -1) {
+            const def = SECTION_DEFS[defKey];
+            const newItem = {
+                id: 'item_' + Date.now() + Math.floor(Math.random() * 1000),
+                defKey: defKey,
+                data: {}
+            };
+
+            if (def.hasTitleSlideOptions) {
+                let defaultTitle = def.title.includes(': ') ? def.title.split(': ')[1] : def.title;
+                if (defKey === 'sectH') defaultTitle = 'Vocabulary'; 
+                if (defKey === 'sectJ') defaultTitle = 'Finish the sentence';
+                
+                newItem.data.titleSettings = {
+                    include: true,
+                    title: defaultTitle,
+                    instructions: ''
+                };
+            }
+
+            const getDefaultValue = (f) => {
+                if (f.default !== undefined) return f.default;
+                if (f.type === 'select' && f.options && f.options.length > 0) return f.options[0];
+                if (f.type === 'checkbox') return false;
+                return ''; 
+            };
+
+            if (def.type === 'weekly') {
+                if (def.fields) {
+                    def.fields.forEach(f => { newItem.data[f.id] = getDefaultValue(f); });
+                }
+            } else if (def.type === 'daily') {
+                DAYS.forEach(day => {
+                    if (!newItem.data[day]) newItem.data[day] = {};
+                    if (def.fields) {
+                        def.fields.forEach(f => { newItem.data[day][f.id] = getDefaultValue(f); });
+                    }
+                });
+            } else if (def.type === 'mixed') {
+                if (def.weeklyFields) {
+                    def.weeklyFields.forEach(f => { newItem.data[f.id] = getDefaultValue(f); });
+                }
+                if (def.dailyFields) {
+                    DAYS.forEach(day => {
+                        if (!newItem.data[day]) newItem.data[day] = {};
+                        def.dailyFields.forEach(f => { newItem.data[day][f.id] = getDefaultValue(f); });
+                    });
+                }
+            }
+
+            // specific logic overrides
+            if (def.type === 'daily' || def.type === 'mixed') {
+                DAYS.forEach(day => { 
+                    if (!newItem.data[day]) newItem.data[day] = {}; 
+                    
+                    if (defKey === 'sectF') {
+                        const dayDefaults = {
+                            'Monday': 'Pen/Pan',
+                            'Tuesday': 'Pat/Pet',
+                            'Wednesday': 'Marry/Merry',
+                            'Thursday': 'Axe/Ex',
+                            'Friday': 'Al/L'
+                        };
+                        newItem.data[day]['pair'] = dayDefaults[day] || 'Pen/Pan';
+                    }
+                });
+            }
+
+            if (index === -1) {
+                timelineItems.push(newItem);
+            } else {
+                timelineItems.splice(index, 0, newItem);
+            }
+
+            renderTimeline();
+            selectItem(newItem.id);
+            saveState();
+        }
+
+        function deleteTimelineItem(id) {
+            timelineItems = timelineItems.filter(i => i.id !== id);
+            if (selectedItemId === id) selectItem(null);
+            else renderTimeline();
+            saveState();
+        }
+
+        function selectItem(id, isLibrary = false) {
+            if (isLibrary) {
+                selectedLibraryKey = id;
+                selectedItemId = null;
+            } else {
+                selectedItemId = id;
+                selectedLibraryKey = null;
+            }
+            renderTimeline();
+            updateLibrarySelection();
+            renderInspector();
+        }
+
+        function renderTimeline() {
+            const list = document.getElementById('timeline-list');
+            list.innerHTML = '';
+
+            timelineItems.forEach(item => {
+                const def = SECTION_DEFS[item.defKey];
+                const el = document.createElement('div');
+                const isSelected = item.id === selectedItemId;
+                
+                el.className = `timeline-item p-3 bg-white border ${isSelected ? 'border-blue-500 shadow-md ring-2 ring-blue-100' : 'border-slate-200'} rounded-xl cursor-pointer hover:border-blue-300 transition-all flex items-center gap-3`;
+                el.onclick = (e) => { e.stopPropagation(); selectItem(item.id); };
+
+                el.innerHTML = `
+                    <div class="cursor-grab text-slate-300 hover:text-slate-500 py-2"><i class="fa-solid fa-grip-vertical"></i></div>
+                    <div class="w-10 h-10 rounded-lg ${def.bg} ${def.color} flex items-center justify-center shrink-0">
+                        <i class="fa-solid ${def.icon} text-lg"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-slate-700 truncate">${def.title}</div>
+                        <div class="text-xs text-slate-400 truncate">${def.shortDesc}</div>
+                    </div>
+                    <button class="text-slate-300 hover:text-red-500 p-2 transition-colors shrink-0" onclick="event.stopPropagation(); deleteTimelineItem('${item.id}')">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+                list.appendChild(el);
+            });
+        }
+
+        function renderInspector() {
+            const header = document.getElementById('inspector-header');
+            const title = document.getElementById('inspector-title');
+            const content = document.getElementById('inspector-content');
+            content.innerHTML = '';
+
+            if (!selectedItemId && !selectedLibraryKey) {
+                header.className = 'bg-slate-100 border-b border-slate-200 px-4 py-3 font-bold text-slate-700 shrink-0 transition-colors';
+                title.innerHTML = '<i class="fa-solid fa-globe mr-2"></i> Global Settings';
+
+                let phonicsOptions = SOUNDS_WRITE_LEVELS.map(level => 
+                    `<option value="${level}" ${globalSettings.phonicsLevel === level ? 'selected' : ''}>${level}</option>`
+                ).join('');
+
+                content.innerHTML = `
+                    <div class="space-y-5">
+                        <div>
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 border-b border-slate-100 pb-1">Deck Details</h3>
+                            
+                            <div class="mb-3">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Deck Name</label>
+                                <input type="text" id="g-name" value="${globalSettings.deckName}" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Prepared by</label>
+                                <input type="text" id="g-author" value="${globalSettings.preparedBy || ''}" placeholder="your name" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Current Phonics Level</label>
+                                <select id="g-phonics" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                    ${phonicsOptions}
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Year Level</label>
+                                <select id="g-yearLevel" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <option value="Kindergarten" ${globalSettings.yearLevel === 'Kindergarten' ? 'selected' : ''}>Kindergarten</option>
+                                    <option value="Stage 1" ${globalSettings.yearLevel === 'Stage 1' ? 'selected' : ''}>Stage 1</option>
+                                    <option value="Stage 2" ${globalSettings.yearLevel === 'Stage 2' ? 'selected' : ''}>Stage 2</option>
+                                    <option value="Stage 3" ${globalSettings.yearLevel === 'Stage 3' ? 'selected' : ''}>Stage 3</option>
+                                </select>
+                            </div>
+
+                            <div class="flex gap-4 mb-2">
+                                <div class="w-1/2">
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Term</label>
+                                    <input type="number" min="1" max="4" id="g-term" value="${globalSettings.term}" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div class="w-1/2">
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Week</label>
+                                    <input type="number" min="1" max="11" id="g-week" value="${globalSettings.week}" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-1">Active Days</h3>
+                            <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                ${DAYS.map(day => `
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" id="chk-${day}" ${globalSettings.activeDays[day] ? 'checked' : ''} class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                                        <span class="text-sm font-medium text-slate-700">${day}</span>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-1">System</h3>
+                            <div class="mb-3">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Google Slides Template ID</label>
+                                <input type="text" id="g-tid" value="${globalSettings.templateId}" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-slate-500">
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Destination Folder ID</label>
+                                <input type="text" id="g-folderId" value="${globalSettings.folderId || ''}" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-slate-500">
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                ['name', 'author', 'phonics', 'yearLevel', 'term', 'week', 'tid', 'folderId'].forEach(k => {
+                    document.getElementById(`g-${k}`).addEventListener('input', (e) => {
+                        const map = { name: 'deckName', author: 'preparedBy', phonics: 'phonicsLevel', yearLevel: 'yearLevel', term: 'term', week: 'week', tid: 'templateId', folderId: 'folderId' };
+                        globalSettings[map[k]] = e.target.type === 'number' ? parseInt(e.target.value) : e.target.value;
+                        if (k === 'name') document.getElementById('timeline-filename').textContent = e.target.value;
+                        saveState();
+                    });
+                });
+                DAYS.forEach(day => {
+                    document.getElementById(`chk-${day}`).addEventListener('change', (e) => {
+                        globalSettings.activeDays[day] = e.target.checked;
+                        saveState();
+                    });
+                });
+
+            } else {
+                const isPreview = !!selectedLibraryKey;
+                let item, def;
+                
+                if (isPreview) {
+                    def = SECTION_DEFS[selectedLibraryKey];
+                    item = { id: 'preview', defKey: selectedLibraryKey, data: {} };
+                    
+                    if (def.hasTitleSlideOptions) {
+                        let defaultTitle = def.title.includes(': ') ? def.title.split(': ')[1] : def.title;
+                        if (selectedLibraryKey === 'sectH') defaultTitle = 'Vocabulary';
+                        if (selectedLibraryKey === 'sectJ') defaultTitle = 'Finish the sentence';
+                        item.data.titleSettings = { include: true, title: defaultTitle, instructions: '' };
+                    }
+                    if (def.type === 'daily' || def.type === 'mixed') {
+                        DAYS.forEach(day => { item.data[day] = {}; });
+                    }
+                } else {
+                    item = timelineItems.find(i => i.id === selectedItemId);
+                    def = SECTION_DEFS[item.defKey];
+                }
+
+                header.className = `bg-blue-50 border-b border-blue-100 px-4 py-3 font-bold text-blue-800 shrink-0 transition-colors flex items-center gap-2`;
+                title.innerHTML = `<i class="fa-solid ${def.icon}"></i> ${def.title}`;
+
+                let contentHtml = '';
+
+                if (isPreview) {
+                    contentHtml += `<div class="bg-amber-50 text-amber-800 text-sm font-bold px-4 py-3 rounded-xl mb-5 border border-amber-200 flex items-center shadow-sm"><i class="fa-solid fa-circle-exclamation mr-2 text-lg text-amber-500"></i> To customise, add this block to your timeline.</div>`;
+                }
+
+                if (def.description) {
+                    contentHtml += `<div class="bg-slate-50 text-slate-600 text-sm p-4 rounded-xl mb-5 border border-slate-200 leading-relaxed shadow-sm"><i class="fa-solid fa-circle-info mr-1 text-blue-500"></i> ${def.description}</div>`;
+                }
+
+                if (isPreview) {
+                    contentHtml += `<div class="opacity-50 pointer-events-none grayscale transition-all duration-300">`;
+                }
+
+                if (def.hasTitleSlideOptions) {
+                    if (!item.data.titleSettings) {
+                        let defaultTitle = def.title.includes(': ') ? def.title.split(': ')[1] : def.title;
+                        if (item.defKey === 'sectH') defaultTitle = 'Vocabulary'; 
+                        if (item.defKey === 'sectJ') defaultTitle = 'Finish the sentence';
+                        item.data.titleSettings = { include: true, title: defaultTitle, instructions: '' };
+                    }
+                    const ts = item.data.titleSettings;
+                    
+                    contentHtml += `
+                        <div class="mb-5 bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm transition-all">
+                            <label class="flex items-center gap-2 cursor-pointer mb-3 w-fit">
+                                <input type="checkbox" id="chk-ts-include" ${ts.include ? 'checked' : ''} class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                                <span class="text-sm font-bold text-slate-700">Include Title/Instruction Slide</span>
+                            </label>
+                            <div id="ts-fields" class="${ts.include ? '' : 'opacity-40 pointer-events-none grayscale'} transition-all duration-200 space-y-3 pl-6 border-l-2 border-slate-200">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Section Title</label>
+                                    <input type="text" id="txt-ts-title" value="${ts.title}" class="w-full text-sm p-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Instructions (Optional)</label>
+                                    <textarea id="txt-ts-inst" class="w-full text-sm p-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none h-12" placeholder="Leave blank for none...">${ts.instructions}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (def.type === 'static') {
+                    contentHtml += `
+                        <div class="flex flex-col items-center justify-center py-10 px-4 bg-emerald-50 rounded-xl border border-emerald-100 mt-4">
+                            <i class="fa-solid fa-circle-check text-5xl mb-3 text-emerald-400"></i>
+                            <p class="font-bold text-emerald-800">This is a fixed slide.</p>
+                            <p class="text-sm mt-1 text-emerald-600 font-medium">You don't have to do anything. Too Easy.</p>
+                        </div>
+                    `;
+                    
+                    if (item.defKey === 'mainIntro') {
+                        contentHtml += `
+                            <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                                <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                                <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative flex items-center justify-center overflow-hidden">
+                                    <div class="absolute right-6 top-0 bottom-0 flex flex-col justify-center gap-3">
+                                        <div class="flex flex-col items-center">
+                                            <div class="w-10 h-10 rounded-full bg-[#fcd34d] flex items-center justify-center shadow-sm mb-1"><i class="fa-solid fa-book-open-reader text-yellow-900 text-lg"></i></div>
+                                            <span class="edu-font text-[10px] text-slate-800 leading-none">Recite</span>
+                                        </div>
+                                        <div class="flex flex-col items-center">
+                                            <div class="w-10 h-10 rounded-full bg-[#f97316] flex items-center justify-center shadow-sm mb-1"><i class="fa-solid fa-brain text-orange-900 text-lg"></i></div>
+                                            <span class="edu-font text-[10px] text-slate-800 leading-none">Recall</span>
+                                        </div>
+                                        <div class="flex flex-col items-center">
+                                            <div class="w-10 h-10 rounded-full bg-[#60a5fa] flex items-center justify-center shadow-sm mb-1"><i class="fa-solid fa-chalkboard-user text-blue-900 text-lg"></i></div>
+                                            <span class="edu-font text-[10px] text-slate-800 leading-none">Apply</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col items-center justify-center -ml-12 w-3/4">
+                                        <div class="edu-font text-5xl text-slate-800 mb-4">${globalSettings.yearLevel}</div>
+                                        <div class="edu-font text-xl text-slate-800 mb-1">Reading Daily Review</div>
+                                        <div class="edu-font text-xl text-slate-800">Term ${globalSettings.term} Week ${globalSettings.week}</div>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                            </div>
+                        `;
+                    }
+
+                    if (item.defKey === 'finished') {
+                        contentHtml += `
+                            <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                                <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                                <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative flex items-center justify-center overflow-hidden">
+                                    <div class="flex items-center gap-4">
+                                        <div class="edu-font text-5xl text-slate-800">Finished</div>
+                                        <div class="w-12 h-12 bg-[#4ade80] rounded-lg shadow-[0_4px_0_#22c55e] flex items-center justify-center text-white mt-1">
+                                            <i class="fa-solid fa-check text-3xl font-bold"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                            </div>
+                        `;
+                    }
+
+                    if (item.defKey === 'dayDivider') {
+                        contentHtml += `
+                            <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                                <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                                <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative flex flex-col items-center justify-center p-6 overflow-hidden">
+                                    <div class="w-[90%] flex h-14 border border-slate-400 mb-6 relative shadow-sm">
+                                        <div class="absolute -top-1.5 -bottom-1.5 -left-1.5 w-[calc(14.28%+3px)] border-[5px] border-slate-900 z-10"></div>
+                                        <div class="flex-1 bg-[#facc15] border-r border-slate-400 flex items-center justify-center"><span class="edu-font text-[11px] text-slate-700">Monday</span></div>
+                                        <div class="flex-1 bg-[#c084fc] border-r border-slate-400 flex items-center justify-center"><span class="edu-font text-[11px] text-slate-700">Tuesday</span></div>
+                                        <div class="flex-1 bg-[#7dd3fc] border-r border-slate-400 flex items-center justify-center"><span class="edu-font text-[11px] text-slate-700">Wednesday</span></div>
+                                        <div class="flex-1 bg-[#f472b6] border-r border-slate-400 flex items-center justify-center"><span class="edu-font text-[11px] text-slate-700">Thursday</span></div>
+                                        <div class="flex-1 bg-[#fb923c] border-r border-slate-400 flex items-center justify-center"><span class="edu-font text-[11px] text-slate-700">Friday</span></div>
+                                        <div class="flex-1 bg-[#f87171] border-r border-slate-400 flex items-center justify-center"><span class="edu-font text-[11px] text-slate-700">Saturday</span></div>
+                                        <div class="flex-1 bg-[#f1f5f9] flex items-center justify-center"><span class="edu-font text-[11px] text-slate-700">Sunday</span></div>
+                                    </div>
+                                    <div class="edu-font text-6xl text-slate-900 mt-2">Today is Monday.</div>
+                                </div>
+                                <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                            </div>
+                        `;
+                    }
+                    
+                    content.innerHTML = contentHtml;
+                    return;
+                }
+
+                let hasFields = false;
+                if ((def.type === 'weekly' || def.type === 'daily') && def.fields && def.fields.length > 0) hasFields = true;
+                if (def.type === 'mixed' && ((def.weeklyFields && def.weeklyFields.length > 0) || (def.dailyFields && def.dailyFields.length > 0))) hasFields = true;
+
+                if (!hasFields) {
+                    contentHtml += `
+                        <div class="flex flex-col items-center justify-center py-10 px-4 bg-emerald-50 rounded-xl border border-emerald-100 mt-4">
+                            <i class="fa-solid fa-circle-check text-5xl mb-3 text-emerald-400"></i>
+                            <p class="font-bold text-emerald-800">This is a fixed layout.</p>
+                            <p class="text-sm mt-1 text-emerald-600 font-medium">You don't have to do anything. Too Easy.</p>
+                        </div>
+                    `;
+                } else {
+                    const createFieldHtml = (field, value, path) => {
+                        let actualValue = value !== undefined ? value : (field.default || '');
+                        const valAttr = actualValue !== '' ? `value="${actualValue}"` : '';
+                        const wrapperId = `field-wrap-${path.join('-')}`;
+                        
+                        if (field.type === 'checkbox') {
+                            const isChecked = actualValue === true || actualValue === 'true' ? 'checked' : '';
+                            return `
+                                <div class="mb-3 transition-all duration-200" id="${wrapperId}">
+                                    <label class="flex items-center gap-2 cursor-pointer w-fit">
+                                        <input type="checkbox" data-path='${JSON.stringify(path)}' ${isChecked} class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                                        <span class="text-xs font-semibold text-slate-600">${field.label}</span>
+                                    </label>
+                                </div>
+                            `;
+                        }
+
+                        let html = `<label class="block text-xs font-semibold text-slate-600 mb-1">${field.label}</label>`;
+                        
+                        if (field.type === 'textarea') {
+                            html += `<textarea data-path='${JSON.stringify(path)}' class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none h-16">${actualValue}</textarea>`;
+                        } else if (field.type === 'select') {
+                            html += `<select data-path='${JSON.stringify(path)}' class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">`;
+                            field.options.forEach(opt => {
+                                html += `<option value="${opt}" ${actualValue === opt ? 'selected' : ''}>${opt}</option>`;
+                            });
+                            html += `</select>`;
+                        } else {
+                            html += `<input type="${field.type}" data-path='${JSON.stringify(path)}' ${valAttr} class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">`;
+                        }
+                        return `<div class="mb-3 transition-all duration-200" id="${wrapperId}">${html}</div>`;
+                    };
+
+                    contentHtml += `<div class="space-y-6">`;
+
+                    if (def.type === 'weekly' || def.type === 'mixed') {
+                        const fields = def.type === 'weekly' ? def.fields : def.weeklyFields;
+                        if (fields && fields.length > 0) {
+                            contentHtml += `<div>`;
+                            fields.forEach(f => {
+                                contentHtml += createFieldHtml(f, item.data[f.id], ['weekly', f.id]);
+                            });
+                            contentHtml += `</div>`;
+                        }
+                    }
+
+                    if (def.type === 'daily' || def.type === 'mixed') {
+                        const fields = def.type === 'daily' ? def.fields : def.dailyFields;
+                        if (fields && fields.length > 0) {
+                            DAYS.forEach(day => {
+                                if (!globalSettings.activeDays[day]) return;
+                                contentHtml += `<div>
+                                    <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center before:content-[''] before:flex-1 before:h-[1px] before:bg-blue-100 before:mr-2 after:content-[''] after:flex-1 after:h-[1px] after:bg-blue-100 after:ml-2">${day}</h3>
+                                    <div class="pl-2 border-l-2 border-slate-100">`;
+                                fields.forEach(f => {
+                                    contentHtml += createFieldHtml(f, item.data[day][f.id], ['daily', day, f.id]);
+                                });
+                                contentHtml += `</div></div>`;
+                            });
+                        }
+                    }
+
+                    contentHtml += `</div>`;
+                }
+                
+                if (isPreview) {
+                    contentHtml += `</div>`;
+                }
+                
+                // Add static thumbnail preview specifically for Section B (Say the Sound)
+                if (item.defKey === 'sectB') {
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative flex items-center justify-center overflow-hidden">
+                                <div class="edu-font text-[4.5rem] text-slate-800 tracking-wide">a</div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
+                // Add static thumbnail preview specifically for Section C (Read the lines)
+                if (item.defKey === 'sectC') {
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative flex flex-col items-center justify-center overflow-hidden">
+                                <div class="absolute right-4 top-4 flex flex-col items-center">
+                                    <div class="w-10 h-10 rounded-full bg-[#fcd34d] flex items-center justify-center shadow-sm mb-1"><i class="fa-solid fa-book-open-reader text-yellow-900 text-lg"></i></div>
+                                    <span class="edu-font text-[10px] text-slate-800 leading-none">Recite</span>
+                                </div>
+                                <div class="edu-font text-3xl sm:text-4xl text-slate-800 tracking-[0.2em] mb-5 text-center">s T o b j u m ff</div>
+                                <div class="edu-font text-3xl sm:text-4xl text-slate-800 tracking-[0.2em] text-center">W Z m x a ll p i</div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
+                // Add static thumbnail preview specifically for Section D (Heart Words)
+                if (item.defKey === 'sectD') {
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative flex items-center justify-center overflow-hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="absolute w-[75%] h-[75%] opacity-80" style="fill: #fbcfe8;">
+                                    <path d="M 50 85 C 20 60 10 40 10 25 C 10 5 40 5 50 25 C 60 5 90 5 90 25 C 90 40 80 60 50 85 Z"/>
+                                </svg>
+                                <div class="edu-font text-[4.5rem] text-slate-800 tracking-wide z-10 relative">the</div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
+                // Add dynamic thumbnail preview specifically for Section E (Read the Word)
+                if (item.defKey === 'sectE') {
+                    let firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
+                    let wordsVal = 'cat';
+                    if (firstActiveDay && item.data[firstActiveDay] && item.data[firstActiveDay]['words']) {
+                        wordsVal = item.data[firstActiveDay]['words'];
+                    }
+                    
+                    let firstWord = wordsVal.split(',')[0].trim() || 'cat';
+                    let isAlien = firstWord.endsWith('*');
+                    firstWord = firstWord.replace('*', '');
+                    
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative flex items-center justify-center overflow-hidden">
+                                <div id="thumb-alien-icon" class="absolute top-4 left-6 transition-opacity duration-200 ${isAlien ? 'opacity-100' : 'opacity-0'}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="w-16 h-16 drop-shadow-md">
+                                        <path d="M 35 25 Q 30 15 25 15" fill="none" stroke="#22c55e" stroke-width="4" stroke-linecap="round"/>
+                                        <circle cx="25" cy="15" r="4" fill="#22c55e"/>
+                                        <path d="M 65 25 Q 70 15 75 15" fill="none" stroke="#22c55e" stroke-width="4" stroke-linecap="round"/>
+                                        <circle cx="75" cy="15" r="4" fill="#22c55e"/>
+                                        <path d="M 20 60 C 20 30, 80 30, 80 60 C 80 85, 60 90, 50 90 C 40 90, 20 85, 20 60 Z" fill="#22c55e"/>
+                                        <ellipse cx="35" cy="55" rx="8" ry="12" fill="#ffffff" transform="rotate(-20 35 55)"/>
+                                        <circle cx="35" cy="55" r="3" fill="#0f172a"/>
+                                        <ellipse cx="65" cy="55" rx="8" ry="12" fill="#ffffff" transform="rotate(20 65 55)"/>
+                                        <circle cx="65" cy="55" r="3" fill="#0f172a"/>
+                                        <path d="M 45 75 Q 50 80 55 75" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+                                    </svg>
+                                </div>
+                                <div id="thumb-word" class="edu-font text-[4.5rem] text-slate-800 tracking-wide">${firstWord}</div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
+                // Add dynamic thumbnail preview specifically for Section H (Long Content)
+                if (item.defKey === 'sectH') {
+                    let firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
+                    let titleVal = 'Title';
+                    let bodyVal = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.';
+                    
+                    if (firstActiveDay && item.data[firstActiveDay]) {
+                        if (item.data[firstActiveDay]['title']) titleVal = item.data[firstActiveDay]['title'];
+                        if (item.data[firstActiveDay]['body']) bodyVal = item.data[firstActiveDay]['body'];
+                    }
+                    
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative overflow-hidden flex p-4">
+                                <div class="absolute top-2 right-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="w-12 h-12">
+                                        <circle cx="50" cy="50" r="48" fill="#ea580c"/>
+                                        <path d="M 35 60 C 35 45, 65 45, 65 60 L 65 80 L 35 80 Z" fill="#0f172a"/>
+                                        <circle cx="50" cy="35" r="10" fill="#0f172a"/>
+                                        <ellipse cx="65" cy="20" rx="12" ry="8" fill="#0f172a"/>
+                                        <ellipse cx="75" cy="30" rx="10" ry="7" fill="#0f172a"/>
+                                        <ellipse cx="55" cy="30" rx="8" ry="6" fill="#0f172a"/>
+                                        <text x="50" y="92" font-family="sans-serif" font-size="12" fill="#0f172a" text-anchor="middle" font-weight="bold">Recall</text>
+                                    </svg>
+                                </div>
+                                <div class="w-2/3 flex flex-col pt-2 pr-2">
+                                    <div class="edu-font text-lg text-slate-800 font-bold mb-2 truncate" id="thumb-h-title">${titleVal}</div>
+                                    <div class="edu-font text-[10px] text-slate-800 leading-tight overflow-hidden break-words line-clamp-6" id="thumb-h-body">${bodyVal}</div>
+                                </div>
+                                <div class="w-1/3 flex items-center justify-center pl-2 pt-8 pb-4">
+                                    <div class="w-full h-full bg-slate-200 border-2 border-slate-300 rounded-md"></div>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
+                // Add dynamic thumbnail preview specifically for Section I (Read the Sentence)
+                if (item.defKey === 'sectI') {
+                    let firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
+                    let sentVal = 'The cat sat on Sam.';
+                    let styleVal = 'Picture';
+                    
+                    if (firstActiveDay && item.data[firstActiveDay]) {
+                        if (item.data[firstActiveDay]['sent']) sentVal = item.data[firstActiveDay]['sent'];
+                        if (item.data[firstActiveDay]['style']) styleVal = item.data[firstActiveDay]['style'];
+                    }
+                    
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative overflow-hidden flex flex-col items-center justify-center p-2" id="thumb-i-wrapper">
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
+                // Add dynamic thumbnail preview specifically for Section J (Sentences)
+                if (item.defKey === 'sectJ') {
+                    let firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
+                    let sentVal = 'The ___ sat on ___.';
+                    
+                    if (firstActiveDay && item.data[firstActiveDay] && item.data[firstActiveDay]['sent']) {
+                        sentVal = item.data[firstActiveDay]['sent'];
+                    }
+                    
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative overflow-hidden flex items-center justify-center p-4">
+                                <div class="edu-font text-2xl text-slate-800 text-center w-full truncate pb-2" id="thumb-j-sent">${sentVal}</div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
+                // Add static thumbnail preview specifically for Section K (Label and write a sentence)
+                if (item.defKey === 'sectK') {
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative overflow-hidden flex flex-col items-center justify-center p-4">
+                                <div class="absolute top-2 right-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="w-10 h-10">
+                                        <circle cx="50" cy="50" r="48" fill="#3b82f6"/>
+                                        <circle cx="50" cy="30" r="12" fill="#0f172a"/>
+                                        <path d="M 25 70 C 25 50, 75 50, 75 70 L 75 80 L 25 80 Z" fill="#0f172a"/>
+                                        <rect x="35" y="60" width="30" height="20" fill="#e2e8f0"/>
+                                        <path d="M 40 65 Q 45 62 50 65 T 60 65" fill="none" stroke="#0f172a" stroke-width="1"/>
+                                        <path d="M 40 70 Q 45 67 50 70 T 60 70" fill="none" stroke="#0f172a" stroke-width="1"/>
+                                        <path d="M 40 75 Q 45 72 50 75 T 60 75" fill="none" stroke="#0f172a" stroke-width="1"/>
+                                        <text x="50" y="95" font-family="sans-serif" font-size="12" fill="#0f172a" text-anchor="middle" font-weight="bold">Apply</text>
+                                    </svg>
+                                </div>
+                                <div class="w-[45%] h-[60%] bg-slate-100 border-2 border-slate-200 rounded-lg flex items-center justify-center text-slate-300 relative">
+                                    <div class="absolute -left-12 top-4 w-10 h-[2px] bg-slate-800"></div>
+                                    <div class="absolute -left-12 top-10 w-10 h-[2px] bg-slate-800"></div>
+                                    <div class="absolute -left-12 bottom-4 w-10 h-[2px] bg-slate-800"></div>
+                                    <div class="absolute -right-12 top-4 w-10 h-[2px] bg-slate-800"></div>
+                                    <div class="absolute -right-12 top-10 w-10 h-[2px] bg-slate-800"></div>
+                                    <div class="absolute -right-12 bottom-4 w-10 h-[2px] bg-slate-800"></div>
+                                    <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-500"><i class="fa-solid fa-image text-sm"></i></div>
+                                </div>
+                                <div class="w-[85%] h-[2px] bg-slate-800 mt-6"></div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
+                // Add dynamic thumbnail preview specifically for Generic Section
+                if (item.defKey === 'generic') {
+                    let firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
+                    let wordVal = 'Content';
+                    
+                    if (firstActiveDay && item.data[firstActiveDay] && item.data[firstActiveDay]['word']) {
+                        wordVal = item.data[firstActiveDay]['word'];
+                    }
+                    
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative overflow-hidden flex items-center justify-center p-4">
+                                <div class="edu-font text-5xl text-slate-800 text-center w-full truncate" id="thumb-generic-word">${wordVal}</div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
+                // Add dynamic thumbnail preview specifically for Expectations
+                if (item.defKey === 'expectations') {
+                    let styleVal = 'Basic';
+                    if (item.data) {
+                        styleVal = item.data.weekly?.style || item.data.style || 'Basic';
+                    }
+
+                    const showWB = styleVal === 'Whiteboards' || styleVal === 'Whiteboards and Music';
+                    const showMusic = styleVal === 'Whiteboards and Music';
+
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative overflow-hidden flex flex-col items-center justify-center p-4">
+                                
+                                <div id="thumb-exp-music" class="absolute top-4 left-4 w-10 h-10 bg-blue-300 rounded-full items-center justify-center shadow-sm" style="display: ${showMusic ? 'flex' : 'none'}">
+                                    <i class="fa-solid fa-play text-white text-lg ml-1"></i>
+                                </div>
+                                
+                                <div class="flex-1 w-full flex-col items-center justify-center transition-all duration-300" id="thumb-exp-wb" style="display: ${showWB ? 'flex' : 'none'}">
+                                    <div class="edu-font text-2xl text-slate-800 mb-2 text-center">You will need:</div>
+                                    <div class="flex items-center justify-center gap-6">
+                                        <div class="w-20 h-12 border-4 border-slate-800 rounded-lg bg-white rotate-[2deg] shadow-sm"></div>
+                                        <div class="flex items-center rotate-[-15deg] gap-1 shadow-sm">
+                                            <div class="w-3 h-2 bg-slate-800 rounded-sm"></div>
+                                            <div class="w-14 h-2 bg-slate-100 border border-slate-300 rounded-r-full relative overflow-hidden">
+                                                <div class="absolute left-0 top-0 bottom-0 w-2 bg-slate-800"></div>
+                                            </div>
+                                        </div>
+                                        <div class="w-12 h-8 bg-blue-500 rounded skew-x-[-10deg] border-b-4 border-blue-700 shadow-sm relative overflow-hidden">
+                                            <div class="absolute top-0 right-0 w-4 h-full bg-blue-400 opacity-50 skew-x-[15deg]"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex-1 w-full flex flex-col items-center justify-center">
+                                    <div class="edu-font text-2xl text-slate-800 mb-2 mt-2 text-center">I am looking for:</div>
+                                    <div class="flex items-center justify-center gap-6">
+                                        <div class="w-14 h-6 bg-[#fcd34d] rounded-[2rem] flex items-center justify-center gap-1 border border-orange-300 shadow-sm overflow-hidden relative">
+                                            <div class="absolute bottom-1 right-4 w-1 h-1 border-b border-r border-orange-800 rounded-br"></div>
+                                            <div class="w-3 h-3 rounded-full bg-white border-[1px] border-green-600 flex items-center justify-center"><div class="w-1.5 h-1.5 bg-black rounded-full"></div></div>
+                                            <div class="w-3 h-3 rounded-full bg-white border-[1px] border-green-600 flex items-center justify-center"><div class="w-1.5 h-1.5 bg-black rounded-full"></div></div>
+                                        </div>
+                                        <div class="text-3xl text-[#d97706] drop-shadow-sm"><i class="fa-solid fa-ear-listen"></i></div>
+                                        <div class="w-16 h-10 bg-[#fcd34d] rounded-[3rem] flex items-center justify-center border border-orange-300 shadow-sm">
+                                            <svg class="w-10 h-5" viewBox="0 0 24 12">
+                                                <path d="M2,2 Q12,12 22,2" fill="#fca5a5" stroke="#be123c" stroke-width="1.5"/>
+                                                <path d="M2,2 Q12,6 22,2" fill="none" stroke="#be123c" stroke-width="1.5"/>
+                                            </svg>
+                                        </div>
+                                        <div class="flex flex-col items-center justify-end text-4xl text-blue-500 drop-shadow-sm">
+                                            <i class="fa-solid fa-child-reaching"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
+                content.innerHTML = contentHtml;
+
+                if (def.hasTitleSlideOptions) {
+                    const chk = document.getElementById('chk-ts-include');
+                    const fieldsDiv = document.getElementById('ts-fields');
+                    const txtTitle = document.getElementById('txt-ts-title');
+                    const txtInst = document.getElementById('txt-ts-inst');
+
+                    chk.addEventListener('change', (e) => {
+                        item.data.titleSettings.include = e.target.checked;
+                        if (e.target.checked) {
+                            fieldsDiv.classList.remove('opacity-40', 'pointer-events-none', 'grayscale');
+                        } else {
+                            fieldsDiv.classList.add('opacity-40', 'pointer-events-none', 'grayscale');
+                        }
+                        saveState();
+                    });
+
+                    txtTitle.addEventListener('input', (e) => { item.data.titleSettings.title = e.target.value; saveState(); });
+                    txtInst.addEventListener('input', (e) => { item.data.titleSettings.instructions = e.target.value; saveState(); });
+                }
+
+                if (item.defKey === 'sectD') {
+                    DAYS.forEach(day => {
+                        if (!globalSettings.activeDays[day]) return;
+                        
+                        const chkWriteIt = content.querySelector(`[data-path='["daily","${day}","writeIt"]']`);
+                        const wrapWriteItWords = document.getElementById(`field-wrap-daily-${day}-writeItWords`);
+                        
+                        if (chkWriteIt && wrapWriteItWords) {
+                            const updateWriteItState = (isChecked) => {
+                                if (isChecked) {
+                                    wrapWriteItWords.classList.remove('opacity-40', 'pointer-events-none', 'grayscale');
+                                } else {
+                                    wrapWriteItWords.classList.add('opacity-40', 'pointer-events-none', 'grayscale');
+                                }
+                            };
+                            updateWriteItState(chkWriteIt.checked); 
+                            chkWriteIt.addEventListener('change', (e) => updateWriteItState(e.target.checked));
+                        }
+                    });
+                }
+
+                if (item.defKey === 'sectE') {
+                    let firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
+                    if (firstActiveDay) {
+                        const dayInput = content.querySelector(`[data-path='["daily","${firstActiveDay}","words"]']`);
+                        if (dayInput) {
+                            dayInput.addEventListener('input', (e) => {
+                                let val = e.target.value;
+                                let first = val.split(',')[0].trim() || 'cat';
+                                let isAl = first.endsWith('*');
+                                first = first.replace('*', '');
+                                
+                                document.getElementById('thumb-word').textContent = first;
+                                const alienIcon = document.getElementById('thumb-alien-icon');
+                                if (isAl) {
+                                    alienIcon.classList.remove('opacity-0');
+                                    alienIcon.classList.add('opacity-100');
+                                } else {
+                                    alienIcon.classList.remove('opacity-100');
+                                    alienIcon.classList.add('opacity-0');
+                                }
+                            });
+                        }
+                    }
+                }
+
+                if (item.defKey === 'sectH') {
+                    let firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
+                    if (firstActiveDay) {
+                        const titleInput = content.querySelector(`[data-path='["daily","${firstActiveDay}","title"]']`);
+                        const bodyInput = content.querySelector(`[data-path='["daily","${firstActiveDay}","body"]']`);
+                        
+                        if (titleInput) {
+                            titleInput.addEventListener('input', (e) => {
+                                document.getElementById('thumb-h-title').textContent = e.target.value || 'Title';
+                            });
+                        }
+                        if (bodyInput) {
+                            bodyInput.addEventListener('input', (e) => {
+                                document.getElementById('thumb-h-body').textContent = e.target.value || 'Lorem ipsum dolor sit amet...';
+                            });
+                        }
+                    }
+                }
+
+                if (item.defKey === 'sectI') {
+                    let firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
+                    if (firstActiveDay) {
+                        const sentInput = content.querySelector(`[data-path='["daily","${firstActiveDay}","sent"]']`);
+                        const styleInput = content.querySelector(`[data-path='["daily","${firstActiveDay}","style"]']`);
+                        const wrapper = document.getElementById('thumb-i-wrapper');
+
+                        const updateSectIPreview = () => {
+                            let s = sentInput ? sentInput.value || 'The cat sat on Sam.' : 'The cat sat on Sam.';
+                            let st = styleInput ? styleInput.value : 'Picture';
+                            
+                            if (st === 'Pyramid') {
+                                const words = s.trim().split(/\s+/).filter(w => w);
+                                let pyramidLines = [];
+                                let currentLine = '';
+                                for(let i = 0; i < words.length; i++) {
+                                    currentLine += (i > 0 ? ' ' : '') + words[i];
+                                    pyramidLines.push(`<div class="leading-tight">${currentLine}</div>`);
+                                }
+                                wrapper.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center py-2"><div class="edu-font text-lg text-slate-800 text-center">${pyramidLines.join('')}</div></div>`;
+                            } else {
+                                wrapper.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center p-3"><div class="w-[45%] h-[50%] bg-slate-200 border-2 border-slate-300 rounded-lg mb-3 flex items-center justify-center text-slate-400 shrink-0"><i class="fa-solid fa-image text-3xl"></i></div><div class="edu-font text-2xl text-slate-800 text-center w-full truncate pb-2">${s}</div></div>`;
+                            }
+                        };
+
+                        if (wrapper) updateSectIPreview();
+                        if (sentInput) sentInput.addEventListener('input', updateSectIPreview);
+                        if (styleInput) styleInput.addEventListener('change', updateSectIPreview);
+                    }
+                }
+
+                if (item.defKey === 'sectJ') {
+                    let firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
+                    if (firstActiveDay) {
+                        const sentInput = content.querySelector(`[data-path='["daily","${firstActiveDay}","sent"]']`);
+                        if (sentInput) {
+                            sentInput.addEventListener('input', (e) => {
+                                document.getElementById('thumb-j-sent').textContent = e.target.value || 'The ___ sat on ___.';
+                            });
+                        }
+                    }
+                }
+
+                if (item.defKey === 'expectations') {
+                    const styleInput = content.querySelector(`[data-path='["weekly","style"]']`);
+                    if (styleInput) {
+                        styleInput.addEventListener('change', (e) => {
+                            const val = e.target.value;
+                            const wbSection = document.getElementById('thumb-exp-wb');
+                            const musicIcon = document.getElementById('thumb-exp-music');
+                            
+                            if (wbSection) {
+                                wbSection.style.display = (val === 'Whiteboards' || val === 'Whiteboards and Music') ? 'flex' : 'none';
+                            }
+                            if (musicIcon) {
+                                musicIcon.style.display = (val === 'Whiteboards and Music') ? 'flex' : 'none';
+                            }
+                        });
+                    }
+                }
+
+                if (item.defKey === 'generic') {
+                    let firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
+                    if (firstActiveDay) {
+                        const wordInput = content.querySelector(`[data-path='["daily","${firstActiveDay}","word"]']`);
+                        if (wordInput) {
+                            wordInput.addEventListener('input', (e) => {
+                                document.getElementById('thumb-generic-word').textContent = e.target.value || 'Content';
+                            });
+                        }
+                    }
+                }
+
+                content.querySelectorAll('[data-path]').forEach(el => {
+                    el.addEventListener('input', (e) => {
+                        const path = JSON.parse(e.target.dataset.path);
+                        const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+                        
+                        if (path[0] === 'weekly') item.data[path[1]] = val;
+                        if (path[0] === 'daily') item.data[path[1]][path[2]] = val;
+                        saveState();
+                    });
+                });
+            }
+        }
+
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        function randomizeCasing(grapheme) {
+            if (grapheme.length > 1) return grapheme.toLowerCase(); 
+            return Math.random() > 0.5 ? grapheme.toUpperCase() : grapheme.toLowerCase();
+        }
+
+        function buildPyramid(sentence) {
+            const words = sentence.trim().split(/\s+/).filter(w => w);
+            let pyramid = [];
+            let currentLine = [];
+            for (let i = 0; i < words.length; i++) {
+                currentLine.push(words[i]);
+                pyramid.push(currentLine.join(' '));
+            }
+            return pyramid.join('\n');
+        }
+
+        document.getElementById('btn-assemble').addEventListener('click', () => {
+            const recipe = {
+                deckName: globalSettings.deckName,
+                author: globalSettings.preparedBy || "",
+                templateId: globalSettings.templateId,
+                folderId: globalSettings.folderId || null,
+                globalTerm: globalSettings.term,
+                globalWeek: globalSettings.week,
+                globalPhonicsLevel: globalSettings.phonicsLevel,
+                slides: []
+            };
+
+            const introBlock = timelineItems.find(i => i.defKey === 'mainIntro');
+            if (introBlock) {
+                recipe.slides.push({
+                    noteId: "[mainTitle]",
+                    replacements: {
+                        "{{yearLevel}}": globalSettings.yearLevel,
+                        "{{termNumber}}": globalSettings.term.toString(),
+                        "{{weekNumber}}": globalSettings.week.toString()
+                    }
+                });
+            }
+
+            const currentLevelIdx = SOUNDS_WRITE_LEVELS.indexOf(globalSettings.phonicsLevel);
+            let fullPool = [];
+            let currentLevelGraphemes = [];
+            
+            for (let i = 0; i <= currentLevelIdx; i++) {
+                let levelName = SOUNDS_WRITE_LEVELS[i];
+                let graphemes = phonicsData[levelName] || [];
+                fullPool = fullPool.concat(graphemes);
+                if (i === currentLevelIdx) {
+                    currentLevelGraphemes = graphemes;
+                }
+            }
+            const previousLevelGraphemes = fullPool.filter(g => !currentLevelGraphemes.includes(g));
+
+            DAYS.forEach(day => {
+                if (!globalSettings.activeDays[day]) return;
+
+                timelineItems.forEach(item => {
+                    const def = SECTION_DEFS[item.defKey];
+                    const data = item.data;
+
+                    if (item.defKey === 'mainIntro') return; 
+
+                    if (def.hasTitleSlideOptions && data.titleSettings?.include) {
+                        recipe.slides.push({
+                            noteId: "[sectionTitle]",
+                            replacements: {
+                                "{{sectionTitle}}": data.titleSettings.title || "",
+                                "{{instructions}}": data.titleSettings.instructions || ""
+                            }
+                        });
+                    }
+
+                    if (item.defKey === 'expectations') {
+                        const style = data.weekly?.style || data.style || 'Basic';
+                        let noteId = "[expectations]";
+                        if (style === 'Whiteboards') noteId = "[expectations_wb]";
+                        if (style === 'Whiteboards and Music') noteId = "[expectations_wb_music]";
+                        recipe.slides.push({ noteId: noteId });
+                    }
+                    
+                    else if (item.defKey === 'dayDivider') {
+                        recipe.slides.push({ noteId: `[Days_${day.toLowerCase()}]` });
+                    }
+
+                    else if (item.defKey === 'sectA') {
+                        recipe.slides.push({
+                            noteId: "[pictureTalk_stimulus]",
+                            injectNotes: data[day]?.prompt || ""
+                        });
+                    }
+
+                    else if (item.defKey === 'sectB') {
+                        let limitStr = data.weekly?.limit || data.limit;
+                        let selectedGraphemes = [];
+                        
+                        if (limitStr && parseInt(limitStr) > 0) {
+                            let limit = parseInt(limitStr);
+                            if (currentLevelGraphemes.length >= limit) {
+                                selectedGraphemes = shuffleArray([...currentLevelGraphemes]).slice(0, limit);
+                            } else {
+                                selectedGraphemes = [...currentLevelGraphemes];
+                                let remainder = limit - selectedGraphemes.length;
+                                let shuffledPrev = shuffleArray([...previousLevelGraphemes]);
+                                
+                                for (let i = 0; i < remainder; i++) {
+                                    selectedGraphemes.push(shuffledPrev[i % (shuffledPrev.length || 1)] || "a"); 
+                                }
+                            }
+                        } else {
+                            selectedGraphemes = [...fullPool];
+                        }
+                        
+                        selectedGraphemes = shuffleArray(selectedGraphemes);
+                        
+                        selectedGraphemes.forEach(gr => {
+                            recipe.slides.push({
+                                noteId: "[graphemeRead_stimulus]",
+                                replacements: { "{{gr}}": gr }
+                            });
+                        });
+                    }
+
+                    else if (item.defKey === 'sectC') {
+                        const standardVowels = ['a', 'e', 'i', 'o', 'u'];
+                        let poolVowels = fullPool.filter(g => standardVowels.includes(g));
+                        let poolConsonants = fullPool.filter(g => !standardVowels.includes(g));
+                        
+                        if (poolVowels.length === 0) poolVowels = standardVowels;
+                        if (poolConsonants.length === 0) poolConsonants = ['b','c','d','f','g','m','s','t']; 
+                        
+                        const generateLine = () => {
+                            let line = [];
+                            for (let i = 0; i < 3; i++) line.push(poolVowels[Math.floor(Math.random() * poolVowels.length)]);
+                            for (let i = 0; i < 4; i++) line.push(poolConsonants[Math.floor(Math.random() * poolConsonants.length)]);
+                            
+                            line = shuffleArray(line);
+                            return line.map(randomizeCasing).join(" ");
+                        };
+
+                        recipe.slides.push({
+                            noteId: "[readLines_stimulus]",
+                            replacements: {
+                                "{{readLines_1}}": generateLine(),
+                                "{{readLines_2}}": generateLine()
+                            }
+                        });
+                    }
+
+                    else if (item.defKey === 'sectD') {
+                        const wordsStr = data.words || data.weekly?.words || "";
+                        let wordsArray = wordsStr.split(",").map(w => w.trim()).filter(w => w);
+                        wordsArray = shuffleArray(wordsArray);
+                        
+                        wordsArray.forEach(w => {
+                            recipe.slides.push({
+                                noteId: "[heartWords_stimulus]",
+                                replacements: { "{{a}}": w }
+                            });
+                        });
+
+                        const writeIt = data[day]?.writeIt;
+                        const writeItWordsStr = data[day]?.writeItWords || "";
+                        
+                        if (writeIt && writeItWordsStr) {
+                            let writeArray = writeItWordsStr.split(",").map(w => w.trim()).filter(w => w);
+                            writeArray.forEach(w => {
+                                recipe.slides.push({
+                                    noteId: "[heartWords_write]",
+                                    replacements: { "{{a}}": w }
+                                });
+                                recipe.slides.push({
+                                    noteId: "[heartWords_write_blank]"
+                                });
+                            });
+                        }
+                    }
+
+                    else if (item.defKey === 'sectE') {
+                        const wordsStr = data[day]?.words || "";
+                        let wordsArray = wordsStr.split(",").map(w => w.trim()).filter(w => w);
+                        
+                        wordsArray.forEach(w => {
+                            let isAlien = w.endsWith("*");
+                            let cleanWord = isAlien ? w.slice(0, -1) : w;
+                            recipe.slides.push({
+                                noteId: isAlien ? "[wordReading_alien_stimulus]" : "[wordReading_stimulus]",
+                                replacements: { "{{word}}": cleanWord }
+                            });
+                        });
+                    }
+
+                    else if (item.defKey === 'sectF') {
+                        recipe.slides.push({ noteId: "[audDiscrim_instruction_ae]" });
+                        
+                        const pair = data[day]?.pair || "Pen/Pan";
+                        const map = {
+                            "Pen/Pan": "[audDiscrim_penPan]",
+                            "Pat/Pet": "[audDiscrim_patPet]",
+                            "Marry/Merry": "[audDiscrim_marryMerry]",
+                            "Axe/Ex": "[audDiscrim_axeX]",
+                            "Al/L": "[audDiscrim_alL]"
+                        };
+                        recipe.slides.push({ noteId: map[pair] || "[audDiscrim_penPan]" });
+                    }
+
+                    else if (item.defKey === 'sectG') {
+                        let letter = data[day]?.letter || "";
+                        letter = letter.trim().toLowerCase();
+                        if (letter) {
+                            recipe.slides.push({ noteId: `[writeLetter_${letter}]` });
+                        }
+                    }
+
+                    else if (item.defKey === 'sectH') {
+                        recipe.slides.push({
+                            noteId: "[vocabulary_stimulus]",
+                            replacements: {
+                                "{{title}}": data[day]?.title || "",
+                                "{{body}}": data[day]?.body || ""
+                            }
+                        });
+                    }
+
+                    else if (item.defKey === 'sectI') {
+                        let sent = data[day]?.sent || "";
+                        let style = data[day]?.style || "Picture";
+                        
+                        if (style === "Pyramid") {
+                            recipe.slides.push({
+                                noteId: "[sentenceRead_pyramid_stimulus]",
+                                replacements: { "{{sent}}": buildPyramid(sent) }
+                            });
+                        } else {
+                            recipe.slides.push({
+                                noteId: "[sentenceRead_pic_stimulus]",
+                                replacements: { "{{sent}}": sent }
+                            });
+                        }
+                    }
+
+                    else if (item.defKey === 'sectJ') {
+                        recipe.slides.push({
+                            noteId: "[finishSentence_stimulus]",
+                            replacements: { "{{sent}}": data[day]?.sent || "" }
+                        });
+                    }
+
+                    else if (item.defKey === 'sectK') {
+                        recipe.slides.push({ noteId: "[labelAndSentence_instructions]" });
+                        recipe.slides.push({
+                            noteId: "[labelAndSentence_stimulus]",
+                            injectNotes: data[day]?.prompt || ""
+                        });
+                    }
+
+                    else if (item.defKey === 'generic') {
+                        recipe.slides.push({
+                            noteId: "[generic_stimulus]",
+                            replacements: { "{{content}}": data[day]?.word || "" },
+                            injectNotes: data[day]?.notes || ""
+                        });
+                    }
+
+                    else if (item.defKey === 'finished') {
+                        recipe.slides.push({ noteId: "[finished]" });
+                    }
+                });
+            });
+
+            currentRecipe = recipe;
+
+            const modal = document.getElementById('json-modal');
+            const content = document.getElementById('json-modal-content');
+            const output = document.getElementById('json-output');
+            
+            output.textContent = JSON.stringify(recipe, null, 4);
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        });
+
+        document.getElementById('btn-close-modal').addEventListener('click', () => {
+            const modal = document.getElementById('json-modal');
+            const content = document.getElementById('json-modal-content');
+            
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        });
+
+        function openDriveFolder(e) {
+            if (globalSettings.folderId) {
+                window.open(`https://drive.google.com/drive/folders/${globalSettings.folderId}`, '_blank');
+            } else {
+                const btn = e.currentTarget;
+                const originalHtml = btn.innerHTML;
+                const originalClasses = btn.className;
+                btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Missing Folder ID`;
+                btn.classList.add('text-rose-600', 'bg-rose-50', 'border-rose-200');
+                btn.classList.remove('text-blue-700', 'text-blue-600');
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.className = originalClasses;
+                }, 3000);
+            }
+        }
+
+        document.getElementById('btn-open-folder-header').addEventListener('click', openDriveFolder);
+        document.getElementById('btn-open-folder-modal').addEventListener('click', openDriveFolder);
+
+        document.getElementById('btn-send-api').addEventListener('click', async () => {
+            if (!currentRecipe) return;
+
+            const btn = document.getElementById('btn-send-api');
+            const status = document.getElementById('api-status');
+            
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            status.classList.remove('hidden');
+            status.textContent = "Building presentation... (this may take 10-20 seconds)";
+            status.className = "text-sm font-semibold text-blue-600 animate-pulse";
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8",
+                    },
+                    body: JSON.stringify(currentRecipe),
+                });
+
+                const result = await response.json();
+
+                if (result.status === "success") {
+                    status.textContent = "Success!";
+                    status.className = "text-sm font-bold text-emerald-500";
+                    btn.innerHTML = `<i class="fa-solid fa-arrow-up-right-from-square"></i> Open Google Slides`;
+                    btn.onclick = () => window.open(result.url, '_blank');
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btn.disabled = false;
+                } else {
+                    throw new Error(result.message || "Unknown error occurred.");
+                }
+            } catch (error) {
+                console.error("API Error:", error);
+                status.textContent = "Error: Check console for details.";
+                status.className = "text-sm font-bold text-rose-500";
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>

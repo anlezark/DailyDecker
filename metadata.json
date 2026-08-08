@@ -1,0 +1,8 @@
+{
+  "name": "Daily Review Builder",
+  "description": "A Daily Review slideshow builder for primary classroom phonics and reading lessons",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
