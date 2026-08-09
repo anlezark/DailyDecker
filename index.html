@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Review Builder - v6.7</title>
+    <title>Daily Deck - v7.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -31,7 +31,7 @@
     <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shrink-0 z-10 relative shadow-sm">
         <div class="flex items-center gap-3">
             <div class="bg-blue-600 text-white p-2 rounded-lg"><i class="fa-solid fa-layer-group"></i></div>
-            <h1 class="text-xl font-bold text-slate-800">Review<span class="text-blue-600">Builder</span> <span class="text-xs text-slate-400 font-normal ml-2">v6.7</span></h1>
+            <h1 class="text-xl font-bold text-slate-800">Daily<span class="text-blue-600">Deck</span> <span class="text-xs text-slate-400 font-normal ml-2">v7.1</span></h1>
         </div>
         <div class="flex items-center gap-3">
             <button id="btn-open-folder-header" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2 border border-blue-200">
@@ -84,22 +84,40 @@
         </div>
     </main>
 
-    <div id="json-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-8 opacity-0 transition-opacity">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-full max-h-[80vh] flex flex-col overflow-hidden transform scale-95 transition-transform" id="json-modal-content">
-            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-                <h2 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-code text-blue-500 mr-2"></i> Assembly Recipe (JSON)</h2>
-                <button id="btn-close-modal" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div id="json-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-6 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden transform scale-95 transition-transform" id="json-modal-content">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-start bg-slate-50 shrink-0">
+                <div>
+                    <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-code text-blue-500"></i> Assembly Recipe (JSON)
+                    </h2>
+                    <p class="text-sm text-slate-600 mt-1" id="modal-deck-subtitle">
+                        Your deck <strong class="font-bold text-slate-900" id="modal-deck-name">Term 1, Week 1 Review</strong> is ready for assembly. <i class="fa-solid fa-circle-check text-emerald-500 ml-0.5"></i>
+                    </p>
+                </div>
+                <button id="btn-close-modal" class="text-slate-400 hover:text-slate-600 p-1 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <div class="flex-1 p-4 bg-slate-900 overflow-y-auto">
-                <pre id="json-output" class="text-green-400 font-mono text-sm whitespace-pre-wrap break-words"></pre>
+            <div class="max-h-[42vh] p-4 bg-slate-900 overflow-y-auto border-b border-slate-800">
+                <pre id="json-output" class="text-green-400 font-mono text-xs sm:text-sm whitespace-pre-wrap break-words leading-relaxed"></pre>
             </div>
-            <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
-                <button id="btn-open-folder-modal" class="text-blue-600 hover:text-blue-800 font-semibold text-sm flex items-center gap-2 transition-colors">
-                    <i class="fa-solid fa-folder-open"></i> Open Destination Folder
-                </button>
-                <div class="flex items-center gap-4">
+            <div class="p-6 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0 border-t border-slate-200">
+                <div class="flex items-center gap-4 w-full sm:w-auto">
+                    <button id="btn-open-folder-modal" class="text-slate-700 hover:text-blue-700 bg-white hover:bg-blue-50 border border-slate-300 hover:border-blue-300 px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-sm shrink-0">
+                        <i class="fa-solid fa-folder-open text-blue-600"></i> Destination Folder
+                    </button>
+                    <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 cursor-pointer bg-white px-3.5 py-2 rounded-xl border border-slate-200 hover:border-amber-400 transition-colors shadow-sm select-none shrink-0">
+                        <input type="checkbox" id="chk-export-pptx" class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-file-powerpoint text-amber-500 text-base"></i> Create PowerPoint (.pptx) version</span>
+                    </label>
+                </div>
+                <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                    <div id="pptx-download-container" class="hidden">
+                        <button id="btn-download-pptx" class="bg-amber-500 hover:bg-amber-600 text-white px-5 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-md hover:shadow-lg text-sm shrink-0">
+                            <i class="fa-solid fa-download"></i> Download PowerPoint
+                        </button>
+                    </div>
                     <span id="api-status" class="text-sm font-semibold text-slate-500 hidden">Sending...</span>
-                    <button id="btn-send-api" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-semibold transition-colors flex items-center gap-2">
+                    <button id="btn-send-api" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0">
                         <i class="fa-solid fa-paper-plane"></i> Send to Google Slides
                     </button>
                 </div>
@@ -1308,7 +1326,59 @@
             return pyramid.join('\n');
         }
 
+        let createdDeckUrl = null;
+        let createdPptxUrl = null;
+
+        function resetModalState() {
+            createdDeckUrl = null;
+            createdPptxUrl = null;
+            const btn = document.getElementById('btn-send-api');
+            const status = document.getElementById('api-status');
+            const deckNameEl = document.getElementById('modal-deck-name');
+            const pptxContainer = document.getElementById('pptx-download-container');
+
+            if (deckNameEl) {
+                deckNameEl.textContent = globalSettings.deckName || "Daily Review";
+            }
+
+            if (status) {
+                status.textContent = "";
+                status.className = "text-sm font-semibold text-slate-500 hidden";
+            }
+
+            if (pptxContainer) {
+                pptxContainer.classList.add('hidden');
+            }
+
+            if (btn) {
+                btn.disabled = false;
+                btn.className = "bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0";
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Send to Google Slides`;
+            }
+        }
+
+        document.getElementById('chk-export-pptx')?.addEventListener('change', (e) => {
+            if (currentRecipe) {
+                currentRecipe.exportPptx = e.target.checked;
+                const output = document.getElementById('json-output');
+                if (output) {
+                    output.textContent = JSON.stringify(currentRecipe, null, 4);
+                }
+            }
+        });
+
+        document.getElementById('btn-download-pptx')?.addEventListener('click', () => {
+            if (createdPptxUrl) {
+                window.open(createdPptxUrl, '_blank');
+            }
+        });
+
         document.getElementById('btn-assemble').addEventListener('click', () => {
+            resetModalState();
+
+            const chkPptx = document.getElementById('chk-export-pptx');
+            const exportPptx = chkPptx ? chkPptx.checked : false;
+
             const recipe = {
                 deckName: globalSettings.deckName,
                 author: globalSettings.preparedBy || "",
@@ -1317,6 +1387,7 @@
                 globalTerm: globalSettings.term,
                 globalWeek: globalSettings.week,
                 globalPhonicsLevel: globalSettings.phonicsLevel,
+                exportPptx: exportPptx,
                 slides: []
             };
 
@@ -1607,13 +1678,18 @@
         document.getElementById('btn-open-folder-modal').addEventListener('click', openDriveFolder);
 
         document.getElementById('btn-send-api').addEventListener('click', async () => {
+            if (createdDeckUrl) {
+                window.open(createdDeckUrl, '_blank');
+                return;
+            }
+
             if (!currentRecipe) return;
 
             const btn = document.getElementById('btn-send-api');
             const status = document.getElementById('api-status');
             
             btn.disabled = true;
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            btn.className = "bg-blue-600 text-white px-7 py-3 rounded-xl font-bold transition-all flex items-center gap-2.5 shadow-md text-sm shrink-0 opacity-50 cursor-not-allowed";
             status.classList.remove('hidden');
             status.textContent = "Building presentation... (this may take 10-20 seconds)";
             status.className = "text-sm font-semibold text-blue-600 animate-pulse";
@@ -1630,12 +1706,20 @@
                 const result = await response.json();
 
                 if (result.status === "success") {
+                    createdDeckUrl = result.url;
                     status.textContent = "Success!";
                     status.className = "text-sm font-bold text-emerald-500";
                     btn.innerHTML = `<i class="fa-solid fa-arrow-up-right-from-square"></i> Open Google Slides`;
-                    btn.onclick = () => window.open(result.url, '_blank');
-                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btn.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0";
                     btn.disabled = false;
+
+                    if (result.pptxUrl) {
+                        createdPptxUrl = result.pptxUrl;
+                        const pptxContainer = document.getElementById('pptx-download-container');
+                        if (pptxContainer) {
+                            pptxContainer.classList.remove('hidden');
+                        }
+                    }
                 } else {
                     throw new Error(result.message || "Unknown error occurred.");
                 }
@@ -1644,7 +1728,7 @@
                 status.textContent = "Error: Check console for details.";
                 status.className = "text-sm font-bold text-rose-500";
                 btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.className = "bg-blue-600 hover:bg-blue-700 text-white px-7 py-3 rounded-xl font-bold transition-all flex items-center gap-2.5 shadow-md text-sm shrink-0";
             }
         });
 
