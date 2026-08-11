@@ -106,7 +106,7 @@ function doPost(e) {
           } catch(sharingErr) {
             // Ignore if domain sharing limits apply
           }
-          pptxUrl = pptxFile.getUrl();
+          pptxUrl = "https://drive.google.com/uc?export=download&id=" + pptxFile.getId();
           pptxId = pptxFile.getId();
         }
       } catch (pptxErr) {

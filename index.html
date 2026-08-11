@@ -89,37 +89,50 @@
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-start bg-slate-50 shrink-0">
                 <div>
                     <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-                        <i class="fa-solid fa-code text-blue-500"></i> Assembly Recipe (JSON)
+                        <i class="fa-solid fa-paper-plane text-blue-500"></i> Assemble Deck
                     </h2>
                     <p class="text-sm text-slate-600 mt-1" id="modal-deck-subtitle">
                         Your deck <strong class="font-bold text-slate-900" id="modal-deck-name">Term 1, Week 1 Review</strong> is ready for assembly. <i class="fa-solid fa-circle-check text-emerald-500 ml-0.5"></i>
                     </p>
+                    <button id="btn-toggle-json" class="mt-2 text-xs font-semibold text-slate-500 hover:text-blue-600 flex items-center gap-1.5 transition-colors cursor-pointer bg-white hover:bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-sm">
+                        <i class="fa-solid fa-code text-slate-400"></i>
+                        <span id="json-toggle-label">Show JSON recipe</span>
+                        <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 ml-0.5 transition-transform" id="json-toggle-icon"></i>
+                    </button>
                 </div>
                 <button id="btn-close-modal" class="text-slate-400 hover:text-slate-600 p-1 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <div class="max-h-[42vh] p-4 bg-slate-900 overflow-y-auto border-b border-slate-800">
+            <div id="json-container" class="hidden max-h-[38vh] p-4 bg-slate-900 overflow-y-auto border-b border-slate-800 shrink-0">
                 <pre id="json-output" class="text-green-400 font-mono text-xs sm:text-sm whitespace-pre-wrap break-words leading-relaxed"></pre>
             </div>
-            <div class="p-6 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0 border-t border-slate-200">
-                <div class="flex items-center gap-4 w-full sm:w-auto">
+            <div class="p-6 bg-slate-50 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0 border-t border-slate-200">
+                <div class="flex items-center gap-3 w-full md:w-auto">
                     <button id="btn-open-folder-modal" class="text-slate-700 hover:text-blue-700 bg-white hover:bg-blue-50 border border-slate-300 hover:border-blue-300 px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-sm shrink-0">
                         <i class="fa-solid fa-folder-open text-blue-600"></i> Destination Folder
                     </button>
-                    <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 cursor-pointer bg-white px-3.5 py-2 rounded-xl border border-slate-200 hover:border-amber-400 transition-colors shadow-sm select-none shrink-0">
-                        <input type="checkbox" id="chk-export-pptx" class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer">
-                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-file-powerpoint text-amber-500 text-base"></i> Create PowerPoint (.pptx) version</span>
-                    </label>
                 </div>
-                <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-                    <div id="pptx-download-container" class="hidden">
-                        <button id="btn-download-pptx" class="bg-amber-500 hover:bg-amber-600 text-white px-5 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-md hover:shadow-lg text-sm shrink-0">
+
+                <div class="flex-1 text-center px-2 w-full md:w-auto">
+                    <span id="api-status" class="text-sm font-semibold text-slate-500 hidden leading-tight block">Sending...</span>
+                </div>
+
+                <div class="flex flex-col items-stretch sm:items-end gap-2.5 w-full md:w-auto shrink-0">
+                    <button id="btn-send-api" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0">
+                        <i class="fa-solid fa-paper-plane"></i> Send to Google Slides
+                    </button>
+
+                    <div id="pptx-checkbox-container" class="flex items-center justify-end">
+                        <label class="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 hover:border-amber-400 transition-colors shadow-sm select-none">
+                            <input type="checkbox" id="chk-export-pptx" class="w-3.5 h-3.5 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-file-powerpoint text-amber-500 text-sm"></i> Create PowerPoint (.pptx) version</span>
+                        </label>
+                    </div>
+
+                    <div id="pptx-download-container" class="hidden flex items-center justify-end">
+                        <button id="btn-download-pptx" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg text-sm shrink-0">
                             <i class="fa-solid fa-download"></i> Download PowerPoint
                         </button>
                     </div>
-                    <span id="api-status" class="text-sm font-semibold text-slate-500 hidden">Sending...</span>
-                    <button id="btn-send-api" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0">
-                        <i class="fa-solid fa-paper-plane"></i> Send to Google Slides
-                    </button>
                 </div>
             </div>
         </div>
@@ -1336,6 +1349,10 @@
             const status = document.getElementById('api-status');
             const deckNameEl = document.getElementById('modal-deck-name');
             const pptxContainer = document.getElementById('pptx-download-container');
+            const pptxCheckboxContainer = document.getElementById('pptx-checkbox-container');
+            const jsonContainer = document.getElementById('json-container');
+            const toggleLabel = document.getElementById('json-toggle-label');
+            const toggleIcon = document.getElementById('json-toggle-icon');
 
             if (deckNameEl) {
                 deckNameEl.textContent = globalSettings.deckName || "Daily Review";
@@ -1350,12 +1367,46 @@
                 pptxContainer.classList.add('hidden');
             }
 
+            if (pptxCheckboxContainer) {
+                pptxCheckboxContainer.classList.remove('hidden');
+            }
+
+            if (jsonContainer) {
+                jsonContainer.classList.add('hidden');
+            }
+
+            if (toggleLabel) {
+                toggleLabel.textContent = "Show JSON recipe";
+            }
+
+            if (toggleIcon) {
+                toggleIcon.className = "fa-solid fa-chevron-right text-[10px] text-slate-400 ml-0.5 transition-transform";
+            }
+
             if (btn) {
                 btn.disabled = false;
-                btn.className = "bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0";
+                btn.className = "bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0";
                 btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Send to Google Slides`;
             }
         }
+
+        document.getElementById('btn-toggle-json')?.addEventListener('click', () => {
+            const jsonContainer = document.getElementById('json-container');
+            const toggleLabel = document.getElementById('json-toggle-label');
+            const toggleIcon = document.getElementById('json-toggle-icon');
+            if (!jsonContainer) return;
+
+            const isHidden = jsonContainer.classList.contains('hidden');
+            if (isHidden) {
+                jsonContainer.classList.remove('hidden');
+                if (toggleLabel) toggleLabel.textContent = "Hide JSON recipe";
+                if (toggleIcon) toggleIcon.className = "fa-solid fa-chevron-down text-[10px] text-slate-400 ml-0.5 transition-transform";
+            } else {
+                jsonContainer.classList.add('hidden');
+                if (toggleLabel) toggleLabel.textContent = "Show JSON recipe";
+                if (toggleIcon) toggleIcon.className = "fa-solid fa-chevron-right text-[10px] text-slate-400 ml-0.5 transition-transform";
+            }
+        });
 
         document.getElementById('chk-export-pptx')?.addEventListener('change', (e) => {
             if (currentRecipe) {
@@ -1710,11 +1761,18 @@
                     status.textContent = "Success!";
                     status.className = "text-sm font-bold text-emerald-500";
                     btn.innerHTML = `<i class="fa-solid fa-arrow-up-right-from-square"></i> Open Google Slides`;
-                    btn.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0";
+                    btn.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0";
                     btn.disabled = false;
 
-                    if (result.pptxUrl) {
-                        createdPptxUrl = result.pptxUrl;
+                    const pptxCheckboxContainer = document.getElementById('pptx-checkbox-container');
+                    if (pptxCheckboxContainer) {
+                        pptxCheckboxContainer.classList.add('hidden');
+                    }
+
+                    if (result.pptxUrl || result.pptxId) {
+                        createdPptxUrl = result.pptxId 
+                            ? `https://drive.google.com/uc?export=download&id=${result.pptxId}` 
+                            : result.pptxUrl;
                         const pptxContainer = document.getElementById('pptx-download-container');
                         if (pptxContainer) {
                             pptxContainer.classList.remove('hidden');
