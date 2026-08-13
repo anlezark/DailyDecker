@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Deck - v7.1</title>
+    <title>Daily Deck - v7.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -31,7 +31,7 @@
     <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shrink-0 z-10 relative shadow-sm">
         <div class="flex items-center gap-3">
             <div class="bg-blue-600 text-white p-2 rounded-lg"><i class="fa-solid fa-layer-group"></i></div>
-            <h1 class="text-xl font-bold text-slate-800">Daily<span class="text-blue-600">Deck</span> <span class="text-xs text-slate-400 font-normal ml-2">v7.1</span></h1>
+            <h1 class="text-xl font-bold text-slate-800">Daily<span class="text-blue-600">Deck</span> <span class="text-xs text-slate-400 font-normal ml-2">v7.2</span></h1>
         </div>
         <div class="flex items-center gap-3">
             <button id="btn-open-folder-header" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2 border border-blue-200">
@@ -51,18 +51,67 @@
                 <span><i class="fa-solid fa-book-open text-blue-500 mr-2"></i> Section Library</span>
             </div>
             <div class="p-4 overflow-y-auto flex-1">
-                <div id="library-list" class="flex flex-col gap-2">
-                    <!-- Populated by JS -->
+                <div id="library-parts" class="flex flex-col gap-3">
+                    <!-- Part 1: Deck Starters -->
+                    <div class="library-part border border-slate-200 rounded-xl overflow-hidden bg-white shadow-2xs">
+                        <button type="button" class="library-part-header w-full px-4 py-3 bg-slate-100/80 hover:bg-slate-200/80 text-left font-bold text-slate-700 flex items-center justify-between transition-colors select-none" data-part="starters">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-folder text-amber-500 text-base"></i>
+                                <span class="text-sm font-bold text-slate-800">Deck Starters</span>
+                                <span class="text-[10px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">2</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform duration-200 part-chevron"></i>
+                        </button>
+                        <div class="library-part-content hidden p-3 flex flex-col gap-2 bg-slate-50/50 border-t border-slate-200" id="part-starters-content">
+                            <!-- Dummy block 1: Kindergarten -->
+                            <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-center gap-3 cursor-pointer hover:border-amber-400 hover:shadow-2xs transition-all group opacity-85 hover:opacity-100" title="Deck starter preset (coming soon)">
+                                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 font-bold text-sm">
+                                    <i class="fa-solid fa-child"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-semibold text-slate-700 text-sm group-hover:text-amber-600 transition-colors truncate">Kindergarten</div>
+                                    <div class="text-[10px] text-slate-400 truncate">Preset deck starter (coming soon)</div>
+                                </div>
+                                <span class="text-[9px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 shrink-0">Soon</span>
+                            </div>
+
+                            <!-- Dummy block 2: Stage 1 -->
+                            <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-center gap-3 cursor-pointer hover:border-indigo-400 hover:shadow-2xs transition-all group opacity-85 hover:opacity-100" title="Deck starter preset (coming soon)">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 font-bold text-sm">
+                                    <i class="fa-solid fa-graduation-cap"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-semibold text-slate-700 text-sm group-hover:text-indigo-600 transition-colors truncate">Stage 1</div>
+                                    <div class="text-[10px] text-slate-400 truncate">Preset deck starter (coming soon)</div>
+                                </div>
+                                <span class="text-[9px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200 shrink-0">Soon</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Part 2: All Sections -->
+                    <div class="library-part border border-slate-200 rounded-xl overflow-hidden bg-white shadow-2xs">
+                        <button type="button" class="library-part-header w-full px-4 py-3 bg-slate-100/80 hover:bg-slate-200/80 text-left font-bold text-slate-700 flex items-center justify-between transition-colors select-none" data-part="all-sections">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-cubes text-blue-500 text-base"></i>
+                                <span class="text-sm font-bold text-slate-800">All Sections</span>
+                                <span class="text-[10px] font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full" id="all-sections-count">0</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform duration-200 part-chevron"></i>
+                        </button>
+                        <div class="library-part-content hidden p-3 flex flex-col gap-2 bg-slate-50/50 border-t border-slate-200" id="all-sections-list">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Timeline Panel -->
+        <!-- Deck Sequencer Panel -->
         <div class="w-2/4 bento-box flex flex-col overflow-hidden bg-white border-2 border-blue-200 shadow-lg relative z-10">
             <div id="timeline-header" class="bg-slate-50 border-b border-blue-100 px-4 py-3 flex justify-between items-center shrink-0 cursor-pointer hover:bg-slate-100 transition-colors" title="Click to view Global Settings">
-                <span class="font-bold text-slate-700"><i class="fa-solid fa-route text-emerald-500 mr-2"></i> Timeline: <span class="font-normal text-slate-500" id="timeline-filename">Term 1, Week 1 Review</span></span>
+                <span class="font-bold text-slate-700"><i class="fa-solid fa-layer-group text-blue-600 mr-2"></i> Deck Sequencer: <span class="font-normal text-slate-500" id="timeline-filename">Term 1, Week 1 Review</span></span>
                 <div class="flex items-center gap-2">
-                    <button id="btn-add-all" class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-md transition-colors border border-blue-100"><i class="fa-solid fa-list-check"></i> Include All</button>
                     <button id="btn-reset" class="text-xs font-semibold text-rose-500 hover:text-rose-600 flex items-center gap-1 bg-rose-50 hover:bg-rose-100 px-2 py-1 rounded-md transition-colors border border-rose-100"><i class="fa-solid fa-rotate-left"></i> Reset</button>
                 </div>
             </div>
@@ -83,6 +132,52 @@
             </div>
         </div>
     </main>
+
+    <!-- Privacy Notice Modal -->
+    <div id="privacy-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-6 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden transform scale-95 transition-transform" id="privacy-modal-content">
+            <div class="p-6 flex flex-col items-center text-center">
+                <div class="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center text-xl mb-4 shrink-0 shadow-sm">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h2 class="font-bold text-xl text-slate-800 mb-2">Privacy Notice</h2>
+                <p class="text-sm text-slate-600 leading-relaxed">
+                    Your Deck will be generated in a shared drive. Ensure your slides do not contain sensitive information.
+                </p>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
+                <button id="btn-privacy-back" class="text-slate-600 hover:text-slate-800 bg-white hover:bg-slate-100 border border-slate-200 px-5 py-2.5 rounded-xl font-semibold transition-all text-sm shadow-sm">
+                    Back
+                </button>
+                <button id="btn-privacy-agree" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-md hover:shadow-lg text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-check"></i> Agree
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deck Starter Overwrite Confirmation Modal -->
+    <div id="starter-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-6 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden transform scale-95 transition-transform" id="starter-modal-content">
+            <div class="p-6 flex flex-col items-center text-center">
+                <div class="w-14 h-14 rounded-full bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-2xl mb-4 shrink-0 shadow-sm">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <h2 class="font-bold text-xl text-slate-800 mb-2" id="starter-modal-title">Load Deck Starter?</h2>
+                <p class="text-sm text-slate-600 leading-relaxed" id="starter-modal-body">
+                    Loading this Deck Starter will replace all sections currently in your deck sequence.
+                </p>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
+                <button id="btn-starter-cancel" class="text-slate-600 hover:text-slate-800 bg-white hover:bg-slate-100 border border-slate-200 px-5 py-2.5 rounded-xl font-semibold transition-all text-sm shadow-sm">
+                    Cancel
+                </button>
+                <button id="btn-starter-confirm" class="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-md hover:shadow-lg text-sm flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-file-import"></i> Overwrite & Load
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div id="json-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-6 opacity-0 transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden transform scale-95 transition-transform" id="json-modal-content">
@@ -152,7 +247,14 @@
             "IC5 (k, l, r, u)",
             "IC6 (j, w, z)",
             "IC7 (x, y, ff, ll, ss, zz)",
-            "IC11 (sh, ch, tch, th, ck, wh, ng, qu)"
+            "IC11 - sh",
+            "IC11 - ch",
+            "IC11 - tch",
+            "IC11 - th",
+            "IC11 - ck",
+            "IC11 - wh",
+            "IC11 - ng",
+            "IC11 - qu"
         ];
 
         // Mapping graphemes for logic generator
@@ -164,8 +266,39 @@
             "IC5 (k, l, r, u)": ["k", "l", "r", "u"],
             "IC6 (j, w, z)": ["j", "w", "z"],
             "IC7 (x, y, ff, ll, ss, zz)": ["x", "y", "ff", "ll", "ss", "zz"],
-            "IC11 (sh, ch, tch, th, ck, wh, ng, qu)": ["sh", "ch", "tch", "th", "ck", "wh", "ng", "qu"]
+            "IC11 - sh": ["sh"],
+            "IC11 - ch": ["ch"],
+            "IC11 - tch": ["tch"],
+            "IC11 - th": ["th"],
+            "IC11 - ck": ["ck"],
+            "IC11 - wh": ["wh"],
+            "IC11 - ng": ["ng"],
+            "IC11 - qu": ["qu"]
         };
+
+        function getPhonicsPoolInfo(phonicsLevel) {
+            let selectedPhonicsLevel = phonicsLevel || globalSettings.phonicsLevel;
+            if (selectedPhonicsLevel === "IC11 (sh, ch, tch, th, ck, wh, ng, qu)" || !SOUNDS_WRITE_LEVELS.includes(selectedPhonicsLevel)) {
+                selectedPhonicsLevel = "IC11 - qu";
+            }
+            let currentLevelIdx = SOUNDS_WRITE_LEVELS.indexOf(selectedPhonicsLevel);
+            if (currentLevelIdx === -1) {
+                currentLevelIdx = SOUNDS_WRITE_LEVELS.length - 1;
+            }
+            let fullPool = [];
+            let currentLevelGraphemes = [];
+            
+            for (let i = 0; i <= currentLevelIdx; i++) {
+                let levelName = SOUNDS_WRITE_LEVELS[i];
+                let graphemes = phonicsData[levelName] || [];
+                fullPool = fullPool.concat(graphemes);
+                if (i === currentLevelIdx) {
+                    currentLevelGraphemes = graphemes;
+                }
+            }
+            const previousLevelGraphemes = fullPool.filter(g => !currentLevelGraphemes.includes(g));
+            return { fullPool, currentLevelGraphemes, previousLevelGraphemes };
+        }
 
         const SECTION_DEFS = {
             'mainIntro': { 
@@ -196,11 +329,30 @@
                 description: 'Two lines of graphemes based on your current phonics level. They will be randomised for each day of the week.',
                 fields: []
             },
+            'sectDigraphs': {
+                title: 'Digraphs', shortDesc: 'consonant and vowel digraphs', icon: 'fa-spell-check', color: 'text-violet-500', bg: 'bg-violet-100', type: 'weekly', hasTitleSlideOptions: true,
+                description: 'This section flashes a digraph slide for students to recite learnt digraphs (or trigraphs, tetragraphs, etc!).',
+                fields: [
+                    { id: 'digraphs', label: 'Digraphs (separate by commas, e.g. th, ch, ai)', type: 'textarea', default: '' },
+                    { id: 'shuffle', label: 'Shuffle order', type: 'checkbox', default: false }
+                ]
+            },
             'sectD': {
-                title: 'Heart Words', shortDesc: 'High-frequency words', icon: 'fa-heart', color: 'text-red-500', bg: 'bg-red-100', type: 'mixed', hasTitleSlideOptions: true,
-                description: 'This section includes slides with a single high frequency word (aka \'heart word\') on each slide. Students say the word. Include your set of heart words in the text box below, separated by commas. Optionally, the final heart word(s) can be on the "write it" slide for students to write on their whiteboards.',
+                title: 'Heart Words', shortDesc: 'Read high-frequency words on a heart.', icon: 'fa-heart', color: 'text-red-500', bg: 'bg-red-100', type: 'mixed', hasTitleSlideOptions: true,
+                description: 'This section includes slides with a single high frequency word in a heart on each slide. Include your set of heart words in the text box below, separated by commas. Optionally, the final heart word(s) can be on the "write it" slide for students to write on their whiteboards.\n\nNote: The "High Frequency Words" section is identical, without the fun heart.',
                 weeklyFields: [
                     { id: 'words', label: 'Heart Words (comma separated)', type: 'textarea', default: 'a, the, is, are, I, am, and, to, we, me, my, she, he, has, have, you, they, was, that, this, for' }
+                ],
+                dailyFields: [
+                    { id: 'writeIt', label: 'Include "Write It" slide', type: 'checkbox' },
+                    { id: 'writeItWords', label: 'Word(s) for Write It slide(s)', type: 'text' }
+                ]
+            },
+            'sectHFW': {
+                title: 'High Frequency Words', shortDesc: 'Read high frequency words.', icon: 'fa-font', color: 'text-purple-500', bg: 'bg-purple-100', type: 'mixed', hasTitleSlideOptions: true,
+                description: 'This section includes slides with a single high frequency word on each slide. Include your set of words in the text box below, separated by commas. Optionally, the final word(s) can be on the "write it" slide for students to write on their whiteboards.\n\nNote: The "Heart Words" section is identical, except it features a fun heart.',
+                weeklyFields: [
+                    { id: 'words', label: 'Word list (comma separated)', type: 'textarea', default: 'a, the, is, are, I, am, and, to, we, me, my, she, he, has, have, you, they, was, that, this, for' }
                 ],
                 dailyFields: [
                     { id: 'writeIt', label: 'Include "Write It" slide', type: 'checkbox' },
@@ -247,18 +399,120 @@
                 description: 'This section can be used as a placeholder or general purpose slide for sections not included in this builder. Add short text below, include prompt to be inserted in the speakers notes.',
                 fields: [{ id: 'word', label: 'Content', type: 'text' }, { id: 'notes', label: 'Speaker\'s notes', type: 'textarea' }]
             },
+            'customisable': {
+                title: 'Customisable Section', shortDesc: 'specify your own slide', icon: 'fa-sliders', color: 'text-indigo-500', bg: 'bg-indigo-100', type: 'weekly', hasTitleSlideOptions: true,
+                description: 'Use this section to specify and customise any new slide in your template. The template tag and content tags (if used) must match your template.',
+                fields: []
+            },
             'finished': { 
                 title: 'Finished', shortDesc: 'A finished slide.', icon: 'fa-flag-checkered', color: 'text-stone-500', bg: 'bg-stone-200', type: 'static',
                 description: 'A simple slide to indicate the day\'s set of slides is done.' 
             }
         };
 
+        const STARTER_DEFS = {
+            'starter_kindergarten': {
+                title: 'Kindergarten',
+                shortDesc: 'Preset deck starter for Kindergarten',
+                icon: 'fa-layer-group',
+                color: 'text-amber-600',
+                bg: 'bg-amber-100',
+                hoverBorder: 'border-amber-400',
+                badge: 'Preset',
+                badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
+                sections: Object.keys(SECTION_DEFS).filter(k => k !== 'sectHFW' && k !== 'sectDigraphs' && k !== 'generic' && k !== 'customisable')
+            },
+            'starter_stage1': {
+                title: 'Stage 1',
+                shortDesc: 'Preset deck starter (coming soon)',
+                icon: 'fa-layer-group',
+                color: 'text-indigo-600',
+                bg: 'bg-indigo-100',
+                hoverBorder: 'border-indigo-400',
+                badge: 'Soon',
+                badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                isDummy: true,
+                sections: []
+            }
+        };
+
+        let pendingStarterKey = null;
+
+        function showToast(message, iconClass = 'fa-circle-info text-amber-400') {
+            let toast = document.getElementById('toast-notification');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast-notification';
+                toast.className = 'fixed bottom-5 right-5 bg-slate-800 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-xl z-50 transition-all transform translate-y-10 opacity-0 pointer-events-none flex items-center gap-2 border border-slate-700';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = `<i class="fa-solid ${iconClass}"></i> ${message}`;
+            toast.classList.remove('translate-y-10', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+            }, 3200);
+        }
+
+        function loadDeckStarter(starterKey) {
+            const starter = STARTER_DEFS[starterKey];
+            if (!starter) return;
+
+            if (starter.isDummy) {
+                showToast(`The "${starter.title}" Deck Starter is coming soon!`, 'fa-clock text-amber-400');
+                return;
+            }
+
+            if (timelineItems.length > 0) {
+                pendingStarterKey = starterKey;
+                const modal = document.getElementById('starter-modal');
+                const content = document.getElementById('starter-modal-content');
+                document.getElementById('starter-modal-title').textContent = `Load "${starter.title}" Deck Starter?`;
+                document.getElementById('starter-modal-body').textContent = `Loading the "${starter.title}" Deck Starter will replace all sections currently in your deck sequence. Do you want to proceed?`;
+                
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-95');
+                }, 10);
+            } else {
+                executeLoadDeckStarter(starterKey);
+            }
+        }
+
+        function closeStarterModal() {
+            const modal = document.getElementById('starter-modal');
+            const content = document.getElementById('starter-modal-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                pendingStarterKey = null;
+            }, 200);
+        }
+
+        function executeLoadDeckStarter(starterKey) {
+            const starter = STARTER_DEFS[starterKey];
+            if (!starter || starter.isDummy) return;
+
+            timelineItems = [];
+            starter.sections.forEach(k => {
+                if (SECTION_DEFS[k]) {
+                    addTimelineItem(k, -1, true);
+                }
+            });
+
+            selectItem(null);
+            renderTimeline();
+            saveState();
+            showToast(`Loaded "${starter.title}" Deck Starter!`, 'fa-circle-check text-emerald-400');
+        }
+
         const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
         let globalSettings = {
             deckName: "Term 1, Week 1 Review",
             preparedBy: "",
-            phonicsLevel: "IC11 (sh, ch, tch, th, ck, wh, ng, qu)",
+            phonicsLevel: "IC11 - qu",
             yearLevel: "Kindergarten",
             term: 1,
             week: 1,
@@ -286,7 +540,12 @@
                 const saved = localStorage.getItem(STATE_KEY);
                 if (saved) {
                     const parsed = JSON.parse(saved);
-                    if (parsed.settings) globalSettings = { ...globalSettings, ...parsed.settings };
+                    if (parsed.settings) {
+                        globalSettings = { ...globalSettings, ...parsed.settings };
+                        if (globalSettings.phonicsLevel === "IC11 (sh, ch, tch, th, ck, wh, ng, qu)" || !SOUNDS_WRITE_LEVELS.includes(globalSettings.phonicsLevel)) {
+                            globalSettings.phonicsLevel = "IC11 - qu";
+                        }
+                    }
                     if (parsed.timeline) timelineItems = parsed.timeline;
                     return true;
                 }
@@ -297,9 +556,8 @@
         }
 
         function updateLibrarySelection() {
-            const items = document.getElementById('library-list').children;
-            for (let i = 0; i < items.length; i++) {
-                const el = items[i];
+            const items = document.querySelectorAll('.library-part-content [data-key]');
+            items.forEach(el => {
                 if (el.dataset.key === selectedLibraryKey) {
                     el.classList.add('border-blue-500', 'shadow-md', 'ring-2', 'ring-blue-100');
                     el.classList.remove('border-slate-200');
@@ -307,36 +565,101 @@
                     el.classList.remove('border-blue-500', 'shadow-md', 'ring-2', 'ring-blue-100');
                     el.classList.add('border-slate-200');
                 }
-            }
+            });
         }
 
         function init() {
-            // Populate Library
-            const libraryList = document.getElementById('library-list');
-            Object.keys(SECTION_DEFS).forEach(key => {
-                const def = SECTION_DEFS[key];
-                const el = document.createElement('div');
-                el.className = 'p-3 bg-white border border-slate-200 rounded-xl cursor-grab hover:border-blue-300 hover:shadow-sm transition-all flex items-center gap-3 group';
-                el.dataset.key = key;
-                el.onclick = () => selectItem(key, true);
-                el.innerHTML = `
-                    <div class="w-8 h-8 rounded-lg ${def.bg} ${def.color} flex items-center justify-center shrink-0">
-                        <i class="fa-solid ${def.icon}"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="font-semibold text-slate-700 text-sm group-hover:text-blue-600 transition-colors truncate">${def.title}</div>
-                        <div class="text-[10px] text-slate-400 truncate">${def.shortDesc}</div>
-                    </div>
-                    <i class="fa-solid fa-grip-vertical ml-auto text-slate-300 shrink-0 pl-2"></i>
-                `;
-                libraryList.appendChild(el);
+            // Setup Accordion for Library Parts
+            document.querySelectorAll('.library-part-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const part = header.closest('.library-part');
+                    const content = part.querySelector('.library-part-content');
+                    const chevron = header.querySelector('.part-chevron');
+                    const isOpen = !content.classList.contains('hidden');
+
+                    // Close all parts
+                    document.querySelectorAll('.library-part-content').forEach(c => c.classList.add('hidden'));
+                    document.querySelectorAll('.part-chevron').forEach(ch => ch.classList.remove('rotate-180'));
+
+                    // Toggle clicked part if it was closed
+                    if (!isOpen) {
+                        content.classList.remove('hidden');
+                        chevron.classList.add('rotate-180');
+                    }
+                });
             });
+
+            // Populate Library - Part 1: Deck Starters
+            const startersList = document.getElementById('part-starters-content');
+            if (startersList) {
+                startersList.innerHTML = '';
+                Object.keys(STARTER_DEFS).forEach(key => {
+                    const starter = STARTER_DEFS[key];
+                    const el = document.createElement('div');
+                    el.className = `p-3 bg-white border border-slate-200 rounded-xl cursor-grab hover:${starter.hoverBorder} hover:shadow-2xs transition-all flex items-center gap-3 group`;
+                    el.dataset.key = key;
+                    el.onclick = () => selectItem(key, true);
+                    el.innerHTML = `
+                        <div class="w-8 h-8 rounded-lg ${starter.bg} ${starter.color} flex items-center justify-center shrink-0 font-bold text-sm">
+                            <i class="fa-solid ${starter.icon}"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-semibold text-slate-700 text-sm group-hover:${starter.color} transition-colors truncate">${starter.title}</div>
+                            <div class="text-[10px] text-slate-400 truncate">${starter.shortDesc}</div>
+                        </div>
+                        <span class="text-[9px] font-bold uppercase tracking-wider ${starter.badgeClass} px-1.5 py-0.5 rounded border shrink-0">${starter.badge}</span>
+                        <i class="fa-solid fa-grip-vertical ml-auto text-slate-300 shrink-0 pl-1"></i>
+                    `;
+                    startersList.appendChild(el);
+                });
+
+                new Sortable(startersList, {
+                    group: { name: 'shared', pull: 'clone', put: false },
+                    animation: 150,
+                    sort: false,
+                    ghostClass: 'drag-ghost'
+                });
+            }
+
+            // Populate Library - Part 2: All Sections
+            const allSectionsList = document.getElementById('all-sections-list');
+            const sectionKeys = Object.keys(SECTION_DEFS);
+            const countEl = document.getElementById('all-sections-count');
+            if (countEl) countEl.textContent = sectionKeys.length;
+
+            if (allSectionsList) {
+                sectionKeys.forEach(key => {
+                    const def = SECTION_DEFS[key];
+                    const el = document.createElement('div');
+                    el.className = 'p-3 bg-white border border-slate-200 rounded-xl cursor-grab hover:border-blue-300 hover:shadow-sm transition-all flex items-center gap-3 group';
+                    el.dataset.key = key;
+                    el.onclick = () => selectItem(key, true);
+                    el.innerHTML = `
+                        <div class="w-8 h-8 rounded-lg ${def.bg} ${def.color} flex items-center justify-center shrink-0">
+                            <i class="fa-solid ${def.icon}"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-semibold text-slate-700 text-sm group-hover:text-blue-600 transition-colors truncate">${def.title}</div>
+                            <div class="text-[10px] text-slate-400 truncate">${def.shortDesc}</div>
+                        </div>
+                        <i class="fa-solid fa-grip-vertical ml-auto text-slate-300 shrink-0 pl-2"></i>
+                    `;
+                    allSectionsList.appendChild(el);
+                });
+
+                // Setup Drag and Drop for All Sections
+                new Sortable(allSectionsList, {
+                    group: { name: 'shared', pull: 'clone', put: false },
+                    animation: 150,
+                    sort: false,
+                    ghostClass: 'drag-ghost'
+                });
+            }
 
             // Preload Timeline OR Load State
             if (!loadState()) {
                 addTimelineItem('mainIntro');
                 addTimelineItem('expectations');
-                addTimelineItem('dayDivider');
                 addTimelineItem('finished');
             } else {
                 document.getElementById('timeline-filename').textContent = globalSettings.deckName;
@@ -346,14 +669,6 @@
             // Default to having nothing selected so Global Settings are shown on first load
             selectItem(null);
 
-            // Setup Drag and Drop
-            new Sortable(libraryList, {
-                group: { name: 'shared', pull: 'clone', put: false },
-                animation: 150,
-                sort: false,
-                ghostClass: 'drag-ghost'
-            });
-
             new Sortable(document.getElementById('timeline-list'), {
                 group: 'shared',
                 animation: 150,
@@ -362,7 +677,11 @@
                 onAdd: function (evt) {
                     const key = evt.item.dataset.key;
                     evt.item.remove(); // Remove the DOM element clone
-                    addTimelineItem(key, evt.newIndex); // Rebuild via state
+                    if (key && STARTER_DEFS[key]) {
+                        loadDeckStarter(key);
+                    } else if (key && SECTION_DEFS[key]) {
+                        addTimelineItem(key, evt.newIndex);
+                    }
                 },
                 onUpdate: function (evt) {
                     const item = timelineItems.splice(evt.oldIndex, 1)[0];
@@ -384,29 +703,37 @@
             document.getElementById('btn-reset').addEventListener('click', (e) => {
                 e.stopPropagation(); 
                 timelineItems = [];
-                ['mainIntro', 'expectations', 'dayDivider', 'finished'].forEach(k => addTimelineItem(k));
+                ['mainIntro', 'expectations', 'finished'].forEach(k => addTimelineItem(k));
                 selectItem(null);
                 saveState();
             });
 
-            document.getElementById('btn-add-all').addEventListener('click', (e) => {
-                e.stopPropagation(); 
-                timelineItems = [];
-                Object.keys(SECTION_DEFS).forEach(k => addTimelineItem(k));
-                selectItem(null);
-                saveState();
+            document.getElementById('btn-starter-cancel').addEventListener('click', closeStarterModal);
+            document.getElementById('btn-starter-confirm').addEventListener('click', () => {
+                if (pendingStarterKey) {
+                    const keyToLoad = pendingStarterKey;
+                    closeStarterModal();
+                    executeLoadDeckStarter(keyToLoad);
+                }
             });
 
             renderInspector();
         }
 
-        function addTimelineItem(defKey, index = -1) {
+        function addTimelineItem(defKey, index = -1, skipSelectAndRender = false) {
             const def = SECTION_DEFS[defKey];
+            if (!def) return;
+
             const newItem = {
-                id: 'item_' + Date.now() + Math.floor(Math.random() * 1000),
+                id: 'item_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
                 defKey: defKey,
                 data: {}
             };
+
+            if (defKey === 'customisable') {
+                newItem.data.templateTag = '';
+                newItem.data.contents = [];
+            }
 
             if (def.hasTitleSlideOptions) {
                 let defaultTitle = def.title.includes(': ') ? def.title.split(': ')[1] : def.title;
@@ -474,9 +801,12 @@
                 timelineItems.splice(index, 0, newItem);
             }
 
-            renderTimeline();
-            selectItem(newItem.id);
-            saveState();
+            if (!skipSelectAndRender) {
+                renderTimeline();
+                selectItem(newItem.id);
+                saveState();
+            }
+            return newItem;
         }
 
         function deleteTimelineItem(id) {
@@ -517,7 +847,7 @@
                         <i class="fa-solid ${def.icon} text-lg"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-bold text-slate-700 truncate">${def.title}</div>
+                        <div class="font-bold text-slate-700 truncate">${item.customTitle || def.title}</div>
                         <div class="text-xs text-slate-400 truncate">${def.shortDesc}</div>
                     </div>
                     <button class="text-slate-300 hover:text-red-500 p-2 transition-colors shrink-0" onclick="event.stopPropagation(); deleteTimelineItem('${item.id}')">
@@ -566,12 +896,7 @@
                             
                             <div class="mb-3">
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">Year Level</label>
-                                <select id="g-yearLevel" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                                    <option value="Kindergarten" ${globalSettings.yearLevel === 'Kindergarten' ? 'selected' : ''}>Kindergarten</option>
-                                    <option value="Stage 1" ${globalSettings.yearLevel === 'Stage 1' ? 'selected' : ''}>Stage 1</option>
-                                    <option value="Stage 2" ${globalSettings.yearLevel === 'Stage 2' ? 'selected' : ''}>Stage 2</option>
-                                    <option value="Stage 3" ${globalSettings.yearLevel === 'Stage 3' ? 'selected' : ''}>Stage 3</option>
-                                </select>
+                                <input type="text" id="g-yearLevel" value="${globalSettings.yearLevel || 'Kindergarten'}" placeholder="e.g. Kindergarten" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                             </div>
 
                             <div class="flex gap-4 mb-2">
@@ -617,6 +942,7 @@
                         const map = { name: 'deckName', author: 'preparedBy', phonics: 'phonicsLevel', yearLevel: 'yearLevel', term: 'term', week: 'week', tid: 'templateId', folderId: 'folderId' };
                         globalSettings[map[k]] = e.target.type === 'number' ? parseInt(e.target.value) : e.target.value;
                         if (k === 'name') document.getElementById('timeline-filename').textContent = e.target.value;
+                        if (k === 'phonics' && selectedItemId) renderConfigPanel();
                         saveState();
                     });
                 });
@@ -632,6 +958,73 @@
                 let item, def;
                 
                 if (isPreview) {
+                    if (STARTER_DEFS[selectedLibraryKey]) {
+                        const starter = STARTER_DEFS[selectedLibraryKey];
+                        header.className = `bg-amber-50 border-b border-amber-100 px-4 py-3 font-bold text-amber-900 shrink-0 flex items-center gap-2`;
+                        title.innerHTML = `<i class="fa-solid ${starter.icon} ${starter.color}"></i> ${starter.title} (Deck Starter)`;
+
+                        let contentHtml = `
+                            <div class="bg-amber-50 text-amber-900 text-xs p-4 rounded-xl mb-4 border border-amber-200 leading-relaxed shadow-2xs">
+                                <div class="font-bold text-sm text-amber-800 mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-layer-group text-amber-600"></i> Deck Starter
+                                </div>
+                                This is a Deck Starter. Drag this to the Deck Sequencer to load the following set of sections to your deck. This will overwrite any sections currently in your deck sequence.
+                            </div>
+                        `;
+
+                        if (!starter.isDummy) {
+                            contentHtml += `
+                                <button type="button" id="btn-load-starter-inspector" class="w-full py-2.5 px-4 mb-5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer">
+                                    <i class="fa-solid fa-file-import"></i> Load "${starter.title}" Deck Starter
+                                </button>
+                            `;
+                        } else {
+                            contentHtml += `
+                                <div class="p-3 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-500 font-semibold text-center mb-5">
+                                    <i class="fa-solid fa-clock text-amber-500 mr-1"></i> Stage 1 Deck Starter is coming soon!
+                                </div>
+                            `;
+                        }
+
+                        if (!starter.isDummy && starter.sections.length > 0) {
+                            contentHtml += `
+                                <div>
+                                    <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">Included Sections (${starter.sections.length})</h3>
+                                    <div class="space-y-1.5 max-h-[45vh] overflow-y-auto pr-1">
+                            `;
+
+                            starter.sections.forEach(secKey => {
+                                const secDef = SECTION_DEFS[secKey];
+                                if (secDef) {
+                                    contentHtml += `
+                                        <div class="flex items-center gap-2.5 p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                                            <div class="w-6 h-6 rounded-md ${secDef.bg} ${secDef.color} flex items-center justify-center text-xs shrink-0">
+                                                <i class="fa-solid ${secDef.icon}"></i>
+                                            </div>
+                                            <span class="text-xs font-semibold text-slate-700 truncate">${secDef.title}</span>
+                                        </div>
+                                    `;
+                                }
+                            });
+
+                            contentHtml += `
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        content.innerHTML = contentHtml;
+
+                        const btnLoad = document.getElementById('btn-load-starter-inspector');
+                        if (btnLoad) {
+                            btnLoad.addEventListener('click', () => {
+                                loadDeckStarter(selectedLibraryKey);
+                            });
+                        }
+
+                        return;
+                    }
+
                     def = SECTION_DEFS[selectedLibraryKey];
                     item = { id: 'preview', defKey: selectedLibraryKey, data: {} };
                     
@@ -650,12 +1043,31 @@
                 }
 
                 header.className = `bg-blue-50 border-b border-blue-100 px-4 py-3 font-bold text-blue-800 shrink-0 transition-colors flex items-center gap-2`;
-                title.innerHTML = `<i class="fa-solid ${def.icon}"></i> ${def.title}`;
+                
+                const isEditable = !isPreview && item && item.defKey !== 'mainIntro' && item.defKey !== 'finished';
+                const currentTitle = item.customTitle || def.title;
+
+                if (isEditable) {
+                    title.innerHTML = `
+                        <div class="flex items-center gap-2 w-full">
+                            <i class="fa-solid ${def.icon} text-blue-600 shrink-0"></i>
+                            <div class="flex-1 min-w-0 relative">
+                                <div id="inspector-section-display" class="group flex items-center gap-1.5 cursor-pointer hover:bg-blue-100/80 px-2 py-1 -my-1 -ml-1 rounded-lg transition-colors border border-transparent hover:border-blue-300" title="Click to edit section name">
+                                    <span class="truncate text-blue-900 font-bold" id="section-title-text">${currentTitle}</span>
+                                    <i class="fa-solid fa-pen text-xs text-blue-500 opacity-60 group-hover:opacity-100 shrink-0 transition-opacity"></i>
+                                </div>
+                                <input type="text" id="inspector-section-input" value="${currentTitle}" class="hidden w-full font-bold text-slate-800 text-sm bg-white border-2 border-blue-500 rounded-lg px-2 py-1 outline-none shadow-sm -my-1 -ml-1" placeholder="${def.title}">
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    title.innerHTML = `<i class="fa-solid ${def.icon}"></i> ${currentTitle}`;
+                }
 
                 let contentHtml = '';
 
                 if (isPreview) {
-                    contentHtml += `<div class="bg-amber-50 text-amber-800 text-sm font-bold px-4 py-3 rounded-xl mb-5 border border-amber-200 flex items-center shadow-sm"><i class="fa-solid fa-circle-exclamation mr-2 text-lg text-amber-500"></i> To customise, add this block to your timeline.</div>`;
+                    contentHtml += `<div class="bg-amber-50 text-amber-800 text-sm font-bold px-4 py-3 rounded-xl mb-5 border border-amber-200 flex items-center shadow-sm"><i class="fa-solid fa-circle-exclamation mr-2 text-lg text-amber-500"></i> To customise, add this block to your deck sequence.</div>`;
                 }
 
                 if (def.description) {
@@ -780,8 +1192,52 @@
                 let hasFields = false;
                 if ((def.type === 'weekly' || def.type === 'daily') && def.fields && def.fields.length > 0) hasFields = true;
                 if (def.type === 'mixed' && ((def.weeklyFields && def.weeklyFields.length > 0) || (def.dailyFields && def.dailyFields.length > 0))) hasFields = true;
+                if (item.defKey === 'customisable') hasFields = true;
 
-                if (!hasFields) {
+                if (item.defKey === 'customisable') {
+                    if (item.data.templateTag === undefined) item.data.templateTag = '';
+                    if (!Array.isArray(item.data.contents)) item.data.contents = [];
+
+                    contentHtml += `
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Template tag - e.g. [new_slide]</label>
+                                <input type="text" id="cust-template-tag" value="${item.data.templateTag || ''}" placeholder="e.g. [new_slide]" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                <p class="text-[11px] text-slate-400 mt-1 font-medium">Use square brackets and no spaces.</p>
+                            </div>
+
+                            <div class="border-t border-slate-200 pt-4">
+                                <div id="cust-contents-list" class="space-y-3 mb-3">
+                    `;
+
+                    item.data.contents.forEach((c, idx) => {
+                        contentHtml += `
+                            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl relative group transition-all">
+                                <button type="button" class="btn-remove-cust-content absolute top-2 right-2 text-slate-400 hover:text-red-500 text-xs p-1" data-index="${idx}" title="Remove content tag">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                                <div class="mb-2">
+                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Content tag - e.g. {{text}}</label>
+                                    <input type="text" value="${c.tag || ''}" data-index="${idx}" data-field="tag" class="cust-content-field w-full text-xs p-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. {{text}}">
+                                </div>
+                                <div class="mb-1.5">
+                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Replace with:</label>
+                                    <input type="text" value="${c.value || ''}" data-index="${idx}" data-field="value" class="cust-content-field w-full text-xs p-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Replacement text">
+                                </div>
+                                <p class="text-[10px] text-slate-400 font-medium">Use double curly brackets, {{a}}.</p>
+                            </div>
+                        `;
+                    });
+
+                    contentHtml += `
+                                </div>
+                                <button type="button" id="btn-cust-add-content" class="w-full py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold text-xs rounded-xl border border-blue-200 flex items-center justify-center gap-1.5 transition-colors">
+                                    <i class="fa-solid fa-plus text-xs"></i> Add content (optional)
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else if (!hasFields) {
                     contentHtml += `
                         <div class="flex flex-col items-center justify-center py-10 px-4 bg-emerald-50 rounded-xl border border-emerald-100 mt-4">
                             <i class="fa-solid fa-circle-check text-5xl mb-3 text-emerald-400"></i>
@@ -794,6 +1250,41 @@
                         let actualValue = value !== undefined ? value : (field.default || '');
                         const valAttr = actualValue !== '' ? `value="${actualValue}"` : '';
                         const wrapperId = `field-wrap-${path.join('-')}`;
+
+                        if (field.id === 'limit' && item.defKey === 'sectB') {
+                            const { fullPool } = getPhonicsPoolInfo();
+                            const totalPoolCount = fullPool.length;
+                            let limitVal = actualValue;
+                            let limitNum = (limitVal !== undefined && limitVal !== '') ? parseInt(limitVal) : totalPoolCount;
+                            if (isNaN(limitNum) || limitNum > totalPoolCount) limitNum = totalPoolCount;
+                            if (limitNum < 1) limitNum = 1;
+                            
+                            const slideCountDisplay = (limitNum === totalPoolCount) ? 'All' : limitNum;
+
+                            return `
+                                <div class="mb-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200 transition-all duration-200" id="${wrapperId}">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label class="block text-xs font-semibold text-slate-700">
+                                            Slide count: <span id="sectB-slideCount-display" class="font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md ml-1">${slideCountDisplay}</span>
+                                        </label>
+                                        <span class="text-[11px] text-slate-500 font-medium bg-white border border-slate-200 px-2 py-0.5 rounded-md shadow-2xs">
+                                            Phoneme pool: <strong class="text-slate-700">${totalPoolCount}</strong> graphemes
+                                        </span>
+                                    </div>
+                                    <input type="range" 
+                                           id="sectB-limit-slider" 
+                                           data-path='${JSON.stringify(path)}' 
+                                           min="1" 
+                                           max="${totalPoolCount}" 
+                                           value="${limitNum}" 
+                                           class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-500 my-2">
+                                    <div class="flex justify-between text-[11px] text-slate-400 font-medium">
+                                        <span>1 slide</span>
+                                        <span>All (${totalPoolCount} slides)</span>
+                                    </div>
+                                </div>
+                            `;
+                        }
                         
                         if (field.type === 'checkbox') {
                             const isChecked = actualValue === true || actualValue === 'true' ? 'checked' : '';
@@ -890,6 +1381,47 @@
                     `;
                 }
 
+                // Add slide preview specifically for Digraphs (matching sh screenshot layout)
+                if (item.defKey === 'sectDigraphs') {
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full p-1.5 bg-slate-900 rounded-2xl shadow-md border border-slate-700">
+                                <div class="w-full aspect-[16/9] bg-white rounded-xl relative flex flex-col items-center justify-center overflow-hidden">
+                                    <div class="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-[#fde047] border border-amber-300 flex items-center justify-center shadow-2xs">
+                                        <div class="w-4 h-4 rounded-full bg-amber-400 flex items-center justify-center text-[8px] text-amber-950 font-bold">
+                                            <i class="fa-solid fa-book-open"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col items-center justify-center -mt-1">
+                                        <div class="edu-font text-5xl font-medium text-slate-900 leading-none mb-3">sh</div>
+                                        <div class="edu-font text-2xl font-medium text-slate-800 tracking-wide">shiny shell</div>
+                                    </div>
+                                    <div class="absolute -bottom-1 -right-1 text-rose-300 pointer-events-none">
+                                        <svg width="68" height="68" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="drop-shadow-xs">
+                                            <path d="M50 90 C18 80 5 50 15 32 C20 18 40 8 50 8 C60 8 80 18 85 32 C95 50 82 80 50 90 Z" fill="url(#shellGrad)" stroke="#c084fc" stroke-width="2.5"/>
+                                            <path d="M50 90 Q32 50 22 25" stroke="#a855f7" stroke-width="2" fill="none" opacity="0.6"/>
+                                            <path d="M50 90 Q40 50 36 16" stroke="#a855f7" stroke-width="2" fill="none" opacity="0.6"/>
+                                            <path d="M50 90 Q50 50 50 12" stroke="#a855f7" stroke-width="2" fill="none" opacity="0.6"/>
+                                            <path d="M50 90 Q60 50 64 16" stroke="#a855f7" stroke-width="2" fill="none" opacity="0.6"/>
+                                            <path d="M50 90 Q68 50 78 25" stroke="#a855f7" stroke-width="2" fill="none" opacity="0.6"/>
+                                            <path d="M34 84 C38 92 62 92 66 84 C60 78 40 78 34 84 Z" fill="#f3e8ff" stroke="#c084fc" stroke-width="2"/>
+                                            <defs>
+                                                <linearGradient id="shellGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                    <stop offset="0%" stop-color="#fbcfe8" />
+                                                    <stop offset="50%" stop-color="#f472b6" />
+                                                    <stop offset="100%" stop-color="#c084fc" />
+                                                </linearGradient>
+                                            </defs>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
                 // Add static thumbnail preview specifically for Section D (Heart Words)
                 if (item.defKey === 'sectD') {
                     contentHtml += `
@@ -900,6 +1432,19 @@
                                     <path d="M 50 85 C 20 60 10 40 10 25 C 10 5 40 5 50 25 C 60 5 90 5 90 25 C 90 40 80 60 50 85 Z"/>
                                 </svg>
                                 <div class="edu-font text-[4.5rem] text-slate-800 tracking-wide z-10 relative">the</div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
+                // Add static thumbnail preview specifically for High Frequency Words (sectHFW)
+                if (item.defKey === 'sectHFW') {
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative flex items-center justify-center overflow-hidden">
+                                <div class="edu-font text-[4.5rem] text-slate-800 tracking-wide z-10 relative">they</div>
                             </div>
                             <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
                         </div>
@@ -1077,6 +1622,34 @@
                     `;
                 }
 
+                // Add dynamic thumbnail preview specifically for Customisable Section
+                if (item.defKey === 'customisable') {
+                    const tagVal = (item.data.templateTag || '').trim() || '[new_slide]';
+                    const activeContents = (item.data.contents || []).filter(c => (c.tag || '').trim());
+
+                    let contentsPreviewHtml = '<span class="text-slate-400 italic font-sans text-[11px]">No content tags set</span>';
+                    if (activeContents.length > 0) {
+                        contentsPreviewHtml = activeContents.map(c => 
+                            `<span class="inline-block bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-slate-700 font-mono text-[10px] m-0.5">${c.tag} → "${c.value || ''}"</span>`
+                        ).join(' ');
+                    }
+
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative overflow-hidden flex flex-col items-center justify-center p-4">
+                                <div class="bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono text-sm px-3 py-1.5 rounded-lg mb-2 font-bold shadow-2xs" id="thumb-cust-tag">
+                                    ${tagVal}
+                                </div>
+                                <div class="text-[11px] text-center max-w-[90%] flex flex-wrap justify-center gap-1" id="thumb-cust-contents">
+                                    ${contentsPreviewHtml}
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
                 // Add dynamic thumbnail preview specifically for Expectations
                 if (item.defKey === 'expectations') {
                     let styleVal = 'Basic';
@@ -1140,6 +1713,75 @@
 
                 content.innerHTML = contentHtml;
 
+                if (isEditable) {
+                    const displayEl = document.getElementById('inspector-section-display');
+                    const inputEl = document.getElementById('inspector-section-input');
+
+                    if (displayEl && inputEl) {
+                        const startEditing = () => {
+                            displayEl.classList.add('hidden');
+                            inputEl.classList.remove('hidden');
+                            inputEl.focus();
+                            inputEl.select();
+                        };
+
+                        const finishEditing = () => {
+                            const val = inputEl.value.trim();
+                            const newTitle = val || def.title;
+                            inputEl.value = newTitle;
+                            item.customTitle = (newTitle === def.title) ? undefined : newTitle;
+
+                            if (def.hasTitleSlideOptions && item.data && item.data.titleSettings) {
+                                item.data.titleSettings.title = newTitle;
+                                const txtTitle = document.getElementById('txt-ts-title');
+                                if (txtTitle) txtTitle.value = newTitle;
+                            }
+
+                            const txtDisplay = document.getElementById('section-title-text');
+                            if (txtDisplay) txtDisplay.textContent = newTitle;
+
+                            inputEl.classList.add('hidden');
+                            displayEl.classList.remove('hidden');
+
+                            renderTimeline();
+                            saveState();
+                        };
+
+                        displayEl.addEventListener('click', startEditing);
+
+                        inputEl.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                finishEditing();
+                            } else if (e.key === 'Escape') {
+                                e.preventDefault();
+                                inputEl.value = item.customTitle || def.title;
+                                inputEl.classList.add('hidden');
+                                displayEl.classList.remove('hidden');
+                            }
+                        });
+
+                        inputEl.addEventListener('blur', finishEditing);
+
+                        inputEl.addEventListener('input', (e) => {
+                            const val = e.target.value.trim() || def.title;
+                            item.customTitle = (val === def.title) ? undefined : val;
+
+                            if (def.hasTitleSlideOptions && item.data && item.data.titleSettings) {
+                                item.data.titleSettings.title = val;
+                                const txtTitle = document.getElementById('txt-ts-title');
+                                if (txtTitle) txtTitle.value = val;
+                            }
+
+                            const txtDisplay = document.getElementById('section-title-text');
+                            if (txtDisplay) txtDisplay.textContent = val;
+
+                            renderTimeline();
+                            saveState();
+                        });
+                    }
+                }
+
                 if (def.hasTitleSlideOptions) {
                     const chk = document.getElementById('chk-ts-include');
                     const fieldsDiv = document.getElementById('ts-fields');
@@ -1158,6 +1800,18 @@
 
                     txtTitle.addEventListener('input', (e) => { item.data.titleSettings.title = e.target.value; saveState(); });
                     txtInst.addEventListener('input', (e) => { item.data.titleSettings.instructions = e.target.value; saveState(); });
+                }
+
+                if (item.defKey === 'sectB') {
+                    const slider = content.querySelector('#sectB-limit-slider');
+                    const display = content.querySelector('#sectB-slideCount-display');
+                    if (slider && display) {
+                        slider.addEventListener('input', (e) => {
+                            const val = parseInt(e.target.value);
+                            const max = parseInt(e.target.max);
+                            display.textContent = (val === max) ? 'All' : val;
+                        });
+                    }
                 }
 
                 if (item.defKey === 'sectD') {
@@ -1298,6 +1952,69 @@
                     }
                 }
 
+                if (item.defKey === 'customisable') {
+                    const tagInput = document.getElementById('cust-template-tag');
+                    if (tagInput) {
+                        tagInput.addEventListener('input', (e) => {
+                            item.data.templateTag = e.target.value;
+                            const thumbTag = document.getElementById('thumb-cust-tag');
+                            if (thumbTag) thumbTag.textContent = e.target.value.trim() || '[new_slide]';
+                            saveState();
+                        });
+                    }
+
+                    const updateCustPreviewContents = () => {
+                        const thumbContents = document.getElementById('thumb-cust-contents');
+                        if (!thumbContents) return;
+                        const activeContents = (item.data.contents || []).filter(c => (c.tag || '').trim());
+                        if (activeContents.length === 0) {
+                            thumbContents.innerHTML = '<span class="text-slate-400 italic font-sans text-[11px]">No content tags set</span>';
+                        } else {
+                            thumbContents.innerHTML = activeContents.map(c => 
+                                `<span class="inline-block bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-slate-700 font-mono text-[10px] m-0.5">${c.tag} → "${c.value || ''}"</span>`
+                            ).join(' ');
+                        }
+                    };
+
+                    const btnAdd = document.getElementById('btn-cust-add-content');
+                    if (btnAdd) {
+                        btnAdd.addEventListener('click', () => {
+                            if (!Array.isArray(item.data.contents)) item.data.contents = [];
+                            item.data.contents.push({ tag: '', value: '' });
+                            saveState();
+                            renderInspector();
+                        });
+                    }
+
+                    const contentsList = document.getElementById('cust-contents-list');
+                    if (contentsList) {
+                        contentsList.addEventListener('click', (e) => {
+                            const btnRemove = e.target.closest('.btn-remove-cust-content');
+                            if (btnRemove) {
+                                const idx = parseInt(btnRemove.dataset.index);
+                                if (!isNaN(idx) && Array.isArray(item.data.contents)) {
+                                    item.data.contents.splice(idx, 1);
+                                    saveState();
+                                    renderInspector();
+                                }
+                            }
+                        });
+
+                        contentsList.addEventListener('input', (e) => {
+                            const input = e.target.closest('.cust-content-field');
+                            if (input) {
+                                const idx = parseInt(input.dataset.index);
+                                const field = input.dataset.field;
+                                if (!isNaN(idx) && field && item.data.contents[idx]) {
+                                    item.data.contents[idx][field] = input.value;
+                                    updateCustPreviewContents();
+                                    saveState();
+                                }
+                            }
+                        });
+                    }
+                }
+
                 content.querySelectorAll('[data-path]').forEach(el => {
                     el.addEventListener('input', (e) => {
                         const path = JSON.parse(e.target.dataset.path);
@@ -1424,7 +2141,40 @@
             }
         });
 
+        function openPrivacyModal() {
+            const modal = document.getElementById('privacy-modal');
+            const content = document.getElementById('privacy-modal-content');
+            if (!modal || !content) return;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        }
+
+        function closePrivacyModal() {
+            const modal = document.getElementById('privacy-modal');
+            const content = document.getElementById('privacy-modal-content');
+            if (!modal || !content) return;
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        document.getElementById('btn-privacy-back')?.addEventListener('click', closePrivacyModal);
+
+        document.getElementById('btn-privacy-agree')?.addEventListener('click', () => {
+            closePrivacyModal();
+            setTimeout(() => {
+                generateAndShowAssemblyModal();
+            }, 200);
+        });
+
         document.getElementById('btn-assemble').addEventListener('click', () => {
+            openPrivacyModal();
+        });
+
+        function generateAndShowAssemblyModal() {
             resetModalState();
 
             const chkPptx = document.getElementById('chk-export-pptx');
@@ -1444,29 +2194,30 @@
 
             const introBlock = timelineItems.find(i => i.defKey === 'mainIntro');
             if (introBlock) {
+                const now = new Date();
+                const createdOnStr = now.toLocaleDateString('en-AU', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                }) + ' at ' + now.toLocaleTimeString('en-AU', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const metadataNotes = `Deck Name: ${globalSettings.deckName || ''}\nAuthor: ${globalSettings.preparedBy || ''}\nCreated on: ${createdOnStr}`;
+
                 recipe.slides.push({
                     noteId: "[mainTitle]",
                     replacements: {
                         "{{yearLevel}}": globalSettings.yearLevel,
                         "{{termNumber}}": globalSettings.term.toString(),
                         "{{weekNumber}}": globalSettings.week.toString()
-                    }
+                    },
+                    injectNotes: metadataNotes
                 });
             }
 
-            const currentLevelIdx = SOUNDS_WRITE_LEVELS.indexOf(globalSettings.phonicsLevel);
-            let fullPool = [];
-            let currentLevelGraphemes = [];
-            
-            for (let i = 0; i <= currentLevelIdx; i++) {
-                let levelName = SOUNDS_WRITE_LEVELS[i];
-                let graphemes = phonicsData[levelName] || [];
-                fullPool = fullPool.concat(graphemes);
-                if (i === currentLevelIdx) {
-                    currentLevelGraphemes = graphemes;
-                }
-            }
-            const previousLevelGraphemes = fullPool.filter(g => !currentLevelGraphemes.includes(g));
+            const { fullPool, currentLevelGraphemes, previousLevelGraphemes } = getPhonicsPoolInfo();
 
             DAYS.forEach(day => {
                 if (!globalSettings.activeDays[day]) return;
@@ -1563,6 +2314,21 @@
                         });
                     }
 
+                    else if (item.defKey === 'sectDigraphs') {
+                        const rawStr = data.digraphs !== undefined ? data.digraphs : (data.weekly?.digraphs || "");
+                        let digraphList = rawStr.split(/,|\band\b/i).map(w => w.trim()).filter(w => w);
+                        const isShuffle = data.shuffle === true || data.shuffle === 'true' || data.weekly?.shuffle === true || data.weekly?.shuffle === 'true';
+                        if (isShuffle) {
+                            digraphList = shuffleArray([...digraphList]);
+                        }
+                        digraphList.forEach(dg => {
+                            let cleanLabel = dg.toLowerCase();
+                            recipe.slides.push({
+                                noteId: `[digraph_${cleanLabel}]`
+                            });
+                        });
+                    }
+
                     else if (item.defKey === 'sectD') {
                         const wordsStr = data.words || data.weekly?.words || "";
                         let wordsArray = wordsStr.split(",").map(w => w.trim()).filter(w => w);
@@ -1587,6 +2353,35 @@
                                 });
                                 recipe.slides.push({
                                     noteId: "[heartWords_write_blank]"
+                                });
+                            });
+                        }
+                    }
+
+                    else if (item.defKey === 'sectHFW') {
+                        const wordsStr = data.words || data.weekly?.words || "";
+                        let wordsArray = wordsStr.split(",").map(w => w.trim()).filter(w => w);
+                        wordsArray = shuffleArray(wordsArray);
+                        
+                        wordsArray.forEach(w => {
+                            recipe.slides.push({
+                                noteId: "[HFW_stimulus]",
+                                replacements: { "{{a}}": w }
+                            });
+                        });
+
+                        const writeIt = data[day]?.writeIt;
+                        const writeItWordsStr = data[day]?.writeItWords || "";
+                        
+                        if (writeIt && writeItWordsStr) {
+                            let writeArray = writeItWordsStr.split(",").map(w => w.trim()).filter(w => w);
+                            writeArray.forEach(w => {
+                                recipe.slides.push({
+                                    noteId: "[HFW_write]",
+                                    replacements: { "{{a}}": w }
+                                });
+                                recipe.slides.push({
+                                    noteId: "[HFW_blank]"
                                 });
                             });
                         }
@@ -1678,6 +2473,26 @@
                         });
                     }
 
+                    else if (item.defKey === 'customisable') {
+                        const templateTag = (data.templateTag || '').trim();
+                        if (templateTag) {
+                            let replacements = {};
+                            if (Array.isArray(data.contents)) {
+                                data.contents.forEach(c => {
+                                    let tag = (c.tag || '').trim();
+                                    if (tag) {
+                                        replacements[tag] = c.value || '';
+                                    }
+                                });
+                            }
+                            let slideObj = { noteId: templateTag };
+                            if (Object.keys(replacements).length > 0) {
+                                slideObj.replacements = replacements;
+                            }
+                            recipe.slides.push(slideObj);
+                        }
+                    }
+
                     else if (item.defKey === 'finished') {
                         recipe.slides.push({ noteId: "[finished]" });
                     }
@@ -1697,7 +2512,7 @@
                 modal.classList.remove('opacity-0');
                 content.classList.remove('scale-95', 'opacity-0');
             }, 10);
-        });
+        }
 
         document.getElementById('btn-close-modal').addEventListener('click', () => {
             const modal = document.getElementById('json-modal');
