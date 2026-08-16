@@ -11,4 +11,5 @@ The following list tracks planned features and enhancements for future developme
 - [ ] **School Name Metadata**: Add a "School Name" field after the "Prepared By" field in global settings.
 - [ ] **Branding Options**: Support custom logos, theme colors, and institution branding.
 - [ ] **Save Deck Option**: Enable users to save, load, and manage deck configurations (requires login / database integration).
+- [ ] **Word Count Mismatch Warning**: Generate error warning if mild/spicy word count don't match in the Read a Word, Write a Word section.
 - [ ] **Custom URL**: Support custom domain / custom URL routing.

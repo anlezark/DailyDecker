@@ -58,7 +58,7 @@
                             <div class="flex items-center gap-2.5">
                                 <i class="fa-solid fa-folder text-amber-500 text-base"></i>
                                 <span class="text-sm font-bold text-slate-800">Deck Starters</span>
-                                <span class="text-[10px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">2</span>
+                                <span class="text-[10px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full" id="starters-count">3</span>
                             </div>
                             <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform duration-200 part-chevron"></i>
                         </button>
@@ -247,6 +247,7 @@
             "IC5 (k, l, r, u)",
             "IC6 (j, w, z)",
             "IC7 (x, y, ff, ll, ss, zz)",
+            "IC8-10 - blends",
             "IC11 - sh",
             "IC11 - ch",
             "IC11 - tch",
@@ -266,6 +267,7 @@
             "IC5 (k, l, r, u)": ["k", "l", "r", "u"],
             "IC6 (j, w, z)": ["j", "w", "z"],
             "IC7 (x, y, ff, ll, ss, zz)": ["x", "y", "ff", "ll", "ss", "zz"],
+            "IC8-10 - blends": [],
             "IC11 - sh": ["sh"],
             "IC11 - ch": ["ch"],
             "IC11 - tch": ["tch"],
@@ -337,6 +339,25 @@
                     { id: 'shuffle', label: 'Shuffle order', type: 'checkbox', default: false }
                 ]
             },
+            'sectShortVowelBB': {
+                title: 'Short Vowel Blending Board', shortDesc: 'Blending non-words with short vowels', icon: 'fa-border-all', color: 'text-amber-600', bg: 'bg-amber-100', type: 'weekly', hasTitleSlideOptions: true,
+                description: 'Students practice blending different non-words from learnt graphemes across a grid, using the short vowels. Consonants will be automatically generated from your phonics pool.',
+                fields: [
+                    { id: 'useIntro', label: 'Use short vowel intro slide', type: 'checkbox', default: true },
+                    { id: 'slidesPerDay', label: 'Slides per day', type: 'number', min: 1, default: 1 }
+                ]
+            },
+            'sectBlendingBoard': {
+                title: 'Blending Board', shortDesc: 'Blend non-words across a grid.', icon: 'fa-table-cells', color: 'text-indigo-600', bg: 'bg-indigo-100', type: 'mixed', hasTitleSlideOptions: true,
+                description: 'Students practice blending different non-words from learnt graphemes across a grid, using the same vowel. Consonants will be automatically generated from your phonics pool. Select vowels to focus on each day. There will be one slide per vowel for each day.',
+                weeklyFields: [
+                    { id: 'allowBlends', label: 'Allow consonant blends', type: 'checkbox', default: false },
+                    { id: 'allowSuffixes', label: 'Allow suffixes: ly, ed, ing', type: 'checkbox', default: false }
+                ],
+                dailyFields: [
+                    { id: 'vowels', label: 'Vowel focus (comma separated)', type: 'text', default: '', placeholder: 'e.g. oa, ow, o_e', helpText: 'use underscore for split digraphs: o_e' }
+                ]
+            },
             'sectD': {
                 title: 'Heart Words', shortDesc: 'Read high-frequency words on a heart.', icon: 'fa-heart', color: 'text-red-500', bg: 'bg-red-100', type: 'mixed', hasTitleSlideOptions: true,
                 description: 'This section includes slides with a single high frequency word in a heart on each slide. Include your set of heart words in the text box below, separated by commas. Optionally, the final heart word(s) can be on the "write it" slide for students to write on their whiteboards.\n\nNote: The "High Frequency Words" section is identical, without the fun heart.',
@@ -363,6 +384,18 @@
                 title: 'Read the Word', shortDesc: 'Say the sounds and read the word.', icon: 'fa-comment-dots', color: 'text-cyan-500', bg: 'bg-cyan-100', type: 'daily', hasTitleSlideOptions: true,
                 description: 'This section shows a single word for students to decode. Write a few words below, comma separated. If the word is a "non-word" add an asterisk to use the alien word slide, e.g. hat, dog, fen*.',
                 fields: [{ id: 'words', label: 'Words (comma separated)', type: 'text' }]
+            },
+            'sectReadWordWriteWord': {
+                title: 'Read a Word, Write a Word.', shortDesc: 'Show a word than hide the word.', icon: 'fa-spell-check', color: 'text-sky-600', bg: 'bg-sky-100', type: 'mixed', hasTitleSlideOptions: true,
+                description: 'This section shows a word on a slide, then replaces the word with lines (underscores) - one per phoneme - for students to write the word on their whiteboards. Specify the words below. Use the differentiate checkbox to allow two words on the slide for a mild/spicy choice.',
+                weeklyFields: [
+                    { id: 'differentiate', label: 'Differentiation: Use two words per slide (mild and spicy)', type: 'checkbox', default: false }
+                ],
+                dailyFields: [
+                    { id: 'words', label: 'Word(s)', type: 'text', default: '', placeholder: 'cat 3, drive 4', helpText: 'Type word(s) and number of phonemes. Separate by comma if two or more words.' },
+                    { id: 'mildWords', label: 'Mild word(s)', type: 'text', default: '', placeholder: 'cat 3, drive 4' },
+                    { id: 'spicyWords', label: 'Spicy word(s)', type: 'text', default: '', placeholder: 'Use the same number of mild and spicy words.' }
+                ]
             },
             'sectF': {
                 title: 'Discriminate the Similar Sounds', shortDesc: 'Build auditory discrimination, e.g. pen/pan', icon: 'fa-ear-listen', color: 'text-teal-500', bg: 'bg-teal-100', type: 'daily', hasTitleSlideOptions: true,
@@ -394,6 +427,13 @@
                 description: 'This section features a picture placeholder, space to add labels and space to write a sentence. Picture will need to be added in PowerPoint/Google Slides. Prompts below will be inserted in the speaker notes section.',
                 fields: [{ id: 'prompt', label: 'Teacher Prompt', type: 'textarea' }]
             },
+            'sectSimpleCompound': {
+                title: 'Simple or Compound Sentences', shortDesc: 'Practise identifying sentences', icon: 'fa-code-branch', color: 'text-amber-600', bg: 'bg-amber-100', type: 'mixed', hasTitleSlideOptions: true,
+                description: 'In this section, students read a sentence and identify whether it is simple or compound.',
+                weeklyFields: [
+                    { id: 'includeInstructions', label: 'Include instructions', type: 'checkbox', default: true }
+                ]
+            },
             'generic': {
                 title: 'Generic Section', shortDesc: 'Multipurpose placeholder', icon: 'fa-cube', color: 'text-slate-500', bg: 'bg-slate-200', type: 'daily', hasTitleSlideOptions: true,
                 description: 'This section can be used as a placeholder or general purpose slide for sections not included in this builder. Add short text below, include prompt to be inserted in the speakers notes.',
@@ -410,6 +450,8 @@
             }
         };
 
+        const STANDARD_STARTER_DESCRIPTION = 'This is a Deck Starter. Drag this to the Deck Sequencer to load the following set of sections to your deck. This will overwrite any sections currently in your deck sequence.';
+
         const STARTER_DEFS = {
             'starter_kindergarten': {
                 title: 'Kindergarten',
@@ -420,7 +462,51 @@
                 hoverBorder: 'border-amber-400',
                 badge: 'Preset',
                 badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
-                sections: Object.keys(SECTION_DEFS).filter(k => k !== 'sectHFW' && k !== 'sectDigraphs' && k !== 'generic' && k !== 'customisable')
+                description: STANDARD_STARTER_DESCRIPTION,
+                sections: [
+                    'mainIntro',
+                    'expectations',
+                    'sectA',
+                    'sectB',
+                    'sectC',
+                    'sectD',
+                    'sectE',
+                    'sectF',
+                    'sectG',
+                    'sectH',
+                    'sectI',
+                    'sectJ',
+                    'sectK',
+                    'finished'
+                ]
+            },
+            'starter_k_year1': {
+                title: 'Kinder and Year 1',
+                shortDesc: 'Preset deck for K/1',
+                icon: 'fa-layer-group',
+                color: 'text-teal-600',
+                bg: 'bg-teal-100',
+                hoverBorder: 'border-teal-400',
+                badge: 'Preset',
+                badgeClass: 'bg-teal-50 text-teal-700 border-teal-200',
+                description: STANDARD_STARTER_DESCRIPTION,
+                sections: [
+                    'mainIntro',
+                    'dayDivider',
+                    'expectations',
+                    'sectA',
+                    'sectB',
+                    'sectDigraphs',
+                    'sectShortVowelBB',
+                    'sectBlendingBoard',
+                    'sectG',
+                    'sectD',
+                    'sectHFW',
+                    'sectReadWordWriteWord',
+                    'sectE',
+                    'sectSimpleCompound',
+                    'finished'
+                ]
             },
             'starter_stage1': {
                 title: 'Stage 1',
@@ -431,6 +517,7 @@
                 hoverBorder: 'border-indigo-400',
                 badge: 'Soon',
                 badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                description: STANDARD_STARTER_DESCRIPTION,
                 isDummy: true,
                 sections: []
             }
@@ -613,6 +700,9 @@
                     startersList.appendChild(el);
                 });
 
+                const startersCountEl = document.getElementById('starters-count');
+                if (startersCountEl) startersCountEl.textContent = Object.keys(STARTER_DEFS).length;
+
                 new Sortable(startersList, {
                     group: { name: 'shared', pull: 'clone', put: false },
                     animation: 150,
@@ -739,9 +829,10 @@
                 let defaultTitle = def.title.includes(': ') ? def.title.split(': ')[1] : def.title;
                 if (defKey === 'sectH') defaultTitle = 'Vocabulary'; 
                 if (defKey === 'sectJ') defaultTitle = 'Finish the sentence';
+                const defaultInclude = defKey !== 'sectSimpleCompound';
                 
                 newItem.data.titleSettings = {
-                    include: true,
+                    include: defaultInclude,
                     title: defaultTitle,
                     instructions: ''
                 };
@@ -791,6 +882,12 @@
                             'Friday': 'Al/L'
                         };
                         newItem.data[day]['pair'] = dayDefaults[day] || 'Pen/Pan';
+                    }
+
+                    if (defKey === 'sectSimpleCompound') {
+                        newItem.data[day]['sentences'] = [
+                            { sent: day === 'Monday' ? 'The dog played in the mud.' : '', answer: 'simple' }
+                        ];
                     }
                 });
             }
@@ -968,7 +1065,7 @@
                                 <div class="font-bold text-sm text-amber-800 mb-1 flex items-center gap-1.5">
                                     <i class="fa-solid fa-layer-group text-amber-600"></i> Deck Starter
                                 </div>
-                                This is a Deck Starter. Drag this to the Deck Sequencer to load the following set of sections to your deck. This will overwrite any sections currently in your deck sequence.
+                                ${starter.description || STANDARD_STARTER_DESCRIPTION}
                             </div>
                         `;
 
@@ -1032,7 +1129,8 @@
                         let defaultTitle = def.title.includes(': ') ? def.title.split(': ')[1] : def.title;
                         if (selectedLibraryKey === 'sectH') defaultTitle = 'Vocabulary';
                         if (selectedLibraryKey === 'sectJ') defaultTitle = 'Finish the sentence';
-                        item.data.titleSettings = { include: true, title: defaultTitle, instructions: '' };
+                        const defaultInclude = selectedLibraryKey !== 'sectSimpleCompound';
+                        item.data.titleSettings = { include: defaultInclude, title: defaultTitle, instructions: '' };
                     }
                     if (def.type === 'daily' || def.type === 'mixed') {
                         DAYS.forEach(day => { item.data[day] = {}; });
@@ -1083,7 +1181,8 @@
                         let defaultTitle = def.title.includes(': ') ? def.title.split(': ')[1] : def.title;
                         if (item.defKey === 'sectH') defaultTitle = 'Vocabulary'; 
                         if (item.defKey === 'sectJ') defaultTitle = 'Finish the sentence';
-                        item.data.titleSettings = { include: true, title: defaultTitle, instructions: '' };
+                        const defaultInclude = item.defKey !== 'sectSimpleCompound';
+                        item.data.titleSettings = { include: defaultInclude, title: defaultTitle, instructions: '' };
                     }
                     const ts = item.data.titleSettings;
                     
@@ -1299,9 +1398,11 @@
                         }
 
                         let html = `<label class="block text-xs font-semibold text-slate-600 mb-1">${field.label}</label>`;
+                        const phAttr = field.placeholder ? `placeholder="${field.placeholder}"` : '';
+                        const minAttr = field.min !== undefined ? `min="${field.min}"` : '';
                         
                         if (field.type === 'textarea') {
-                            html += `<textarea data-path='${JSON.stringify(path)}' class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none h-16">${actualValue}</textarea>`;
+                            html += `<textarea data-path='${JSON.stringify(path)}' ${phAttr} class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none h-16">${actualValue}</textarea>`;
                         } else if (field.type === 'select') {
                             html += `<select data-path='${JSON.stringify(path)}' class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">`;
                             field.options.forEach(opt => {
@@ -1309,37 +1410,145 @@
                             });
                             html += `</select>`;
                         } else {
-                            html += `<input type="${field.type}" data-path='${JSON.stringify(path)}' ${valAttr} class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">`;
+                            html += `<input type="${field.type}" data-path='${JSON.stringify(path)}' ${valAttr} ${phAttr} ${minAttr} class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">`;
+                        }
+                        if (field.helpText) {
+                            html += `<p class="text-[11px] text-slate-400 mt-1 font-medium">${field.helpText}</p>`;
                         }
                         return `<div class="mb-3 transition-all duration-200" id="${wrapperId}">${html}</div>`;
                     };
 
                     contentHtml += `<div class="space-y-6">`;
 
-                    if (def.type === 'weekly' || def.type === 'mixed') {
-                        const fields = def.type === 'weekly' ? def.fields : def.weeklyFields;
-                        if (fields && fields.length > 0) {
-                            contentHtml += `<div>`;
-                            fields.forEach(f => {
-                                contentHtml += createFieldHtml(f, item.data[f.id], ['weekly', f.id]);
-                            });
-                            contentHtml += `</div>`;
-                        }
-                    }
+                    if (item.defKey === 'sectReadWordWriteWord') {
+                        const isDiff = item.data.differentiate === true || item.data.weekly?.differentiate === true;
+                        contentHtml += `<div>`;
+                        contentHtml += createFieldHtml({
+                            id: 'differentiate',
+                            label: 'Differentiation: Use two words per slide (mild and spicy)',
+                            type: 'checkbox',
+                            default: false
+                        }, isDiff, ['weekly', 'differentiate']);
+                        contentHtml += `</div>`;
 
-                    if (def.type === 'daily' || def.type === 'mixed') {
-                        const fields = def.type === 'daily' ? def.fields : def.dailyFields;
-                        if (fields && fields.length > 0) {
-                            DAYS.forEach(day => {
-                                if (!globalSettings.activeDays[day]) return;
-                                contentHtml += `<div>
-                                    <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center before:content-[''] before:flex-1 before:h-[1px] before:bg-blue-100 before:mr-2 after:content-[''] after:flex-1 after:h-[1px] after:bg-blue-100 after:ml-2">${day}</h3>
-                                    <div class="pl-2 border-l-2 border-slate-100">`;
-                                fields.forEach(f => {
-                                    contentHtml += createFieldHtml(f, item.data[day][f.id], ['daily', day, f.id]);
-                                });
-                                contentHtml += `</div></div>`;
+                        DAYS.forEach(day => {
+                            if (!globalSettings.activeDays[day]) return;
+                            if (!item.data[day]) item.data[day] = {};
+
+                            contentHtml += `<div>
+                                <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center before:content-[''] before:flex-1 before:h-[1px] before:bg-blue-100 before:mr-2 after:content-[''] after:flex-1 after:h-[1px] after:bg-blue-100 after:ml-2">${day}</h3>
+                                <div class="pl-2 border-l-2 border-slate-100">`;
+
+                            if (isDiff) {
+                                contentHtml += createFieldHtml({
+                                    id: 'mildWords',
+                                    label: 'Mild word(s)',
+                                    type: 'text',
+                                    placeholder: 'cat 3, drive 4'
+                                }, item.data[day].mildWords || '', ['daily', day, 'mildWords']);
+
+                                contentHtml += createFieldHtml({
+                                    id: 'spicyWords',
+                                    label: 'Spicy word(s)',
+                                    type: 'text',
+                                    placeholder: 'Use the same number of mild and spicy words.',
+                                    helpText: 'Type word(s) and number of phonemes. Separate by comma if two or more words.'
+                                }, item.data[day].spicyWords || '', ['daily', day, 'spicyWords']);
+                            } else {
+                                contentHtml += createFieldHtml({
+                                    id: 'words',
+                                    label: 'Word(s)',
+                                    type: 'text',
+                                    placeholder: 'cat 3, drive 4',
+                                    helpText: 'Type word(s) and number of phonemes. Separate by comma if two or more words.'
+                                }, item.data[day].words || '', ['daily', day, 'words']);
+                            }
+
+                            contentHtml += `</div></div>`;
+                        });
+                    } else if (item.defKey === 'sectSimpleCompound') {
+                        const isIncludeInst = item.data.includeInstructions !== false && item.data.weekly?.includeInstructions !== false;
+                        contentHtml += `<div>`;
+                        contentHtml += createFieldHtml({
+                            id: 'includeInstructions',
+                            label: 'Include instructions',
+                            type: 'checkbox',
+                            default: true
+                        }, isIncludeInst, ['weekly', 'includeInstructions']);
+                        contentHtml += `</div>`;
+
+                        DAYS.forEach(day => {
+                            if (!globalSettings.activeDays[day]) return;
+                            if (!item.data[day]) item.data[day] = {};
+                            if (!Array.isArray(item.data[day].sentences) || item.data[day].sentences.length === 0) {
+                                item.data[day].sentences = [
+                                    { sent: (day === 'Monday' && !item.data[day].sent) ? 'The dog played in the mud.' : (item.data[day].sent || ''), answer: item.data[day].answer || 'simple' }
+                                ];
+                            }
+
+                            const sentencesList = item.data[day].sentences;
+
+                            contentHtml += `<div>
+                                <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center before:content-[''] before:flex-1 before:h-[1px] before:bg-blue-100 before:mr-2 after:content-[''] after:flex-1 after:h-[1px] after:bg-blue-100 after:ml-2">${day}</h3>
+                                <div class="pl-2 border-l-2 border-slate-100 space-y-3">
+                                    <div id="sc-sentences-list-${day}" class="space-y-3">`;
+
+                            sentencesList.forEach((s, idx) => {
+                                const escapedSent = (s.sent || '').replace(/"/g, '&quot;');
+                                contentHtml += `
+                                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl relative group transition-all">
+                                        <button type="button" class="btn-remove-sc-sentence absolute top-2 right-2 text-slate-400 hover:text-red-500 text-xs p-1 ${sentencesList.length <= 1 ? 'hidden' : ''}" data-day="${day}" data-index="${idx}" title="Remove sentence">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                        <div class="mb-2">
+                                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Sentence</label>
+                                            <input type="text" value="${escapedSent}" data-day="${day}" data-index="${idx}" data-field="sent" class="sc-sent-field w-full text-xs p-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. The dog played in the mud.">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Type</label>
+                                            <select data-day="${day}" data-index="${idx}" data-field="answer" class="sc-sent-field w-full text-xs p-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                                <option value="simple" ${s.answer === 'simple' || !s.answer ? 'selected' : ''}>Simple</option>
+                                                <option value="compound" ${s.answer === 'compound' ? 'selected' : ''}>Compound</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                `;
                             });
+
+                            contentHtml += `
+                                    </div>
+                                    <button type="button" class="btn-add-sc-sentence w-full py-1.5 px-3 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold text-xs rounded-xl border border-blue-200 flex items-center justify-center gap-1.5 transition-colors mb-4" data-day="${day}">
+                                        <i class="fa-solid fa-plus text-xs"></i> Add Sentence
+                                    </button>
+                                </div>
+                            </div>`;
+                        });
+                    } else {
+                        if (def.type === 'weekly' || def.type === 'mixed') {
+                            const fields = def.type === 'weekly' ? def.fields : def.weeklyFields;
+                            if (fields && fields.length > 0) {
+                                contentHtml += `<div>`;
+                                fields.forEach(f => {
+                                    contentHtml += createFieldHtml(f, item.data[f.id], ['weekly', f.id]);
+                                });
+                                contentHtml += `</div>`;
+                            }
+                        }
+
+                        if (def.type === 'daily' || def.type === 'mixed') {
+                            const fields = def.type === 'daily' ? def.fields : def.dailyFields;
+                            if (fields && fields.length > 0) {
+                                DAYS.forEach(day => {
+                                    if (!globalSettings.activeDays[day]) return;
+                                    contentHtml += `<div>
+                                        <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center before:content-[''] before:flex-1 before:h-[1px] before:bg-blue-100 before:mr-2 after:content-[''] after:flex-1 after:h-[1px] after:bg-blue-100 after:ml-2">${day}</h3>
+                                        <div class="pl-2 border-l-2 border-slate-100">`;
+                                    fields.forEach(f => {
+                                        contentHtml += createFieldHtml(f, item.data[day][f.id], ['daily', day, f.id]);
+                                    });
+                                    contentHtml += `</div></div>`;
+                                });
+                            }
                         }
                     }
 
@@ -1375,6 +1584,63 @@
                                 </div>
                                 <div class="edu-font text-3xl sm:text-4xl text-slate-800 tracking-[0.2em] mb-5 text-center">s T o b j u m ff</div>
                                 <div class="edu-font text-3xl sm:text-4xl text-slate-800 tracking-[0.2em] text-center">W Z m x a ll p i</div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
+                // Add slide preview specifically for Blending Board
+                if (item.defKey === 'sectBlendingBoard') {
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative flex flex-col p-4 overflow-hidden">
+                                <div class="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] shadow-xs">
+                                    <i class="fa-solid fa-brain"></i>
+                                </div>
+                                <div class="flex-1 grid grid-cols-4 items-center justify-items-center edu-font text-2xl sm:text-3xl font-medium text-slate-800">
+                                    <div class="text-slate-800">ph</div>
+                                    <div></div>
+                                    <div class="text-slate-800">m</div>
+                                    <div></div>
+                                    <div class="text-slate-800">t</div>
+                                    <div class="text-rose-500 font-bold">i</div>
+                                    <div class="text-slate-800">v</div>
+                                    <div class="text-rose-500 font-bold">e</div>
+                                    <div class="text-slate-800">wh</div>
+                                    <div></div>
+                                    <div class="text-slate-800">l</div>
+                                    <div></div>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
+                // Add slide preview specifically for Short Vowel Blending Board
+                if (item.defKey === 'sectShortVowelBB') {
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative flex items-center justify-between px-8 sm:px-12 overflow-hidden">
+                                <div class="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-amber-400 border border-amber-300 flex items-center justify-center text-[10px] text-amber-950 font-bold shadow-2xs">
+                                    <i class="fa-solid fa-users"></i>
+                                </div>
+                                <div class="edu-font text-3xl sm:text-4xl font-medium text-slate-800 tracking-widest text-center flex-1">
+                                    s t
+                                </div>
+                                <div class="flex flex-col items-center justify-center gap-0.5 sm:gap-1 text-base sm:text-xl font-bold edu-font px-3">
+                                    <span class="text-red-500">a</span>
+                                    <span class="text-amber-500">e</span>
+                                    <span class="text-emerald-500">i</span>
+                                    <span class="text-orange-500">o</span>
+                                    <span class="text-purple-500">u</span>
+                                </div>
+                                <div class="edu-font text-3xl sm:text-4xl font-medium text-slate-800 tracking-widest text-center flex-1">
+                                    p s
+                                </div>
                             </div>
                             <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
                         </div>
@@ -1488,6 +1754,87 @@
                     `;
                 }
 
+                // Add dynamic thumbnail preview specifically for Read a Word, Write a Word (sectReadWordWriteWord)
+                if (item.defKey === 'sectReadWordWriteWord') {
+                    const isDiff = item.data.differentiate === true || item.data.weekly?.differentiate === true;
+                    const firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
+
+                    if (isDiff) {
+                        let sampleMild = 'stop';
+                        let sampleSpicy = 'although';
+                        if (firstActiveDay && item.data[firstActiveDay]) {
+                            if (item.data[firstActiveDay].mildWords) {
+                                const pMild = parseWordWithPhonemes(item.data[firstActiveDay].mildWords.split(',')[0]);
+                                if (pMild.word) sampleMild = pMild.word;
+                            }
+                            if (item.data[firstActiveDay].spicyWords) {
+                                const pSpicy = parseWordWithPhonemes(item.data[firstActiveDay].spicyWords.split(',')[0]);
+                                if (pSpicy.word) sampleSpicy = pSpicy.word;
+                            }
+                        }
+
+                        contentHtml += `
+                            <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                                <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                                <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between p-4 sm:p-5">
+                                    <!-- Apply Badge -->
+                                    <div class="absolute top-2.5 right-2.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#6ba4e8] border border-[#508bd6] flex flex-col items-center justify-center text-white shadow-2xs">
+                                        <i class="fa-solid fa-chalkboard-user text-[10px] sm:text-xs"></i>
+                                        <span class="text-[6px] sm:text-[7px] font-bold uppercase tracking-tighter leading-none mt-0.5">Apply</span>
+                                    </div>
+                                    
+                                    <!-- Mild Row -->
+                                    <div class="flex-1 flex items-center w-full px-2 sm:px-3">
+                                        <div class="w-10 sm:w-14 flex items-center text-xl sm:text-2xl select-none">
+                                            <span>🌶️</span>
+                                        </div>
+                                        <div class="flex-1 text-center edu-font text-3xl sm:text-4xl text-slate-900 font-medium tracking-wide pr-10 sm:pr-14 truncate" id="thumb-rww-mild">
+                                            ${sampleMild}
+                                        </div>
+                                    </div>
+
+                                    <!-- Horizontal Divider -->
+                                    <div class="w-[92%] h-[1.5px] bg-slate-300 mx-auto"></div>
+
+                                    <!-- Spicy Row -->
+                                    <div class="flex-1 flex items-center w-full px-2 sm:px-3">
+                                        <div class="w-10 sm:w-14 flex items-center text-xl sm:text-2xl space-x-[-4px] select-none">
+                                            <span>🌶️</span><span>🌶️</span>
+                                        </div>
+                                        <div class="flex-1 text-center edu-font text-3xl sm:text-4xl text-slate-900 font-medium tracking-wide pr-10 sm:pr-14 truncate" id="thumb-rww-spicy">
+                                            ${sampleSpicy}
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                            </div>
+                        `;
+                    } else {
+                        let sampleWord = 'bread';
+                        if (firstActiveDay && item.data[firstActiveDay]?.words) {
+                            const pWord = parseWordWithPhonemes(item.data[firstActiveDay].words.split(',')[0]);
+                            if (pWord.word) sampleWord = pWord.word;
+                        }
+
+                        contentHtml += `
+                            <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                                <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                                <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative flex items-center justify-center overflow-hidden p-4">
+                                    <!-- Apply Badge -->
+                                    <div class="absolute top-2.5 right-2.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#6ba4e8] border border-[#508bd6] flex flex-col items-center justify-center text-white shadow-2xs">
+                                        <i class="fa-solid fa-chalkboard-user text-[10px] sm:text-xs"></i>
+                                        <span class="text-[6px] sm:text-[7px] font-bold uppercase tracking-tighter leading-none mt-0.5">Apply</span>
+                                    </div>
+                                    <div class="edu-font text-4xl sm:text-5xl text-slate-900 font-medium tracking-wide text-center truncate max-w-[85%]" id="thumb-rww-word">
+                                        ${sampleWord}
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                            </div>
+                        `;
+                    }
+                }
+
                 // Add dynamic thumbnail preview specifically for Section H (Long Content)
                 if (item.defKey === 'sectH') {
                     let firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
@@ -1596,6 +1943,57 @@
                                     <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-500"><i class="fa-solid fa-image text-sm"></i></div>
                                 </div>
                                 <div class="w-[85%] h-[2px] bg-slate-800 mt-6"></div>
+                            </div>
+                            <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
+                        </div>
+                    `;
+                }
+
+                // Add dynamic thumbnail preview specifically for Simple or Compound Sentences (sectSimpleCompound)
+                if (item.defKey === 'sectSimpleCompound') {
+                    const firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
+                    let sampleSent = 'The dog played in the mud.';
+                    let sampleAnswer = 'simple';
+
+                    if (firstActiveDay && item.data[firstActiveDay]) {
+                        const sentences = item.data[firstActiveDay].sentences;
+                        if (Array.isArray(sentences) && sentences.length > 0 && sentences[0].sent) {
+                            sampleSent = sentences[0].sent;
+                            sampleAnswer = sentences[0].answer || 'simple';
+                        } else if (item.data[firstActiveDay].sent) {
+                            sampleSent = item.data[firstActiveDay].sent;
+                            sampleAnswer = item.data[firstActiveDay].answer || 'simple';
+                        }
+                    }
+
+                    contentHtml += `
+                        <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
+                            <div class="w-full aspect-[16/9] bg-white rounded-2xl border-2 border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between p-4 sm:p-5">
+                                <!-- Top Row: Header on left, Apply badge on right -->
+                                <div class="flex items-start justify-between w-full">
+                                    <div class="edu-font text-lg sm:text-2xl text-slate-800 font-normal">
+                                        Simple or compound sentence?
+                                    </div>
+                                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#6ba4e8] border border-[#508bd6] flex flex-col items-center justify-center text-white shadow-2xs shrink-0">
+                                        <i class="fa-solid fa-chalkboard-user text-[10px] sm:text-xs"></i>
+                                        <span class="text-[6px] sm:text-[7px] font-bold uppercase tracking-tighter leading-none mt-0.5">Apply</span>
+                                    </div>
+                                </div>
+
+                                <!-- Center stimulus sentence -->
+                                <div class="my-auto text-center px-4 py-2">
+                                    <div class="edu-font text-2xl sm:text-3xl text-slate-900 font-normal tracking-wide" id="thumb-sc-sent">
+                                        ${sampleSent}
+                                    </div>
+                                </div>
+
+                                <!-- Bottom Answer Box -->
+                                <div class="flex justify-center pb-2">
+                                    <span class="bg-[#ffff00] px-4 py-1 edu-font text-xl sm:text-2xl text-black font-normal leading-none select-none tracking-wide" id="thumb-sc-answer">
+                                        ${sampleAnswer}
+                                    </span>
+                                </div>
                             </div>
                             <p class="text-[10px] text-center text-slate-400 mt-2 font-medium">Preview may not match template.</p>
                         </div>
@@ -1860,6 +2258,116 @@
                     }
                 }
 
+                if (item.defKey === 'sectReadWordWriteWord') {
+                    const chkDiff = content.querySelector(`[data-path='["weekly","differentiate"]']`);
+                    if (chkDiff) {
+                        chkDiff.addEventListener('change', (e) => {
+                            item.data.differentiate = e.target.checked;
+                            if (!item.data.weekly) item.data.weekly = {};
+                            item.data.weekly.differentiate = e.target.checked;
+                            saveState();
+                            renderInspector();
+                        });
+                    }
+
+                    const firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
+                    if (firstActiveDay) {
+                        const wordInput = content.querySelector(`[data-path='["daily","${firstActiveDay}","words"]']`);
+                        if (wordInput) {
+                            wordInput.addEventListener('input', (e) => {
+                                const el = document.getElementById('thumb-rww-word');
+                                if (el) {
+                                    const parsed = parseWordWithPhonemes(e.target.value.split(',')[0]);
+                                    el.textContent = parsed.word || 'bread';
+                                }
+                            });
+                        }
+                        const mildInput = content.querySelector(`[data-path='["daily","${firstActiveDay}","mildWords"]']`);
+                        if (mildInput) {
+                            mildInput.addEventListener('input', (e) => {
+                                const el = document.getElementById('thumb-rww-mild');
+                                if (el) {
+                                    const parsed = parseWordWithPhonemes(e.target.value.split(',')[0]);
+                                    el.textContent = parsed.word || 'stop';
+                                }
+                            });
+                        }
+                        const spicyInput = content.querySelector(`[data-path='["daily","${firstActiveDay}","spicyWords"]']`);
+                        if (spicyInput) {
+                            spicyInput.addEventListener('input', (e) => {
+                                const el = document.getElementById('thumb-rww-spicy');
+                                if (el) {
+                                    const parsed = parseWordWithPhonemes(e.target.value.split(',')[0]);
+                                    el.textContent = parsed.word || 'although';
+                                }
+                            });
+                        }
+                    }
+                }
+
+                if (item.defKey === 'sectSimpleCompound') {
+                    const chkInst = content.querySelector(`[data-path='["weekly","includeInstructions"]']`);
+                    if (chkInst) {
+                        chkInst.addEventListener('change', (e) => {
+                            item.data.includeInstructions = e.target.checked;
+                            if (!item.data.weekly) item.data.weekly = {};
+                            item.data.weekly.includeInstructions = e.target.checked;
+                            saveState();
+                        });
+                    }
+
+                    content.querySelectorAll('.sc-sent-field').forEach(input => {
+                        input.addEventListener('input', (e) => {
+                            const d = e.target.dataset.day;
+                            const idx = parseInt(e.target.dataset.index, 10);
+                            const fld = e.target.dataset.field;
+                            if (!item.data[d]) item.data[d] = { sentences: [] };
+                            if (!Array.isArray(item.data[d].sentences)) item.data[d].sentences = [];
+                            if (!item.data[d].sentences[idx]) item.data[d].sentences[idx] = { sent: '', answer: 'simple' };
+                            item.data[d].sentences[idx][fld] = e.target.value;
+                            saveState();
+
+                            const firstActiveDay = DAYS.find(day => globalSettings.activeDays[day]);
+                            if (d === firstActiveDay && idx === 0) {
+                                const elSent = document.getElementById('thumb-sc-sent');
+                                const elAns = document.getElementById('thumb-sc-answer');
+                                if (elSent && fld === 'sent') {
+                                    elSent.textContent = e.target.value || 'The dog played in the mud.';
+                                }
+                                if (elAns && fld === 'answer') {
+                                    elAns.textContent = e.target.value || 'simple';
+                                }
+                            }
+                        });
+                    });
+
+                    content.querySelectorAll('.btn-add-sc-sentence').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const d = e.currentTarget.dataset.day;
+                            if (!item.data[d]) item.data[d] = { sentences: [] };
+                            if (!Array.isArray(item.data[d].sentences)) item.data[d].sentences = [];
+                            item.data[d].sentences.push({ sent: '', answer: 'simple' });
+                            saveState();
+                            renderInspector();
+                        });
+                    });
+
+                    content.querySelectorAll('.btn-remove-sc-sentence').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const d = e.currentTarget.dataset.day;
+                            const idx = parseInt(e.currentTarget.dataset.index, 10);
+                            if (item.data[d] && Array.isArray(item.data[d].sentences)) {
+                                item.data[d].sentences.splice(idx, 1);
+                                if (item.data[d].sentences.length === 0) {
+                                    item.data[d].sentences.push({ sent: '', answer: 'simple' });
+                                }
+                                saveState();
+                                renderInspector();
+                            }
+                        });
+                    });
+                }
+
                 if (item.defKey === 'sectH') {
                     let firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
                     if (firstActiveDay) {
@@ -2026,6 +2534,18 @@
                     });
                 });
             }
+        }
+
+        function parseWordWithPhonemes(token) {
+            if (!token) return { word: '', count: 1 };
+            const trimmed = token.trim();
+            const match = trimmed.match(/^(.*?)(?:\s+(\d+))$/);
+            if (match && match[1].trim()) {
+                const word = match[1].trim();
+                const count = parseInt(match[2], 10);
+                return { word, count: Math.max(1, count) };
+            }
+            return { word: trimmed, count: Math.max(1, trimmed.length) };
         }
 
         function shuffleArray(array) {
@@ -2329,6 +2849,232 @@
                         });
                     }
 
+                    else if (item.defKey === 'sectBlendingBoard') {
+                        const allowBlends = data.allowBlends === true || data.allowBlends === 'true' || data.weekly?.allowBlends === true || data.weekly?.allowBlends === 'true';
+                        const allowSuffixes = data.allowSuffixes === true || data.allowSuffixes === 'true' || data.weekly?.allowSuffixes === true || data.weekly?.allowSuffixes === 'true';
+
+                        const COMMON_BLENDS = ['st', 'sp', 'sk', 'sm', 'sn', 'sw', 'sl', 'sc', 'bl', 'cl', 'fl', 'gl', 'pl', 'br', 'cr', 'dr', 'fr', 'gr', 'pr', 'tr', 'tw', 'dw'];
+                        const OFFENSIVE_WORDS = ['fuck', 'fuk', 'fuc', 'fag', 'shit', 'crap', 'wank', 'piss', 'cunt', 'cock', 'dick', 'twat', 'bitch', 'prick', 'slut', 'tit', 'arse', 'ass', 'damn', 'hell', 'cum', 'clit', 'dyke', 'nigg', 'spic', 'chink', 'gook', 'kike', 'paki', 'wop'];
+
+                        const formatInitialGrapheme = (g) => {
+                            if (!g) return '';
+                            const lower = g.toLowerCase();
+                            if (COMMON_BLENDS.includes(lower)) {
+                                return lower.split('').join(' ');
+                            }
+                            return g;
+                        };
+
+                        const isOffensiveWord = (initGrapheme, vowelStr, finalGrapheme) => {
+                            const cleanInit = initGrapheme.replace(/\s+/g, '').toLowerCase();
+                            const cleanVowel = vowelStr.replace(/_/g, '').toLowerCase();
+                            const cleanFinal = finalGrapheme.toLowerCase();
+                            const fullWord = cleanInit + cleanVowel + cleanFinal;
+                            return OFFENSIVE_WORDS.some(bad => fullWord.includes(bad) || (bad.includes(fullWord) && fullWord.length >= 3));
+                        };
+
+                        const consonantsInPool = fullPool.filter(g => !['a', 'e', 'i', 'o', 'u'].includes(g.toLowerCase()));
+
+                        // Initial pool: Exclude double consonants (ff, ll, ss, zz), ng, ck, tch
+                        let initialPool = consonantsInPool.filter(c => !['ff', 'll', 'ss', 'zz', 'ng', 'ck', 'tch'].includes(c.toLowerCase()));
+
+                        // Include 2-letter blends in initial position ONLY if allowBlends checked and both letters in fullPool
+                        if (allowBlends) {
+                            COMMON_BLENDS.forEach(blend => {
+                                if (fullPool.includes(blend[0]) && fullPool.includes(blend[1]) && !initialPool.includes(blend)) {
+                                    initialPool.push(blend);
+                                }
+                            });
+                        }
+
+                        // Base final exclusions: wh, h, q, r, w, s, y, qu AND exclude blends
+                        const FINAL_EXCLUDED = ['wh', 'h', 'q', 'r', 'w', 's', 'y', 'qu'];
+                        let baseFinalPool = consonantsInPool.filter(c => {
+                            const lower = c.toLowerCase();
+                            return !FINAL_EXCLUDED.includes(lower) && !COMMON_BLENDS.includes(lower);
+                        });
+
+                        const defaultInitial = ['p', 'b', 't', 'd', 'k', 'g', 'f', 'm', 'n', 'l', 'ph', 'wh', 'sh', 'ch', 'th'];
+                        const defaultFinal = ['m', 'n', 'p', 't', 'k', 'd', 'g', 'b', 'f', 'l', 'v', 'z'];
+
+                        let availInitial = initialPool.length >= 3 ? shuffleArray([...initialPool]) : shuffleArray([...defaultInitial]);
+
+                        // Vowel list for the day
+                        const vowelsStr = data[day]?.vowels || "";
+                        let dayVowelList = vowelsStr.split(",").map(v => v.trim()).filter(v => v);
+                        if (dayVowelList.length === 0) dayVowelList = ['a'];
+
+                        // Check for vowel digraphs or split digraphs
+                        const hasVowelDigraphs = dayVowelList.some(v => v.length > 1 || v.includes('_'));
+
+                        // If day contains a vowel digraph or split digraph, allow ONLY single consonants in final position
+                        let dayFinalPool = baseFinalPool;
+                        if (hasVowelDigraphs) {
+                            dayFinalPool = baseFinalPool.filter(c => c.length === 1);
+                        }
+
+                        let availFinal = dayFinalPool.length >= 3 ? shuffleArray([...dayFinalPool]) : shuffleArray([...defaultFinal]);
+
+                        // Determine initial and final consonants for the day
+                        let selectedInitials = [availInitial[0] || 'p', availInitial[1] || 't', availInitial[2] || 'm'];
+                        let selectedFinals = [availFinal[0] || 'm', availFinal[1] || 'v', availFinal[2] || 'l'];
+
+                        // Validate grid combinations against day vowels to prevent offensive words
+                        let initIdx = 3;
+                        let finIdx = 3;
+                        for (let vIdx = 0; vIdx < dayVowelList.length; vIdx++) {
+                            const v = dayVowelList[vIdx];
+                            for (let i = 0; i < 3; i++) {
+                                for (let j = 0; j < 3; j++) {
+                                    if (isOffensiveWord(selectedInitials[i], v, selectedFinals[j])) {
+                                        if (initIdx < availInitial.length) {
+                                            selectedInitials[i] = availInitial[initIdx++];
+                                        } else if (finIdx < availFinal.length) {
+                                            selectedFinals[j] = availFinal[finIdx++];
+                                        } else {
+                                            selectedInitials[i] = 'p';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        const c1 = formatInitialGrapheme(selectedInitials[0]);
+                        const c2 = formatInitialGrapheme(selectedInitials[1]);
+                        const c3 = formatInitialGrapheme(selectedInitials[2]);
+
+                        const c5 = selectedFinals[0];
+                        const c6 = selectedFinals[1];
+                        const c7 = selectedFinals[2];
+
+                        let daySuffix = "";
+                        if (allowSuffixes && !hasVowelDigraphs) {
+                            const suffixes = ['ly', 'ed', 'ing'];
+                            daySuffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+                        }
+
+                        dayVowelList.forEach(vowelRaw => {
+                            const vowel = vowelRaw.toLowerCase();
+                            const isSplit = vowel.includes('_');
+
+                            if (isSplit) {
+                                const parts = vowel.split('_');
+                                const v1 = parts[0] || vowel;
+                                const v2 = parts[1] || 'e';
+                                recipe.slides.push({
+                                    noteId: "[blendingBoard_split]",
+                                    replacements: {
+                                        "{{1}}": c1,
+                                        "{{2}}": c2,
+                                        "{{3}}": c3,
+                                        "{{4}}": v1,
+                                        "{{5}}": c5,
+                                        "{{6}}": c6,
+                                        "{{7}}": c7,
+                                        "{{8}}": v2
+                                    }
+                                });
+                            } else {
+                                recipe.slides.push({
+                                    noteId: "[blendingBoard]",
+                                    replacements: {
+                                        "{{1}}": c1,
+                                        "{{2}}": c2,
+                                        "{{3}}": c3,
+                                        "{{4}}": vowel,
+                                        "{{5}}": c5,
+                                        "{{6}}": c6,
+                                        "{{7}}": c7,
+                                        "{{8}}": daySuffix
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    else if (item.defKey === 'sectShortVowelBB') {
+                        const useIntro = data.useIntro !== false && data.weekly?.useIntro !== false;
+                        const slidesPerDay = parseInt(data.slidesPerDay !== undefined ? data.slidesPerDay : (data.weekly?.slidesPerDay !== undefined ? data.weekly.slidesPerDay : 1)) || 1;
+
+                        if (useIntro) {
+                            recipe.slides.push({ noteId: "[shortVowel_all]" });
+                        }
+
+                        const COMMON_BLENDS = ['st', 'sp', 'sk', 'sm', 'sn', 'sw', 'sl', 'sc', 'bl', 'cl', 'fl', 'gl', 'pl', 'br', 'cr', 'dr', 'fr', 'gr', 'pr', 'tr', 'tw', 'dw'];
+                        const FINAL_BLENDS = ['ct', 'ft', 'nt', 'st', 'xt', 'lk', 'lp', 'nd', 'mp', 'sk', 'sp', 'ts', 'ps', 'cs'];
+                        const OFFENSIVE_WORDS = ['fuck', 'fuk', 'fuc', 'fag', 'shit', 'crap', 'wank', 'piss', 'cunt', 'cock', 'dick', 'twat', 'bitch', 'prick', 'slut', 'tit', 'arse', 'ass', 'damn', 'hell', 'cum', 'clit', 'dyke', 'nigg', 'spic', 'chink', 'gook', 'kike', 'paki', 'wop'];
+
+                        const formatGrapheme = (g) => {
+                            if (!g) return '';
+                            const lower = g.toLowerCase();
+                            if (COMMON_BLENDS.includes(lower) || FINAL_BLENDS.includes(lower)) {
+                                return lower.split('').join(' ');
+                            }
+                            return g;
+                        };
+
+                        const isShortVowelOffensive = (initGrapheme, finalGrapheme) => {
+                            const cleanInit = initGrapheme.replace(/\s+/g, '').toLowerCase();
+                            const cleanFinal = finalGrapheme.replace(/\s+/g, '').toLowerCase();
+                            const shortVowels = ['a', 'e', 'i', 'o', 'u'];
+                            return shortVowels.some(v => {
+                                const fullWord = cleanInit + v + cleanFinal;
+                                return OFFENSIVE_WORDS.some(bad => fullWord.includes(bad) || (bad.includes(fullWord) && fullWord.length >= 3));
+                            });
+                        };
+
+                        const currentPhonicsIdx = SOUNDS_WRITE_LEVELS.indexOf(globalSettings.phonicsLevel);
+                        const blendsLevelIdx = SOUNDS_WRITE_LEVELS.indexOf("IC8-10 - blends");
+                        const allowBlends = currentPhonicsIdx >= blendsLevelIdx && blendsLevelIdx !== -1;
+
+                        const consonantsInPool = fullPool.filter(g => !['a', 'e', 'i', 'o', 'u'].includes(g.toLowerCase()));
+
+                        // Initial pool: exclude double consonants, ng, ck, tch
+                        let initialPool = consonantsInPool.filter(c => !['ff', 'll', 'ss', 'zz', 'ng', 'ck', 'tch'].includes(c.toLowerCase()));
+                        if (allowBlends) {
+                            COMMON_BLENDS.forEach(blend => {
+                                if (fullPool.includes(blend[0]) && fullPool.includes(blend[1]) && !initialPool.includes(blend)) {
+                                    initialPool.push(blend);
+                                }
+                            });
+                        }
+
+                        // Final pool: exclude s, h, r, y, qu
+                        let finalPool = consonantsInPool.filter(c => !['s', 'h', 'r', 'y', 'qu'].includes(c.toLowerCase()) && !COMMON_BLENDS.includes(c.toLowerCase()));
+                        if (allowBlends) {
+                            FINAL_BLENDS.forEach(blend => {
+                                if (fullPool.includes(blend[0]) && fullPool.includes(blend[1]) && !finalPool.includes(blend)) {
+                                    finalPool.push(blend);
+                                }
+                            });
+                        }
+
+                        const defaultInitial = ['p', 'b', 't', 'd', 'k', 'g', 'f', 'm', 'n', 'l', 'ph', 'wh', 'sh', 'ch', 'th'];
+                        const defaultFinal = ['m', 'n', 'p', 't', 'k', 'd', 'g', 'b', 'f', 'l', 'v', 'z'];
+
+                        let availInitial = initialPool.length >= 1 ? shuffleArray([...initialPool]) : shuffleArray([...defaultInitial]);
+                        let availFinal = finalPool.length >= 1 ? shuffleArray([...finalPool]) : shuffleArray([...defaultFinal]);
+
+                        for (let s = 0; s < slidesPerDay; s++) {
+                            let initGrapheme = availInitial[s % availInitial.length] || 'p';
+                            let finalGrapheme = availFinal[s % availFinal.length] || 't';
+
+                            let tryCount = 0;
+                            while (isShortVowelOffensive(initGrapheme, finalGrapheme) && tryCount < 20) {
+                                tryCount++;
+                                initGrapheme = availInitial[(s + tryCount) % availInitial.length] || 'p';
+                            }
+
+                            recipe.slides.push({
+                                noteId: "[shortVowelBlendingBoard]",
+                                replacements: {
+                                    "{{1}}": formatGrapheme(initGrapheme),
+                                    "{{2}}": formatGrapheme(finalGrapheme)
+                                }
+                            });
+                        }
+                    }
+
                     else if (item.defKey === 'sectD') {
                         const wordsStr = data.words || data.weekly?.words || "";
                         let wordsArray = wordsStr.split(",").map(w => w.trim()).filter(w => w);
@@ -2401,6 +3147,61 @@
                         });
                     }
 
+                    else if (item.defKey === 'sectReadWordWriteWord') {
+                        const isDiff = data.differentiate === true || data.weekly?.differentiate === true;
+
+                        if (isDiff) {
+                            const mildStr = data[day]?.mildWords || "";
+                            const spicyStr = data[day]?.spicyWords || "";
+                            const mildList = mildStr.split(",").map(t => t.trim()).filter(Boolean).map(parseWordWithPhonemes);
+                            const spicyList = spicyStr.split(",").map(t => t.trim()).filter(Boolean).map(parseWordWithPhonemes);
+                            const maxLen = Math.max(mildList.length, spicyList.length);
+
+                            for (let i = 0; i < maxLen; i++) {
+                                const mildItem = mildList[i] || null;
+                                const spicyItem = spicyList[i] || null;
+                                const mildWord = mildItem ? mildItem.word : "";
+                                const spicyWord = spicyItem ? spicyItem.word : "";
+                                const mildUnderscores = mildItem ? Array(mildItem.count).fill('_').join(' ') : "";
+                                const spicyUnderscores = spicyItem ? Array(spicyItem.count).fill('_').join(' ') : "";
+
+                                recipe.slides.push({
+                                    noteId: "[wordReadWrite_diff]",
+                                    replacements: {
+                                        "{{mild}}": mildWord,
+                                        "{{spicy}}": spicyWord
+                                    }
+                                });
+                                recipe.slides.push({
+                                    noteId: "[wordReadWrite_diff]",
+                                    replacements: {
+                                        "{{mild}}": mildUnderscores,
+                                        "{{spicy}}": spicyUnderscores
+                                    }
+                                });
+                            }
+                        } else {
+                            const wordsStr = data[day]?.words || "";
+                            const wordsList = wordsStr.split(",").map(t => t.trim()).filter(Boolean).map(parseWordWithPhonemes);
+
+                            wordsList.forEach(itemObj => {
+                                const underscores = Array(itemObj.count).fill('_').join(' ');
+                                recipe.slides.push({
+                                    noteId: "[wordReadWrite]",
+                                    replacements: {
+                                        "{{word}}": itemObj.word
+                                    }
+                                });
+                                recipe.slides.push({
+                                    noteId: "[wordReadWrite]",
+                                    replacements: {
+                                        "{{word}}": underscores
+                                    }
+                                });
+                            });
+                        }
+                    }
+
                     else if (item.defKey === 'sectF') {
                         recipe.slides.push({ noteId: "[audDiscrim_instruction_ae]" });
                         
@@ -2462,6 +3263,38 @@
                         recipe.slides.push({
                             noteId: "[labelAndSentence_stimulus]",
                             injectNotes: data[day]?.prompt || ""
+                        });
+                    }
+
+                    else if (item.defKey === 'sectSimpleCompound') {
+                        const isIncludeInst = data.includeInstructions !== false && data.weekly?.includeInstructions !== false;
+
+                        if (isIncludeInst) {
+                            recipe.slides.push({ noteId: "[simpleOrCompound_inst]" });
+                            recipe.slides.push({ noteId: "[simpleOrCompound_cc]" });
+                        }
+
+                        let sentences = data[day]?.sentences;
+                        if (!Array.isArray(sentences) || sentences.length === 0) {
+                            if (data[day]?.sent) {
+                                sentences = [{ sent: data[day].sent, answer: data[day].answer || 'simple' }];
+                            } else {
+                                sentences = [{ sent: 'The dog played in the mud.', answer: 'simple' }];
+                            }
+                        }
+
+                        sentences.forEach(sObj => {
+                            const sentText = (sObj.sent || '').trim();
+                            const ansText = (sObj.answer || 'simple').toLowerCase().trim();
+                            if (sentText) {
+                                recipe.slides.push({
+                                    noteId: "[simpleOrCompound_stim]",
+                                    replacements: {
+                                        "{{sent}}": sentText,
+                                        "{{answer}}": ansText
+                                    }
+                                });
+                            }
                         });
                     }
 
