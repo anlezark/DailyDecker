@@ -748,13 +748,10 @@
 
             // Preload Timeline OR Load State
             if (!loadState()) {
-                addTimelineItem('mainIntro');
-                addTimelineItem('expectations');
-                addTimelineItem('finished');
-            } else {
-                document.getElementById('timeline-filename').textContent = globalSettings.deckName;
-                renderTimeline();
+                timelineItems = [];
             }
+            document.getElementById('timeline-filename').textContent = globalSettings.deckName;
+            renderTimeline();
             
             // Default to having nothing selected so Global Settings are shown on first load
             selectItem(null);
@@ -762,6 +759,7 @@
             new Sortable(document.getElementById('timeline-list'), {
                 group: 'shared',
                 animation: 150,
+                draggable: '.timeline-item',
                 ghostClass: 'drag-ghost',
                 chosenClass: 'drag-chosen',
                 onAdd: function (evt) {
@@ -793,7 +791,6 @@
             document.getElementById('btn-reset').addEventListener('click', (e) => {
                 e.stopPropagation(); 
                 timelineItems = [];
-                ['mainIntro', 'expectations', 'finished'].forEach(k => addTimelineItem(k));
                 selectItem(null);
                 saveState();
             });
@@ -929,6 +926,29 @@
         function renderTimeline() {
             const list = document.getElementById('timeline-list');
             list.innerHTML = '';
+
+            if (timelineItems.length === 0) {
+                const emptyEl = document.createElement('div');
+                emptyEl.className = 'empty-state-placeholder pointer-events-none select-none flex flex-col items-center justify-center text-center p-8 my-auto min-h-[360px] border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/70 shadow-2xs transition-all';
+                emptyEl.innerHTML = `
+                    <div class="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 text-2xl mb-4 shadow-2xs">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <h3 class="text-base sm:text-lg font-bold text-slate-800 mb-3">Your Deck is empty. Let's built it.</h3>
+                    <div class="text-xs sm:text-sm text-slate-600 space-y-2.5 max-w-md leading-relaxed">
+                        <div class="flex items-center justify-start text-left gap-2.5 bg-amber-50/90 border border-amber-200/80 px-4 py-2.5 rounded-xl text-amber-900 shadow-2xs">
+                            <i class="fa-solid fa-arrow-left text-amber-500 shrink-0 text-sm"></i>
+                            <span>Add a <strong>Deck Starter</strong> from the menu on the left, or add individual sections.</span>
+                        </div>
+                        <div class="flex items-center justify-start text-left gap-2.5 bg-blue-50/90 border border-blue-200/80 px-4 py-2.5 rounded-xl text-blue-900 shadow-2xs">
+                            <i class="fa-solid fa-arrow-right text-blue-500 shrink-0 text-sm"></i>
+                            <span>Edit your <strong>Global settings</strong> on the right.</span>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(emptyEl);
+                return;
+            }
 
             timelineItems.forEach(item => {
                 const def = SECTION_DEFS[item.defKey];
