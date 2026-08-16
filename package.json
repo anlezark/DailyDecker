@@ -1,6 +1,6 @@
 {
   "name": "dailydeck",
-  "version": "1.0.0",
+  "version": "1.7.3",
   "description": "A Daily Review slideshow builder for the primary classroom",
   "type": "module",
   "scripts": {

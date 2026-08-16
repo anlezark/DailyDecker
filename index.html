@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Deck - v7.2</title>
+    <title>Daily Deck - v1.7.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -31,7 +31,13 @@
     <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shrink-0 z-10 relative shadow-sm">
         <div class="flex items-center gap-3">
             <div class="bg-blue-600 text-white p-2 rounded-lg"><i class="fa-solid fa-layer-group"></i></div>
-            <h1 class="text-xl font-bold text-slate-800">Daily<span class="text-blue-600">Deck</span> <span class="text-xs text-slate-400 font-normal ml-2">v7.2</span></h1>
+            <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <span>Daily<span class="text-blue-600">Deck</span></span>
+                <span class="text-xs text-slate-400 font-normal">v1.7.3</span>
+            </h1>
+            <button id="btn-about" type="button" class="text-xs font-semibold px-2.5 py-1 rounded-lg text-slate-500 bg-slate-100 hover:bg-slate-200 hover:text-slate-800 transition-colors flex items-center gap-1.5 border border-slate-200 shadow-2xs cursor-pointer ml-1" title="About DailyDeck">
+                <i class="fa-solid fa-circle-info text-blue-500"></i> About
+            </button>
         </div>
         <div class="flex items-center gap-3">
             <button id="btn-open-folder-header" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2 border border-blue-200">
@@ -132,6 +138,123 @@
             </div>
         </div>
     </main>
+
+    <!-- About DailyDeck Modal -->
+    <div id="about-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 sm:p-6 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden transform scale-95 transition-transform" id="about-modal-content">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center text-base shadow-xs">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                            <span>Welcome to Daily<span class="text-blue-600">Deck</span></span>
+                            <span class="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">v1.7.3</span>
+                        </h2>
+                    </div>
+                </div>
+                <button id="btn-close-about-x" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer" title="Close">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 text-slate-700 space-y-4 text-sm leading-relaxed">
+                <!-- Intro Paragraph -->
+                <div class="flex items-start gap-3.5 bg-blue-50/70 border border-blue-100 rounded-xl p-4">
+                    <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <i class="fa-solid fa-chalkboard-user text-sm"></i>
+                    </div>
+                    <p class="text-slate-700 leading-relaxed">
+                        This web app is a tool to help teachers with the fiddly and repetative tasks involved in creating 'Daily Reviews' (aka Warm-Ups). This doesn't replace PowerPoint/Google Slides but acts as a starting point to build the basic structure of your deck, filling in the blanks where possible, leaving you with a mostly-complete deck to wrap up in Google Slides or PowerPoint.
+                    </p>
+                </div>
+
+                <!-- Step 1: Global Settings -->
+                <div class="flex items-start gap-3.5 bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 hover:border-slate-300 transition-colors">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-sm">
+                        <i class="fa-solid fa-sliders"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-slate-700">
+                            Begin by editing your Global Settings in the window on the right. Your Current Phonics Level will inform many of your other sections.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 2: Drag Starters or Sections -->
+                <div class="flex items-start gap-3.5 bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 hover:border-slate-300 transition-colors">
+                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-sm">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-slate-700">
+                            Next drag a Deck Starter or individual sections from the library on the left into your Deck Sequencer in the middle. You can re-order, add to or delete sections to complete your preferred layout.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 3: Section Settings -->
+                <div class="flex items-start gap-3.5 bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 hover:border-slate-300 transition-colors">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-sm">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-slate-700">
+                            Next, select a Section in your Deck Sequencer and edit its settings in the window on the right.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 4: Assemble Deck -->
+                <div class="flex items-start gap-3.5 bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 hover:border-slate-300 transition-colors">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-sm">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-slate-700">
+                            Finally, click Assemble Deck (top right). Your instructions will be sent off and your deck will be created. This takes about 20 seconds. You can then open your Deck in Google Slides and save it to your own Google space. Alternatively, you can download a PowerPoint version, if that's your cup of tea.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQs -->
+                <div class="pt-2 border-t border-slate-200">
+                    <h3 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-question text-purple-600"></i> FAQ's
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div class="font-bold text-slate-800 mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-puzzle-piece text-slate-500 text-xs"></i>
+                                <span>What if I need a section that is not included in the library?</span>
+                            </div>
+                            <p class="text-slate-600 text-xs sm:text-sm pl-5">
+                                Use the 'Generic Section' as a placeholder, adding a reminder note that you can later edit in PowerPoint/Google Slides.
+                            </p>
+                        </div>
+
+                        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div class="font-bold text-slate-800 mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-shield-halved text-emerald-600 text-xs"></i>
+                                <span>Is this secure?</span>
+                            </div>
+                            <p class="text-slate-600 text-xs sm:text-sm pl-5">
+                                Your slide deck will be placed in a shared Google drive. Avoid adding sensitive information to your Deck.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
+                <button id="btn-close-about" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-bold transition-all text-sm shadow-sm cursor-pointer">
+                    Got it
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Privacy Notice Modal -->
     <div id="privacy-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-6 opacity-0 transition-opacity">
@@ -510,16 +633,28 @@
             },
             'starter_stage1': {
                 title: 'Stage 1',
-                shortDesc: 'Preset deck starter (coming soon)',
+                shortDesc: 'Preset deck for Stage 1',
                 icon: 'fa-layer-group',
                 color: 'text-indigo-600',
                 bg: 'bg-indigo-100',
                 hoverBorder: 'border-indigo-400',
-                badge: 'Soon',
+                badge: 'Preset',
                 badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
                 description: STANDARD_STARTER_DESCRIPTION,
-                isDummy: true,
-                sections: []
+                sections: [
+                    'mainIntro',
+                    'dayDivider',
+                    'expectations',
+                    'sectB',
+                    'sectDigraphs',
+                    'sectBlendingBoard',
+                    'sectReadWordWriteWord',
+                    'sectHFW',
+                    'generic',
+                    'sectSimpleCompound',
+                    'sectA',
+                    'finished'
+                ]
             }
         };
 
@@ -2678,6 +2813,35 @@
         document.getElementById('btn-download-pptx')?.addEventListener('click', () => {
             if (createdPptxUrl) {
                 window.open(createdPptxUrl, '_blank');
+            }
+        });
+
+        function openAboutModal() {
+            const modal = document.getElementById('about-modal');
+            const content = document.getElementById('about-modal-content');
+            if (!modal || !content) return;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        }
+
+        function closeAboutModal() {
+            const modal = document.getElementById('about-modal');
+            const content = document.getElementById('about-modal-content');
+            if (!modal || !content) return;
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        document.getElementById('btn-about')?.addEventListener('click', openAboutModal);
+        document.getElementById('btn-close-about')?.addEventListener('click', closeAboutModal);
+        document.getElementById('btn-close-about-x')?.addEventListener('click', closeAboutModal);
+        document.getElementById('about-modal')?.addEventListener('click', (e) => {
+            if (e.target === document.getElementById('about-modal')) {
+                closeAboutModal();
             }
         });
 
