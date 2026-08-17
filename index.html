@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Deck - v1.7.3</title>
+    <title>Daily Deck - v1.7.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@
             <div class="bg-blue-600 text-white p-2 rounded-lg"><i class="fa-solid fa-layer-group"></i></div>
             <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
                 <span>Daily<span class="text-blue-600">Deck</span></span>
-                <span class="text-xs text-slate-400 font-normal">v1.7.3</span>
+                <span class="text-xs text-slate-400 font-normal">v1.7.4</span>
             </h1>
             <button id="btn-about" type="button" class="text-xs font-semibold px-2.5 py-1 rounded-lg text-slate-500 bg-slate-100 hover:bg-slate-200 hover:text-slate-800 transition-colors flex items-center gap-1.5 border border-slate-200 shadow-2xs cursor-pointer ml-1" title="About DailyDeck">
                 <i class="fa-solid fa-circle-info text-blue-500"></i> About
@@ -150,7 +150,7 @@
                     <div>
                         <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2">
                             <span>Welcome to Daily<span class="text-blue-600">Deck</span></span>
-                            <span class="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">v1.7.3</span>
+                            <span class="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">v1.7.4</span>
                         </h2>
                     </div>
                 </div>
@@ -323,33 +323,50 @@
             <div id="json-container" class="hidden max-h-[38vh] p-4 bg-slate-900 overflow-y-auto border-b border-slate-800 shrink-0">
                 <pre id="json-output" class="text-green-400 font-mono text-xs sm:text-sm whitespace-pre-wrap break-words leading-relaxed"></pre>
             </div>
-            <div class="p-6 bg-slate-50 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0 border-t border-slate-200">
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <button id="btn-open-folder-modal" class="text-slate-700 hover:text-blue-700 bg-white hover:bg-blue-50 border border-slate-300 hover:border-blue-300 px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-sm shrink-0">
-                        <i class="fa-solid fa-folder-open text-blue-600"></i> Destination Folder
-                    </button>
+            <div class="p-6 bg-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0 border-t border-slate-200">
+                <div class="flex-1 text-left w-full md:w-auto">
+                    <span id="api-status" class="text-sm font-semibold text-slate-500 hidden leading-tight">Sending...</span>
                 </div>
 
-                <div class="flex-1 text-center px-2 w-full md:w-auto">
-                    <span id="api-status" class="text-sm font-semibold text-slate-500 hidden leading-tight block">Sending...</span>
-                </div>
-
-                <div class="flex flex-col items-stretch sm:items-end gap-2.5 w-full md:w-auto shrink-0">
+                <div class="flex flex-col items-stretch sm:items-end gap-3 w-full md:w-auto shrink-0">
                     <button id="btn-send-api" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0">
                         <i class="fa-solid fa-paper-plane"></i> Send to Google Slides
                     </button>
+
+                    <div id="deck-success-actions" class="hidden flex flex-col items-stretch sm:items-end gap-3.5 w-full">
+                        <!-- Google Slides Section -->
+                        <div class="flex flex-col items-stretch sm:items-end gap-1.5 w-full">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 justify-start sm:justify-end">
+                                <i class="fa-solid fa-presentation-screen text-blue-600"></i> Google Slides
+                            </span>
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
+                                <button id="btn-copy-drive" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow text-sm shrink-0">
+                                    <i class="fa-solid fa-copy"></i> Open a Copy in My Drive
+                                </button>
+                                <button id="btn-open-shared-deck" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow text-sm shrink-0">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in Shared Drive
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PowerPoint Section -->
+                        <div id="pptx-download-container" class="hidden flex flex-col items-stretch sm:items-end gap-1.5 w-full pt-2 border-t border-slate-200/80">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 justify-start sm:justify-end">
+                                <i class="fa-solid fa-file-powerpoint text-amber-600"></i> PowerPoint
+                            </span>
+                            <div class="flex items-center justify-start sm:justify-end w-full">
+                                <button id="btn-download-pptx" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow text-sm shrink-0">
+                                    <i class="fa-solid fa-download"></i> Download .pptx file
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
                     <div id="pptx-checkbox-container" class="flex items-center justify-end">
                         <label class="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 hover:border-amber-400 transition-colors shadow-sm select-none">
                             <input type="checkbox" id="chk-export-pptx" class="w-3.5 h-3.5 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer">
                             <span class="flex items-center gap-1.5"><i class="fa-solid fa-file-powerpoint text-amber-500 text-sm"></i> Create PowerPoint (.pptx) version</span>
                         </label>
-                    </div>
-
-                    <div id="pptx-download-container" class="hidden flex items-center justify-end">
-                        <button id="btn-download-pptx" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg text-sm shrink-0">
-                            <i class="fa-solid fa-download"></i> Download PowerPoint
-                        </button>
                     </div>
                 </div>
             </div>
@@ -358,7 +375,7 @@
 
     <script>
         // --- PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE ---
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwSv0rkt0iPDpxwivv50h5wNOptx6ELvULyAkliPY6xbB7-XPhixAOU3qNJ0nSKvQ0/exec"; 
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycp2mKab6-aeq5ls5ykVegwpsxYpPnDiszlU1S30pJ9V-RkHLCCV_CNX6SB5QsVWHl/exec"; 
         
         let currentRecipe = null;
 
@@ -456,11 +473,8 @@
             },
             'sectDigraphs': {
                 title: 'Digraphs', shortDesc: 'consonant and vowel digraphs', icon: 'fa-spell-check', color: 'text-violet-500', bg: 'bg-violet-100', type: 'weekly', hasTitleSlideOptions: true,
-                description: 'This section flashes a digraph slide for students to recite learnt digraphs (or trigraphs, tetragraphs, etc!).',
-                fields: [
-                    { id: 'digraphs', label: 'Digraphs (separate by commas, e.g. th, ch, ai)', type: 'textarea', default: '' },
-                    { id: 'shuffle', label: 'Shuffle order', type: 'checkbox', default: false }
-                ]
+                description: 'This section flashes a digraph slide for students to recite learnt digraphs (or trigraphs, tetragraphs, etc!). Select common digraphs below and/or add further digraphs.',
+                fields: []
             },
             'sectShortVowelBB': {
                 title: 'Short Vowel Blending Board', shortDesc: 'Blending non-words with short vowels', icon: 'fa-border-all', color: 'text-amber-600', bg: 'bg-amber-100', type: 'weekly', hasTitleSlideOptions: true,
@@ -957,6 +971,12 @@
                 newItem.data.contents = [];
             }
 
+            if (defKey === 'sectDigraphs') {
+                newItem.data.selectedDigraphs = [];
+                newItem.data.furtherDigraphs = '';
+                newItem.data.shuffle = false;
+            }
+
             if (def.hasTitleSlideOptions) {
                 let defaultTitle = def.title.includes(': ') ? def.title.split(': ')[1] : def.title;
                 if (defKey === 'sectH') defaultTitle = 'Vocabulary'; 
@@ -1446,7 +1466,7 @@
                 let hasFields = false;
                 if ((def.type === 'weekly' || def.type === 'daily') && def.fields && def.fields.length > 0) hasFields = true;
                 if (def.type === 'mixed' && ((def.weeklyFields && def.weeklyFields.length > 0) || (def.dailyFields && def.dailyFields.length > 0))) hasFields = true;
-                if (item.defKey === 'customisable') hasFields = true;
+                if (item.defKey === 'customisable' || item.defKey === 'sectDigraphs') hasFields = true;
 
                 if (item.defKey === 'customisable') {
                     if (item.data.templateTag === undefined) item.data.templateTag = '';
@@ -1678,6 +1698,89 @@
                                 </div>
                             </div>`;
                         });
+                    } else if (item.defKey === 'sectDigraphs') {
+                        const COMMON_DIGRAPHS = [
+                            { id: 'sh', label: 'sh', main: 'sh', span: 1, tag: 'digraph_sh' },
+                            { id: 'ch', label: 'ch', main: 'ch', span: 1, tag: 'digraph_ch' },
+                            { id: 'th', label: 'th', main: 'th', span: 1, tag: 'digraph_th' },
+                            { id: 'ck', label: 'ck', main: 'ck', span: 1, tag: 'digraph_ck' },
+                            { id: 'wh', label: 'wh', main: 'wh', span: 1, tag: 'digraph_wh' },
+                            { id: 'ng', label: 'ng', main: 'ng', span: 1, tag: 'digraph_ng' },
+                            { id: 'qu', label: 'qu', main: 'qu', span: 1, tag: 'digraph_qu' },
+                            { id: 'ai', label: 'ai', main: 'ai', span: 1, tag: 'digraph_ai' },
+                            { id: 'ay', label: 'ay', main: 'ay', span: 1, tag: 'digraph_ay' },
+                            { id: 'ee', label: 'ee', main: 'ee', span: 1, tag: 'digraph_ee' },
+                            { id: 'ea', label: 'ea (/ee/)', main: 'ea', sound: '/ee/', span: 2, tag: 'digraph_ea-ee' },
+                            { id: 'oa', label: 'oa', main: 'oa', span: 1, tag: 'digraph_oa' },
+                            { id: 'ow', label: 'ow', main: 'ow', span: 1, tag: 'digraph_ow' }
+                        ];
+                        const commonIds = COMMON_DIGRAPHS.map(d => d.id);
+                        
+                        if (!Array.isArray(item.data.selectedDigraphs)) {
+                            if (item.data.digraphs !== undefined || item.data.weekly?.digraphs !== undefined) {
+                                const raw = item.data.digraphs || item.data.weekly?.digraphs || '';
+                                const tokens = raw.split(/,|\band\b/i).map(w => w.trim()).filter(w => w);
+                                item.data.selectedDigraphs = tokens.filter(t => commonIds.includes(t.toLowerCase())).map(t => t.toLowerCase());
+                                const remainder = tokens.filter(t => !commonIds.includes(t.toLowerCase()));
+                                if (remainder.length > 0 && item.data.furtherDigraphs === undefined) {
+                                    item.data.furtherDigraphs = remainder.join(', ');
+                                }
+                            } else {
+                                item.data.selectedDigraphs = [];
+                            }
+                        }
+                        // Ensure ordered state
+                        const orderMap = {};
+                        COMMON_DIGRAPHS.forEach((d, idx) => { orderMap[d.id] = idx; });
+                        item.data.selectedDigraphs.sort((a, b) => (orderMap[a] ?? 999) - (orderMap[b] ?? 999));
+
+                        if (item.data.furtherDigraphs === undefined) {
+                            item.data.furtherDigraphs = '';
+                        }
+                        const isShuffle = item.data.shuffle === true || item.data.shuffle === 'true' || item.data.weekly?.shuffle === true || item.data.weekly?.shuffle === 'true';
+
+                        contentHtml += `
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <label class="block text-xs font-bold text-slate-700">Common Digraphs</label>
+                                        <span class="text-[11px] text-slate-400 font-semibold">${item.data.selectedDigraphs.length} selected</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        `;
+
+                        COMMON_DIGRAPHS.forEach(dg => {
+                            const isChecked = item.data.selectedDigraphs.includes(dg.id);
+                            const spanClass = dg.span === 2 ? 'col-span-2' : 'col-span-1';
+                            contentHtml += `
+                                <label class="flex items-center gap-2 p-2 bg-white border ${isChecked ? 'border-violet-500 bg-violet-50/60 text-violet-900 shadow-2xs font-bold ring-1 ring-violet-200' : 'border-slate-200 text-slate-700 font-medium hover:border-slate-300 hover:bg-slate-50'} rounded-xl cursor-pointer transition-all select-none ${spanClass}">
+                                    <input type="checkbox" value="${dg.id}" ${isChecked ? 'checked' : ''} class="dg-checkbox w-4 h-4 text-violet-600 rounded border-slate-300 focus:ring-violet-500 shrink-0">
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        <span class="edu-font text-base shrink-0">${dg.main}</span>
+                                        ${dg.sound ? `<span class="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 border border-violet-200/60 shrink-0">(${dg.sound})</span>` : ''}
+                                    </div>
+                                </label>
+                            `;
+                        });
+
+                        contentHtml += `
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-slate-100 pt-3">
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">further diagraphs</label>
+                                    <input type="text" id="txt-further-digraphs" value="${(item.data.furtherDigraphs || '').replace(/"/g, '&quot;')}" placeholder="e.g. tch, ph, igh, oy" class="w-full text-sm p-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <p class="text-[11px] text-slate-400 mt-1">Separate multiple digraphs with commas.</p>
+                                </div>
+
+                                <div class="border-t border-slate-100 pt-3">
+                                    <label class="flex items-center gap-2 cursor-pointer w-fit">
+                                        <input type="checkbox" id="chk-dg-shuffle" ${isShuffle ? 'checked' : ''} class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                                        <span class="text-xs font-semibold text-slate-600">Shuffle order</span>
+                                    </label>
+                                </div>
+                            </div>
+                        `;
                     } else {
                         if (def.type === 'weekly' || def.type === 'mixed') {
                             const fields = def.type === 'weekly' ? def.fields : def.weeklyFields;
@@ -1804,6 +1907,29 @@
 
                 // Add slide preview specifically for Digraphs (matching sh screenshot layout)
                 if (item.defKey === 'sectDigraphs') {
+                    const selected = Array.isArray(item.data.selectedDigraphs) ? item.data.selectedDigraphs : [];
+                    const furtherStr = item.data.furtherDigraphs || '';
+                    const furtherList = furtherStr.split(/,|\band\b/i).map(w => w.trim()).filter(w => w);
+                    const combined = [...selected, ...furtherList];
+                    const activeDg = combined.length > 0 ? combined[0] : 'sh';
+                    
+                    const DIGRAPH_EXAMPLES = {
+                        'sh': 'shiny shell',
+                        'ch': 'chin chop',
+                        'th': 'thin thumb',
+                        'ck': 'black duck',
+                        'wh': 'white whale',
+                        'ng': 'ring song',
+                        'qu': 'quick queen',
+                        'ai': 'rain train',
+                        'ay': 'play day',
+                        'ee': 'see tree',
+                        'ea': 'beach sea',
+                        'oa': 'boat road',
+                        'ow': 'slow snow'
+                    };
+                    const sampleWord = DIGRAPH_EXAMPLES[activeDg.toLowerCase()] || `${activeDg} sound`;
+
                     contentHtml += `
                         <div class="mt-8 border-t border-slate-200 pt-5 pb-5">
                             <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"><i class="fa-solid fa-image text-blue-400 mr-1"></i> Slide Preview</h3>
@@ -1815,8 +1941,8 @@
                                         </div>
                                     </div>
                                     <div class="flex flex-col items-center justify-center -mt-1">
-                                        <div class="edu-font text-5xl font-medium text-slate-900 leading-none mb-3">sh</div>
-                                        <div class="edu-font text-2xl font-medium text-slate-800 tracking-wide">shiny shell</div>
+                                        <div class="edu-font text-5xl font-medium text-slate-900 leading-none mb-3" id="thumb-dg-letter">${activeDg}</div>
+                                        <div class="edu-font text-2xl font-medium text-slate-800 tracking-wide" id="thumb-dg-example">${sampleWord}</div>
                                     </div>
                                     <div class="absolute -bottom-1 -right-1 text-rose-300 pointer-events-none">
                                         <svg width="68" height="68" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="drop-shadow-xs">
@@ -2523,6 +2649,74 @@
                     });
                 }
 
+                if (item.defKey === 'sectDigraphs') {
+                    const COMMON_ORDER = ['sh', 'ch', 'th', 'ck', 'wh', 'ng', 'qu', 'ai', 'ay', 'ee', 'ea', 'oa', 'ow'];
+                    const checkboxes = content.querySelectorAll('.dg-checkbox');
+                    const txtFurther = content.querySelector('#txt-further-digraphs');
+                    const chkShuffle = content.querySelector('#chk-dg-shuffle');
+
+                    checkboxes.forEach(chk => {
+                        chk.addEventListener('change', () => {
+                            const val = chk.value;
+                            if (!Array.isArray(item.data.selectedDigraphs)) item.data.selectedDigraphs = [];
+                            if (chk.checked) {
+                                if (!item.data.selectedDigraphs.includes(val)) {
+                                    item.data.selectedDigraphs.push(val);
+                                }
+                            } else {
+                                item.data.selectedDigraphs = item.data.selectedDigraphs.filter(d => d !== val);
+                            }
+                            // Sort strictly by COMMON_ORDER
+                            const orderMap = {};
+                            COMMON_ORDER.forEach((d, idx) => { orderMap[d] = idx; });
+                            item.data.selectedDigraphs.sort((a, b) => (orderMap[a] ?? 999) - (orderMap[b] ?? 999));
+                            saveState();
+                            renderInspector();
+                        });
+                    });
+
+                    if (txtFurther) {
+                        txtFurther.addEventListener('input', (e) => {
+                            item.data.furtherDigraphs = e.target.value;
+                            saveState();
+                            const thumbLetter = document.getElementById('thumb-dg-letter');
+                            const thumbExample = document.getElementById('thumb-dg-example');
+                            if (thumbLetter) {
+                                const selected = Array.isArray(item.data.selectedDigraphs) ? item.data.selectedDigraphs : [];
+                                const furtherList = e.target.value.split(/,|\band\b/i).map(w => w.trim()).filter(w => w);
+                                const combined = [...selected, ...furtherList];
+                                const activeDg = combined.length > 0 ? combined[0] : 'sh';
+                                thumbLetter.textContent = activeDg;
+                                if (thumbExample) {
+                                    const DIGRAPH_EXAMPLES = {
+                                        'sh': 'shiny shell',
+                                        'ch': 'chin chop',
+                                        'th': 'thin thumb',
+                                        'ck': 'black duck',
+                                        'wh': 'white whale',
+                                        'ng': 'ring song',
+                                        'qu': 'quick queen',
+                                        'ai': 'rain train',
+                                        'ay': 'play day',
+                                        'ee': 'see tree',
+                                        'ea': 'beach sea',
+                                        'oa': 'boat road',
+                                        'ow': 'slow snow'
+                                    };
+                                    thumbExample.textContent = DIGRAPH_EXAMPLES[activeDg.toLowerCase()] || `${activeDg} sound`;
+                                }
+                            }
+                        });
+                    }
+
+                    if (chkShuffle) {
+                        chkShuffle.addEventListener('change', (e) => {
+                            item.data.shuffle = e.target.checked;
+                            saveState();
+                        });
+                    }
+                }
+
                 if (item.defKey === 'sectH') {
                     let firstActiveDay = DAYS.find(d => globalSettings.activeDays[d]);
                     if (firstActiveDay) {
@@ -2732,12 +2926,15 @@
         }
 
         let createdDeckUrl = null;
+        let createdCopyUrl = null;
         let createdPptxUrl = null;
 
         function resetModalState() {
             createdDeckUrl = null;
+            createdCopyUrl = null;
             createdPptxUrl = null;
             const btn = document.getElementById('btn-send-api');
+            const successActions = document.getElementById('deck-success-actions');
             const status = document.getElementById('api-status');
             const deckNameEl = document.getElementById('modal-deck-name');
             const pptxContainer = document.getElementById('pptx-download-container');
@@ -2753,6 +2950,10 @@
             if (status) {
                 status.textContent = "";
                 status.className = "text-sm font-semibold text-slate-500 hidden";
+            }
+
+            if (successActions) {
+                successActions.classList.add('hidden');
             }
 
             if (pptxContainer) {
@@ -2776,6 +2977,7 @@
             }
 
             if (btn) {
+                btn.classList.remove('hidden');
                 btn.disabled = false;
                 btn.className = "bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0";
                 btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Send to Google Slides`;
@@ -3019,17 +3221,75 @@
                     }
 
                     else if (item.defKey === 'sectDigraphs') {
-                        const rawStr = data.digraphs !== undefined ? data.digraphs : (data.weekly?.digraphs || "");
-                        let digraphList = rawStr.split(/,|\band\b/i).map(w => w.trim()).filter(w => w);
+                        const COMMON_DIGRAPHS = [
+                            { id: 'sh', label: 'sh', tag: 'digraph_sh' },
+                            { id: 'ch', label: 'ch', tag: 'digraph_ch' },
+                            { id: 'th', label: 'th', tag: 'digraph_th' },
+                            { id: 'ck', label: 'ck', tag: 'digraph_ck' },
+                            { id: 'wh', label: 'wh', tag: 'digraph_wh' },
+                            { id: 'ng', label: 'ng', tag: 'digraph_ng' },
+                            { id: 'qu', label: 'qu', tag: 'digraph_qu' },
+                            { id: 'ai', label: 'ai', tag: 'digraph_ai' },
+                            { id: 'ay', label: 'ay', tag: 'digraph_ay' },
+                            { id: 'ee', label: 'ee', tag: 'digraph_ee' },
+                            { id: 'ea', label: 'ea (/ee/)', tag: 'digraph_ea-ee' },
+                            { id: 'oa', label: 'oa', tag: 'digraph_oa' },
+                            { id: 'ow', label: 'ow', tag: 'digraph_ow' }
+                        ];
+                        const commonIds = COMMON_DIGRAPHS.map(d => d.id);
+                        
+                        let selectedRaw = [];
+                        if (Array.isArray(data.selectedDigraphs)) {
+                            selectedRaw = data.selectedDigraphs;
+                        } else if (Array.isArray(data.weekly?.selectedDigraphs)) {
+                            selectedRaw = data.weekly.selectedDigraphs;
+                        } else if (typeof data.digraphs === 'string' || typeof data.weekly?.digraphs === 'string') {
+                            const raw = data.digraphs || data.weekly?.digraphs || '';
+                            selectedRaw = raw.split(/,|\band\b/i).map(w => w.trim()).filter(w => w);
+                        }
+
+                        const selectedSet = new Set(selectedRaw.map(s => String(s).toLowerCase().trim()));
+
+                        // Preserve strict COMMON_DIGRAPHS grid order (sh, ch, th, ck, wh, ng, qu, ai, ay, ee, ea, oa, ow)
+                        let digraphList = [];
+                        COMMON_DIGRAPHS.forEach(dg => {
+                            if (selectedSet.has(dg.id.toLowerCase())) {
+                                digraphList.push(dg.id);
+                            }
+                        });
+
+                        // Append further digraphs in their exact entered order
+                        const furtherRaw = data.furtherDigraphs !== undefined ? data.furtherDigraphs : (data.weekly?.furtherDigraphs !== undefined ? data.weekly.furtherDigraphs : '');
+                        if (furtherRaw && typeof furtherRaw === 'string') {
+                            const furtherTokens = furtherRaw.split(/,|\band\b/i).map(w => w.trim()).filter(w => w);
+                            furtherTokens.forEach(t => {
+                                if (!digraphList.some(p => p.toLowerCase() === t.toLowerCase())) {
+                                    digraphList.push(t);
+                                }
+                            });
+                        } else if (data.selectedDigraphs === undefined && typeof data.digraphs === 'string') {
+                            const raw = data.digraphs || '';
+                            const tokens = raw.split(/,|\band\b/i).map(w => w.trim()).filter(w => w);
+                            tokens.forEach(t => {
+                                if (!commonIds.includes(t.toLowerCase()) && !digraphList.some(p => p.toLowerCase() === t.toLowerCase())) {
+                                    digraphList.push(t);
+                                }
+                            });
+                        }
+
                         const isShuffle = data.shuffle === true || data.shuffle === 'true' || data.weekly?.shuffle === true || data.weekly?.shuffle === 'true';
                         if (isShuffle) {
                             digraphList = shuffleArray([...digraphList]);
                         }
                         digraphList.forEach(dg => {
-                            let cleanLabel = dg.toLowerCase();
-                            recipe.slides.push({
-                                noteId: `[digraph_${cleanLabel}]`
-                            });
+                            let cleanLabel = dg.toLowerCase().trim();
+                            if (cleanLabel) {
+                                const matched = COMMON_DIGRAPHS.find(c => c.id === cleanLabel || c.tag === `digraph_${cleanLabel}`);
+                                const tag = matched ? matched.tag : (cleanLabel === 'ea' ? 'digraph_ea-ee' : `digraph_${cleanLabel}`);
+                                recipe.slides.push({
+                                    noteId: `[${tag}]`
+                                });
+                            }
                         });
                     }
 
@@ -3557,18 +3817,13 @@
             }
         }
 
-        document.getElementById('btn-open-folder-header').addEventListener('click', openDriveFolder);
-        document.getElementById('btn-open-folder-modal').addEventListener('click', openDriveFolder);
+        document.getElementById('btn-open-folder-header')?.addEventListener('click', openDriveFolder);
 
         document.getElementById('btn-send-api').addEventListener('click', async () => {
-            if (createdDeckUrl) {
-                window.open(createdDeckUrl, '_blank');
-                return;
-            }
-
             if (!currentRecipe) return;
 
             const btn = document.getElementById('btn-send-api');
+            const successActions = document.getElementById('deck-success-actions');
             const status = document.getElementById('api-status');
             
             btn.disabled = true;
@@ -3590,11 +3845,15 @@
 
                 if (result.status === "success") {
                     createdDeckUrl = result.url;
+                    createdCopyUrl = result.copyUrl || (result.id ? `https://docs.google.com/presentation/d/${result.id}/copy` : (result.url ? result.url.replace(/\/edit.*$/, '/copy') : null));
+                    
                     status.textContent = "Success!";
                     status.className = "text-sm font-bold text-emerald-500";
-                    btn.innerHTML = `<i class="fa-solid fa-arrow-up-right-from-square"></i> Open Google Slides`;
-                    btn.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0";
-                    btn.disabled = false;
+                    
+                    btn.classList.add('hidden');
+                    if (successActions) {
+                        successActions.classList.remove('hidden');
+                    }
 
                     const pptxCheckboxContainer = document.getElementById('pptx-checkbox-container');
                     if (pptxCheckboxContainer) {
@@ -3619,6 +3878,20 @@
                 status.className = "text-sm font-bold text-rose-500";
                 btn.disabled = false;
                 btn.className = "bg-blue-600 hover:bg-blue-700 text-white px-7 py-3 rounded-xl font-bold transition-all flex items-center gap-2.5 shadow-md text-sm shrink-0";
+            }
+        });
+
+        document.getElementById('btn-copy-drive')?.addEventListener('click', () => {
+            if (createdCopyUrl) {
+                window.open(createdCopyUrl, '_blank');
+            } else if (createdDeckUrl) {
+                window.open(createdDeckUrl.replace(/\/edit.*$/, '/copy'), '_blank');
+            }
+        });
+
+        document.getElementById('btn-open-shared-deck')?.addEventListener('click', () => {
+            if (createdDeckUrl) {
+                window.open(createdDeckUrl, '_blank');
             }
         });
 

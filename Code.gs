@@ -80,6 +80,17 @@ function doPost(e) {
     // 7. Save changes
     presentation.saveAndClose();
 
+    // 7.2 Set permissions so any user with the link can view and make a copy (or edit if permitted)
+    try {
+      newFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.EDIT);
+    } catch (sharingErr) {
+      try {
+        newFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      } catch (viewSharingErr) {
+        // Domain policy restrictions
+      }
+    }
+
     // 7.5 Optional: Export to PowerPoint (.pptx)
     var pptxUrl = null;
     var pptxId = null;
@@ -115,10 +126,14 @@ function doPost(e) {
     }
     
     // 8. Return success response
+    var presentationUrl = newFile.getUrl();
+    var copyUrl = "https://docs.google.com/presentation/d/" + newFile.getId() + "/copy";
+
     var responsePayload = {
       status: "success",
       message: "Presentation assembled successfully.",
-      url: newFile.getUrl(),
+      url: presentationUrl,
+      copyUrl: copyUrl,
       id: newFile.getId(),
       pptxUrl: pptxUrl,
       pptxId: pptxId
