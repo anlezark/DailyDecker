@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Deck - v1.7.4</title>
+    <title>Daily Deck - v1.7.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@
             <div class="bg-blue-600 text-white p-2 rounded-lg"><i class="fa-solid fa-layer-group"></i></div>
             <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
                 <span>Daily<span class="text-blue-600">Deck</span></span>
-                <span class="text-xs text-slate-400 font-normal">v1.7.4</span>
+                <span class="text-xs text-slate-400 font-normal">v1.7.5</span>
             </h1>
             <button id="btn-about" type="button" class="text-xs font-semibold px-2.5 py-1 rounded-lg text-slate-500 bg-slate-100 hover:bg-slate-200 hover:text-slate-800 transition-colors flex items-center gap-1.5 border border-slate-200 shadow-2xs cursor-pointer ml-1" title="About DailyDeck">
                 <i class="fa-solid fa-circle-info text-blue-500"></i> About
@@ -150,7 +150,7 @@
                     <div>
                         <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2">
                             <span>Welcome to Daily<span class="text-blue-600">Deck</span></span>
-                            <span class="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">v1.7.4</span>
+                            <span class="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">v1.7.5</span>
                         </h2>
                     </div>
                 </div>
@@ -302,6 +302,73 @@
         </div>
     </div>
 
+    <!-- Add Custom Template Modal -->
+    <div id="custom-template-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 sm:p-6 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden transform scale-95 transition-transform" id="custom-template-modal-content">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+                <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-palette text-blue-600"></i> Add Custom Template
+                </h2>
+                <button id="btn-close-custom-template" class="text-slate-400 hover:text-slate-600 p-1 transition-colors cursor-pointer">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                <!-- Step 1 -->
+                <div class="bg-blue-50/80 border border-blue-100 rounded-xl p-4">
+                    <div class="flex items-start gap-3">
+                        <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">1</span>
+                        <div class="text-sm text-slate-700 leading-relaxed">
+                            <p class="font-bold text-slate-800 mb-1">Make a copy of the default template</p>
+                            <p class="text-slate-600 text-xs mb-3">To add your own Daily Deck template, first make a copy of the default template and edit as desired. Leave <code class="font-mono bg-blue-100/90 text-blue-800 px-1 py-0.5 rounded text-[11px] font-bold">{{tags}}</code> and <code class="font-mono bg-blue-100/90 text-blue-800 px-1 py-0.5 rounded text-[11px] font-bold">[tags]</code> intact!</p>
+                            <a href="https://docs.google.com/presentation/d/12f9hl__t2nghjPeZSO1Ag1P-dLmJXXDKzCSVejT2QbY/copy" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition-colors shadow-2xs">
+                                <i class="fa-solid fa-copy"></i> Make a copy of Default Template <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="bg-amber-50/80 border border-amber-100 rounded-xl p-4">
+                    <div class="flex items-start gap-3">
+                        <span class="w-6 h-6 rounded-full bg-amber-500 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">2</span>
+                        <div class="text-sm text-slate-700 leading-relaxed space-y-2">
+                            <p class="font-bold text-slate-800">Set permission and copy link</p>
+                            <p class="text-slate-600 text-xs leading-relaxed">Open your new template in Google Slides. Select <strong>Share</strong>. Under <strong>General Access</strong> select <strong>Anyone with the link</strong> and <strong>Viewer</strong>. (This ensures the Daily Deck builder can access your template).</p>
+                            <p class="text-slate-600 text-xs leading-relaxed">Select <strong>Copy link</strong>. Finally, paste the link in the box below and give your template a name.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback & Validation Alert Container -->
+                <div id="custom-template-feedback" class="hidden"></div>
+
+                <!-- Input Fields -->
+                <div class="space-y-3 pt-1">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Template Name</label>
+                        <input type="text" id="txt-custom-template-name" placeholder="e.g. My School K-2 Template" class="w-full text-sm p-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Google Slides Share Link or ID</label>
+                        <input type="text" id="txt-custom-template-link" placeholder="https://docs.google.com/presentation/d/.../edit or Presentation ID" class="w-full text-sm p-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs">
+                        <p class="text-[11px] text-slate-400 mt-1">Paste the full share link or Google Slides ID.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3 shrink-0">
+                <button id="btn-cancel-custom-template" class="text-slate-600 hover:text-slate-800 bg-white hover:bg-slate-100 border border-slate-200 px-4 py-2 rounded-xl font-semibold transition-all text-sm shadow-sm cursor-pointer">
+                    Cancel
+                </button>
+                <button id="btn-save-custom-template" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-bold transition-all shadow-sm hover:shadow text-sm flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-check"></i> Add Template
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="json-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-6 opacity-0 transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden transform scale-95 transition-transform" id="json-modal-content">
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-start bg-slate-50 shrink-0">
@@ -323,13 +390,64 @@
             <div id="json-container" class="hidden max-h-[38vh] p-4 bg-slate-900 overflow-y-auto border-b border-slate-800 shrink-0">
                 <pre id="json-output" class="text-green-400 font-mono text-xs sm:text-sm whitespace-pre-wrap break-words leading-relaxed"></pre>
             </div>
-            <div class="p-6 bg-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0 border-t border-slate-200">
+
+            <!-- Engaging Assemble Loading Screen -->
+            <div id="assemble-loading-container" class="hidden p-8 sm:p-12 flex flex-col items-center justify-center text-center bg-white border-t border-slate-200">
+                <!-- Circular Spinner with Center Deck Stack Logo -->
+                <div class="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center mb-5">
+                    <!-- Spinning Outer Ring -->
+                    <div class="absolute inset-0 rounded-full border-4 border-blue-100 border-t-blue-600 border-r-blue-500 animate-spin"></div>
+                    <!-- Soft pulsing ring -->
+                    <div class="absolute w-20 h-20 bg-blue-50 rounded-full animate-ping opacity-25"></div>
+                    <!-- Center Deck Stack Logo -->
+                    <div class="w-14 h-14 bg-blue-600 text-white rounded-2xl shadow-lg flex items-center justify-center text-2xl z-10">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                </div>
+
+                <!-- Animated Step Message -->
+                <h3 id="assemble-loading-title" class="text-lg sm:text-xl font-bold text-slate-800 tracking-tight transition-all duration-300">
+                    Duplicating deck
+                </h3>
+                <p id="assemble-loading-desc" class="text-xs sm:text-sm text-slate-500 mt-1 max-w-sm font-medium transition-all duration-300">
+                    Cloning slide templates in your Google Drive...
+                </p>
+
+                <!-- Step Progress Dots (6 steps: Duplicate, Mon, Tue, Wed, Thu, Fri) -->
+                <div class="flex items-center gap-2 mt-6" id="loading-dots-container">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-600 transition-all duration-300 loading-dot" data-step="0" title="Duplicating deck"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-slate-200 transition-all duration-300 loading-dot" data-step="1" title="Making Monday"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-slate-200 transition-all duration-300 loading-dot" data-step="2" title="Tackling Tuesday"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-slate-200 transition-all duration-300 loading-dot" data-step="3" title="Working on Wednesday"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-slate-200 transition-all duration-300 loading-dot" data-step="4" title="Thrashing out Thursday"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-slate-200 transition-all duration-300 loading-dot" data-step="5" title="Finalising Friday"></span>
+                </div>
+            </div>
+
+            <!-- Footer Controls -->
+            <div id="modal-footer-controls" class="p-6 bg-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0 border-t border-slate-200">
                 <div class="flex-1 text-left w-full md:w-auto">
                     <span id="api-status" class="text-sm font-semibold text-slate-500 hidden leading-tight">Sending...</span>
                 </div>
 
                 <div class="flex flex-col items-stretch sm:items-end gap-3 w-full md:w-auto shrink-0">
-                    <button id="btn-send-api" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0">
+                    <!-- Slide Deck Template Dropdown -->
+                    <div id="modal-template-container" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                        <label for="modal-template-select" class="text-xs font-semibold text-slate-600 whitespace-nowrap">Slide deck template:</label>
+                        <select id="modal-template-select" class="text-xs font-medium p-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer min-w-[200px]">
+                        </select>
+                    </div>
+
+                    <!-- Create PowerPoint Checkbox -->
+                    <div id="pptx-checkbox-container" class="flex items-center justify-start sm:justify-end">
+                        <label class="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 hover:border-amber-400 transition-colors shadow-sm select-none">
+                            <input type="checkbox" id="chk-export-pptx" class="w-3.5 h-3.5 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-file-powerpoint text-amber-500 text-sm"></i> Create PowerPoint (.pptx) version</span>
+                        </label>
+                    </div>
+
+                    <!-- Send to Google Slides Button -->
+                    <button id="btn-send-api" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0 cursor-pointer">
                         <i class="fa-solid fa-paper-plane"></i> Send to Google Slides
                     </button>
 
@@ -360,13 +478,6 @@
                                 </button>
                             </div>
                         </div>
-                    </div>
-
-                    <div id="pptx-checkbox-container" class="flex items-center justify-end">
-                        <label class="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 hover:border-amber-400 transition-colors shadow-sm select-none">
-                            <input type="checkbox" id="chk-export-pptx" class="w-3.5 h-3.5 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer">
-                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-file-powerpoint text-amber-500 text-sm"></i> Create PowerPoint (.pptx) version</span>
-                        </label>
                     </div>
                 </div>
             </div>
@@ -602,9 +713,12 @@
                 description: STANDARD_STARTER_DESCRIPTION,
                 sections: [
                     'mainIntro',
+                    'dayDivider',
                     'expectations',
                     'sectA',
                     'sectB',
+                    'sectDigraphs',
+                    'sectShortVowelBB',
                     'sectC',
                     'sectD',
                     'sectE',
@@ -744,6 +858,7 @@
         }
 
         const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        const DEFAULT_TEMPLATE_ID = "12f9hl__t2nghjPeZSO1Ag1P-dLmJXXDKzCSVejT2QbY";
 
         let globalSettings = {
             deckName: "Term 1, Week 1 Review",
@@ -753,9 +868,150 @@
             term: 1,
             week: 1,
             activeDays: { 'Monday': true, 'Tuesday': true, 'Wednesday': true, 'Thursday': true, 'Friday': true },
-            templateId: "12f9hl__t2nghjPeZSO1Ag1P-dLmJXXDKzCSVejT2QbY",
+            templateId: DEFAULT_TEMPLATE_ID,
+            templateName: "Default Template",
+            templateOptionKey: DEFAULT_TEMPLATE_ID,
+            customTemplates: [],
             folderId: "1wbKRkTXB6M6szi-yeCYiU1kyKJgTfIdK"
         };
+
+        function extractPresentationId(input) {
+            if (!input) return '';
+            const match = input.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) {
+                return match[1];
+            }
+            return input.trim();
+        }
+
+        function checkGoogleSlidesAccess(templateId) {
+            return new Promise((resolve) => {
+                const timeout = setTimeout(() => {
+                    resolve(false);
+                }, 4000);
+
+                const img = new Image();
+                img.onload = () => {
+                    clearTimeout(timeout);
+                    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                        resolve(true);
+                    } else {
+                        resolve(false);
+                    }
+                };
+                img.onerror = () => {
+                    clearTimeout(timeout);
+                    resolve(false);
+                };
+                img.src = `https://drive.google.com/thumbnail?id=${encodeURIComponent(templateId)}&sz=w320&t=${Date.now()}`;
+            });
+        }
+
+        function getTemplateOptionsHtml() {
+            const customTemplates = Array.isArray(globalSettings.customTemplates) ? globalSettings.customTemplates : [];
+            const currentOptKey = globalSettings.templateOptionKey || (globalSettings.templateName === 'Jesmond PS K-2' ? 'jesmond_ps_k2' : globalSettings.templateId || DEFAULT_TEMPLATE_ID);
+
+            let html = `
+                <option value="${DEFAULT_TEMPLATE_ID}" ${(currentOptKey === DEFAULT_TEMPLATE_ID || globalSettings.templateName === 'Default Template' || (!globalSettings.templateOptionKey && globalSettings.templateId === DEFAULT_TEMPLATE_ID)) ? 'selected' : ''}>Default Template</option>
+                <option value="jesmond_ps_k2" ${(currentOptKey === 'jesmond_ps_k2' || globalSettings.templateName === 'Jesmond PS K-2') ? 'selected' : ''}>Jesmond PS K-2</option>
+            `;
+
+            if (customTemplates.length > 0) {
+                html += customTemplates.map(ct => 
+                    `<option value="${ct.id}" ${currentOptKey === ct.id ? 'selected' : ''}>${ct.name || 'Custom Template'}</option>`
+                ).join('');
+            }
+
+            html += `
+                <option disabled>──────────</option>
+                <option value="__add_custom__">+ Add custom template...</option>
+            `;
+            return html;
+        }
+
+        function syncTemplateSelects() {
+            const html = getTemplateOptionsHtml();
+            const gSelect = document.getElementById('g-template-select');
+            const mSelect = document.getElementById('modal-template-select');
+            if (gSelect) gSelect.innerHTML = html;
+            if (mSelect) mSelect.innerHTML = html;
+        }
+
+        function handleTemplateSelection(val) {
+            if (val === '__add_custom__') {
+                openCustomTemplateModal();
+                return;
+            }
+            if (val === 'jesmond_ps_k2') {
+                globalSettings.templateId = DEFAULT_TEMPLATE_ID;
+                globalSettings.templateName = 'Jesmond PS K-2';
+                globalSettings.templateOptionKey = 'jesmond_ps_k2';
+                saveState();
+                syncTemplateSelects();
+                showToast('Selected "Jesmond PS K-2" template', 'fa-palette text-blue-400');
+            } else if (val === DEFAULT_TEMPLATE_ID) {
+                globalSettings.templateId = DEFAULT_TEMPLATE_ID;
+                globalSettings.templateName = 'Default Template';
+                globalSettings.templateOptionKey = DEFAULT_TEMPLATE_ID;
+                saveState();
+                syncTemplateSelects();
+                showToast('Selected "Default Template"', 'fa-palette text-blue-400');
+            } else {
+                const custom = (globalSettings.customTemplates || []).find(ct => ct.id === val);
+                globalSettings.templateId = val;
+                globalSettings.templateName = custom ? custom.name : 'Custom Template';
+                globalSettings.templateOptionKey = val;
+                saveState();
+                syncTemplateSelects();
+                showToast(`Selected "${globalSettings.templateName}"`, 'fa-palette text-blue-400');
+            }
+
+            if (currentRecipe) {
+                currentRecipe.templateId = globalSettings.templateId;
+                const output = document.getElementById('json-output');
+                if (output) {
+                    output.textContent = JSON.stringify(currentRecipe, null, 4);
+                }
+            }
+        }
+
+        function openCustomTemplateModal() {
+            const modal = document.getElementById('custom-template-modal');
+            const content = document.getElementById('custom-template-modal-content');
+            const txtName = document.getElementById('txt-custom-template-name');
+            const txtLink = document.getElementById('txt-custom-template-link');
+            const feedbackEl = document.getElementById('custom-template-feedback');
+            const btnSave = document.getElementById('btn-save-custom-template');
+            if (txtName) txtName.value = '';
+            if (txtLink) txtLink.value = '';
+            if (feedbackEl) {
+                feedbackEl.classList.add('hidden');
+                feedbackEl.innerHTML = '';
+            }
+            if (btnSave) {
+                btnSave.disabled = false;
+                btnSave.innerHTML = '<i class="fa-solid fa-check"></i> Add Template';
+            }
+            if (!modal || !content) return;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                if (txtName) txtName.focus();
+            }, 10);
+        }
+
+        function closeCustomTemplateModal() {
+            const modal = document.getElementById('custom-template-modal');
+            const content = document.getElementById('custom-template-modal-content');
+            if (!modal || !content) return;
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => { 
+                modal.classList.add('hidden'); 
+                syncTemplateSelects();
+            }, 250);
+        }
 
         let timelineItems = []; 
         let selectedItemId = null;
@@ -778,6 +1034,9 @@
                     const parsed = JSON.parse(saved);
                     if (parsed.settings) {
                         globalSettings = { ...globalSettings, ...parsed.settings };
+                        if (!globalSettings.templateId) globalSettings.templateId = DEFAULT_TEMPLATE_ID;
+                        if (!globalSettings.templateOptionKey) globalSettings.templateOptionKey = globalSettings.templateId;
+                        if (!Array.isArray(globalSettings.customTemplates)) globalSettings.customTemplates = [];
                         if (globalSettings.phonicsLevel === "IC11 (sh, ch, tch, th, ck, wh, ng, qu)" || !SOUNDS_WRITE_LEVELS.includes(globalSettings.phonicsLevel)) {
                             globalSettings.phonicsLevel = "IC11 - qu";
                         }
@@ -953,7 +1212,112 @@
                 }
             });
 
+            document.getElementById('btn-close-custom-template')?.addEventListener('click', closeCustomTemplateModal);
+            document.getElementById('btn-cancel-custom-template')?.addEventListener('click', closeCustomTemplateModal);
+            document.getElementById('btn-save-custom-template')?.addEventListener('click', async () => {
+                const linkInput = document.getElementById('txt-custom-template-link');
+                const nameInput = document.getElementById('txt-custom-template-name');
+                const btnSave = document.getElementById('btn-save-custom-template');
+                const feedbackEl = document.getElementById('custom-template-feedback');
+                const rawLink = linkInput ? linkInput.value.trim() : '';
+                const templateId = extractPresentationId(rawLink);
+
+                if (!templateId) {
+                    showToast('Please enter a valid Google Slides link or ID', 'fa-triangle-exclamation text-amber-400');
+                    if (linkInput) linkInput.focus();
+                    return;
+                }
+
+                if (feedbackEl) {
+                    feedbackEl.classList.add('hidden');
+                    feedbackEl.innerHTML = '';
+                }
+
+                // Loading state
+                const originalBtnHtml = btnSave ? btnSave.innerHTML : '<i class="fa-solid fa-check"></i> Add Template';
+                if (btnSave) {
+                    btnSave.disabled = true;
+                    btnSave.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Checking access...';
+                }
+
+                const templateName = (nameInput && nameInput.value.trim()) || `Custom (${templateId.substring(0, 6)}...)`;
+                const isAccessible = await checkGoogleSlidesAccess(templateId);
+
+                if (btnSave) {
+                    btnSave.disabled = false;
+                    btnSave.innerHTML = originalBtnHtml;
+                }
+
+                if (isAccessible) {
+                    if (!Array.isArray(globalSettings.customTemplates)) {
+                        globalSettings.customTemplates = [];
+                    }
+                    const existing = globalSettings.customTemplates.find(t => t.id === templateId);
+                    if (existing) {
+                        existing.name = templateName;
+                    } else {
+                        globalSettings.customTemplates.push({ id: templateId, name: templateName });
+                    }
+                    globalSettings.templateId = templateId;
+                    globalSettings.templateName = templateName;
+                    globalSettings.templateOptionKey = templateId;
+                    saveState();
+                    closeCustomTemplateModal();
+                    renderInspector();
+                    showToast(`Template "${templateName}" added successfully`, 'fa-circle-check text-emerald-400');
+                } else {
+                    if (feedbackEl) {
+                        feedbackEl.className = 'p-3.5 bg-pink-50 border border-pink-200 text-pink-900 rounded-xl text-xs flex items-start gap-2.5 shadow-2xs';
+                        feedbackEl.innerHTML = `
+                            <i class="fa-solid fa-circle-exclamation text-pink-500 text-sm mt-0.5 shrink-0"></i>
+                            <div>
+                                <p class="font-bold text-pink-900 mb-0.5">Daily Deck could not access your template</p>
+                                <p class="text-pink-700 leading-relaxed">Make sure the link is copied from Google Slides and permissions are set to <strong>Anyone with the link</strong> and <strong>Viewer</strong>.</p>
+                            </div>
+                        `;
+                        feedbackEl.classList.remove('hidden');
+                    }
+                    showToast('Daily Deck could not access your template - make sure the link is copied from Google Slides and permissions are set to Anyone with the link and Viewer.', 'fa-circle-exclamation text-pink-400');
+                }
+            });
+
             renderInspector();
+        }
+
+        const DAY_ABBR = {
+            'Monday': 'M',
+            'Tuesday': 'Tu',
+            'Wednesday': 'W',
+            'Thursday': 'Th',
+            'Friday': 'F'
+        };
+
+        function getItemIncludedDays(item) {
+            if (!item) return { 'Monday': true, 'Tuesday': true, 'Wednesday': true, 'Thursday': true, 'Friday': true };
+            if (!item.includedDays) {
+                item.includedDays = { 'Monday': true, 'Tuesday': true, 'Wednesday': true, 'Thursday': true, 'Friday': true };
+            }
+            DAYS.forEach(day => {
+                if (item.includedDays[day] === undefined) {
+                    item.includedDays[day] = true;
+                }
+            });
+            return item.includedDays;
+        }
+
+        function getLimitedDaysBadge(item) {
+            if (!item || item.defKey === 'mainIntro' || item.defKey === 'dayDivider' || item.defKey === 'finished') {
+                return null;
+            }
+            const daysObj = getItemIncludedDays(item);
+            const activeAbbrs = DAYS.filter(d => daysObj[d] !== false).map(d => DAY_ABBR[d]);
+            if (activeAbbrs.length === 5) {
+                return null;
+            }
+            if (activeAbbrs.length === 0) {
+                return '[None]';
+            }
+            return `[${activeAbbrs.join(' ')}]`;
         }
 
         function addTimelineItem(defKey, index = -1, skipSelectAndRender = false) {
@@ -963,7 +1327,8 @@
             const newItem = {
                 id: 'item_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
                 defKey: defKey,
-                data: {}
+                data: {},
+                includedDays: { 'Monday': true, 'Tuesday': true, 'Wednesday': true, 'Thursday': true, 'Friday': true }
             };
 
             if (defKey === 'customisable') {
@@ -1109,6 +1474,8 @@
                 const def = SECTION_DEFS[item.defKey];
                 const el = document.createElement('div');
                 const isSelected = item.id === selectedItemId;
+                const dayBadge = getLimitedDaysBadge(item);
+                const badgeHtml = dayBadge ? `<span class="text-[10px] font-bold text-amber-800 bg-amber-100/90 border border-amber-300/80 px-1.5 py-0.5 rounded leading-none shadow-2xs font-mono tracking-tight" title="Active on: ${dayBadge}">${dayBadge}</span>` : '';
                 
                 el.className = `timeline-item p-3 bg-white border ${isSelected ? 'border-blue-500 shadow-md ring-2 ring-blue-100' : 'border-slate-200'} rounded-xl cursor-pointer hover:border-blue-300 transition-all flex items-center gap-3`;
                 el.onclick = (e) => { e.stopPropagation(); selectItem(item.id); };
@@ -1122,9 +1489,12 @@
                         <div class="font-bold text-slate-700 truncate">${item.customTitle || def.title}</div>
                         <div class="text-xs text-slate-400 truncate">${def.shortDesc}</div>
                     </div>
-                    <button class="text-slate-300 hover:text-red-500 p-2 transition-colors shrink-0" onclick="event.stopPropagation(); deleteTimelineItem('${item.id}')">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
+                    <div class="flex flex-col items-end ${dayBadge ? 'justify-between' : 'justify-center'} shrink-0 self-stretch py-0.5">
+                        ${badgeHtml}
+                        <button class="text-slate-300 hover:text-red-500 p-1.5 transition-colors" onclick="event.stopPropagation(); deleteTimelineItem('${item.id}')" title="Delete section">
+                            <i class="fa-solid fa-trash text-sm"></i>
+                        </button>
+                    </div>
                 `;
                 list.appendChild(el);
             });
@@ -1196,11 +1566,17 @@
                         </div>
 
                         <div>
-                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-1">System</h3>
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-1">Template</h3>
                             <div class="mb-3">
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Google Slides Template ID</label>
-                                <input type="text" id="g-tid" value="${globalSettings.templateId}" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-slate-500">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Slide Deck Template</label>
+                                <select id="g-template-select" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
+                                    ${getTemplateOptionsHtml()}
+                                </select>
                             </div>
+                        </div>
+
+                        <div>
+                            <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-1">Destination</h3>
                             <div class="mb-3">
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">Destination Folder ID</label>
                                 <input type="text" id="g-folderId" value="${globalSettings.folderId || ''}" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-slate-500">
@@ -1209,15 +1585,25 @@
                     </div>
                 `;
 
-                ['name', 'author', 'phonics', 'yearLevel', 'term', 'week', 'tid', 'folderId'].forEach(k => {
-                    document.getElementById(`g-${k}`).addEventListener('input', (e) => {
-                        const map = { name: 'deckName', author: 'preparedBy', phonics: 'phonicsLevel', yearLevel: 'yearLevel', term: 'term', week: 'week', tid: 'templateId', folderId: 'folderId' };
-                        globalSettings[map[k]] = e.target.type === 'number' ? parseInt(e.target.value) : e.target.value;
-                        if (k === 'name') document.getElementById('timeline-filename').textContent = e.target.value;
-                        if (k === 'phonics' && selectedItemId) renderConfigPanel();
-                        saveState();
-                    });
+                ['name', 'author', 'phonics', 'yearLevel', 'term', 'week', 'folderId'].forEach(k => {
+                    const el = document.getElementById(`g-${k}`);
+                    if (el) {
+                        el.addEventListener('input', (e) => {
+                            const map = { name: 'deckName', author: 'preparedBy', phonics: 'phonicsLevel', yearLevel: 'yearLevel', term: 'term', week: 'week', folderId: 'folderId' };
+                            globalSettings[map[k]] = e.target.type === 'number' ? parseInt(e.target.value) : e.target.value;
+                            if (k === 'name') document.getElementById('timeline-filename').textContent = e.target.value;
+                            if (k === 'phonics' && selectedItemId) renderConfigPanel();
+                            saveState();
+                        });
+                    }
                 });
+
+                const templateSelect = document.getElementById('g-template-select');
+                if (templateSelect) {
+                    templateSelect.addEventListener('change', (e) => {
+                        handleTemplateSelection(e.target.value);
+                    });
+                }
                 DAYS.forEach(day => {
                     document.getElementById(`chk-${day}`).addEventListener('change', (e) => {
                         globalSettings.activeDays[day] = e.target.checked;
@@ -1338,6 +1724,7 @@
                 }
 
                 let contentHtml = '';
+                const itemDays = getItemIncludedDays(item);
 
                 if (isPreview) {
                     contentHtml += `<div class="bg-amber-50 text-amber-800 text-sm font-bold px-4 py-3 rounded-xl mb-5 border border-amber-200 flex items-center shadow-sm"><i class="fa-solid fa-circle-exclamation mr-2 text-lg text-amber-500"></i> To customise, add this block to your deck sequence.</div>`;
@@ -1609,10 +1996,13 @@
                         DAYS.forEach(day => {
                             if (!globalSettings.activeDays[day]) return;
                             if (!item.data[day]) item.data[day] = {};
+                            const isDayIncluded = itemDays[day] !== false;
 
-                            contentHtml += `<div>
-                                <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center before:content-[''] before:flex-1 before:h-[1px] before:bg-blue-100 before:mr-2 after:content-[''] after:flex-1 after:h-[1px] after:bg-blue-100 after:ml-2">${day}</h3>
-                                <div class="pl-2 border-l-2 border-slate-100">`;
+                            contentHtml += `<div id="daily-group-${day}" class="transition-all duration-200 ${isDayIncluded ? '' : 'opacity-40 grayscale pointer-events-none select-none'}">
+                                <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center before:content-[''] before:flex-1 before:h-[1px] before:bg-blue-100 before:mr-2 after:content-[''] after:flex-1 after:h-[1px] after:bg-blue-100 after:ml-2">
+                                    ${day} ${isDayIncluded ? '' : '<span class="text-[10px] text-slate-400 font-normal lowercase tracking-normal ml-1.5">(not included)</span>'}
+                                </h3>
+                                <div class="pl-2 border-l-2 ${isDayIncluded ? 'border-blue-200' : 'border-slate-200'}">`;
 
                             if (isDiff) {
                                 contentHtml += createFieldHtml({
@@ -1655,6 +2045,7 @@
                         DAYS.forEach(day => {
                             if (!globalSettings.activeDays[day]) return;
                             if (!item.data[day]) item.data[day] = {};
+                            const isDayIncluded = itemDays[day] !== false;
                             if (!Array.isArray(item.data[day].sentences) || item.data[day].sentences.length === 0) {
                                 item.data[day].sentences = [
                                     { sent: (day === 'Monday' && !item.data[day].sent) ? 'The dog played in the mud.' : (item.data[day].sent || ''), answer: item.data[day].answer || 'simple' }
@@ -1663,9 +2054,11 @@
 
                             const sentencesList = item.data[day].sentences;
 
-                            contentHtml += `<div>
-                                <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center before:content-[''] before:flex-1 before:h-[1px] before:bg-blue-100 before:mr-2 after:content-[''] after:flex-1 after:h-[1px] after:bg-blue-100 after:ml-2">${day}</h3>
-                                <div class="pl-2 border-l-2 border-slate-100 space-y-3">
+                            contentHtml += `<div id="daily-group-${day}" class="transition-all duration-200 ${isDayIncluded ? '' : 'opacity-40 grayscale pointer-events-none select-none'}">
+                                <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center before:content-[''] before:flex-1 before:h-[1px] before:bg-blue-100 before:mr-2 after:content-[''] after:flex-1 after:h-[1px] after:bg-blue-100 after:ml-2">
+                                    ${day} ${isDayIncluded ? '' : '<span class="text-[10px] text-slate-400 font-normal lowercase tracking-normal ml-1.5">(not included)</span>'}
+                                </h3>
+                                <div class="pl-2 border-l-2 ${isDayIncluded ? 'border-blue-200' : 'border-slate-200'} space-y-3">
                                     <div id="sc-sentences-list-${day}" class="space-y-3">`;
 
                             sentencesList.forEach((s, idx) => {
@@ -1798,9 +2191,12 @@
                             if (fields && fields.length > 0) {
                                 DAYS.forEach(day => {
                                     if (!globalSettings.activeDays[day]) return;
-                                    contentHtml += `<div>
-                                        <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center before:content-[''] before:flex-1 before:h-[1px] before:bg-blue-100 before:mr-2 after:content-[''] after:flex-1 after:h-[1px] after:bg-blue-100 after:ml-2">${day}</h3>
-                                        <div class="pl-2 border-l-2 border-slate-100">`;
+                                    const isDayIncluded = itemDays[day] !== false;
+                                    contentHtml += `<div id="daily-group-${day}" class="transition-all duration-200 ${isDayIncluded ? '' : 'opacity-40 grayscale pointer-events-none select-none'}">
+                                        <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center before:content-[''] before:flex-1 before:h-[1px] before:bg-blue-100 before:mr-2 after:content-[''] after:flex-1 after:h-[1px] after:bg-blue-100 after:ml-2">
+                                            ${day} ${isDayIncluded ? '' : '<span class="text-[10px] text-slate-400 font-normal lowercase tracking-normal ml-1.5">(not included)</span>'}
+                                        </h3>
+                                        <div class="pl-2 border-l-2 ${isDayIncluded ? 'border-blue-200' : 'border-slate-200'}">`;
                                     fields.forEach(f => {
                                         contentHtml += createFieldHtml(f, item.data[day][f.id], ['daily', day, f.id]);
                                     });
@@ -1808,6 +2204,32 @@
                                 });
                             }
                         }
+                    }
+
+                    if (isEditable && item.defKey !== 'mainIntro' && item.defKey !== 'dayDivider' && item.defKey !== 'finished') {
+                        const dayPillsHtml = DAYS.map(day => {
+                            const isChecked = itemDays[day] !== false;
+                            const isGloballyActive = globalSettings.activeDays[day] !== false;
+                            return `
+                                <label class="py-2 px-1 bg-white border ${isChecked ? 'border-blue-500 bg-blue-50/50 text-blue-700 font-bold ring-1 ring-blue-200' : 'border-slate-200 text-slate-400 font-medium hover:border-slate-300'} ${!isGloballyActive ? 'opacity-40' : ''} rounded-xl cursor-pointer flex flex-col items-center justify-center gap-1.5 transition-all text-xs select-none shadow-2xs">
+                                    <input type="checkbox" data-day="${day}" class="sec-insert-day-chk w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer" ${isChecked ? 'checked' : ''}>
+                                    <span class="text-xs font-semibold">${DAY_ABBR[day]}</span>
+                                </label>
+                            `;
+                        }).join('');
+
+                        contentHtml += `
+                            <div class="mt-6 pt-5 border-t border-slate-200" id="section-insert-days-container">
+                                <div class="flex items-center justify-between mb-2.5">
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Insert on days</label>
+                                    <span class="text-[11px] text-slate-400 font-medium">Included days</span>
+                                </div>
+                                <div class="grid grid-cols-5 gap-1.5">
+                                    ${dayPillsHtml}
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-2 font-medium">Uncheck any day this section should be excluded from.</p>
+                            </div>
+                        `;
                     }
 
                     contentHtml += `</div>`;
@@ -2882,6 +3304,19 @@
                         saveState();
                     });
                 });
+
+                content.querySelectorAll('.sec-insert-day-chk').forEach(chk => {
+                    chk.addEventListener('change', (e) => {
+                        const day = e.target.dataset.day;
+                        if (!item.includedDays) {
+                            item.includedDays = { 'Monday': true, 'Tuesday': true, 'Wednesday': true, 'Thursday': true, 'Friday': true };
+                        }
+                        item.includedDays[day] = e.target.checked;
+                        saveState();
+                        renderTimeline();
+                        renderInspector();
+                    });
+                });
             }
         }
 
@@ -2925,11 +3360,95 @@
             return pyramid.join('\n');
         }
 
+        const ASSEMBLE_PROGRESS_STEPS = [
+            { title: "Duplicating deck", desc: "Cloning slide templates in your Google Drive..." },
+            { title: "Making Monday", desc: "Building Monday's phonics & activity cards..." },
+            { title: "Tackling Tuesday", desc: "Generating Tuesday's review sequence..." },
+            { title: "Working on Wednesday", desc: "Setting up Wednesday's interactive tasks..." },
+            { title: "Thrashing out Thursday", desc: "Configuring Thursday's exercises & routines..." },
+            { title: "Finalising Friday", desc: "Formatting Friday's review and summary slides..." },
+            { title: "Putting on finishing touches", desc: "Finalizing slide notes and generating links..." }
+        ];
+
+        let assembleProgressTimer = null;
+        let assembleCurrentStep = 0;
+
+        function startAssembleLoading() {
+            stopAssembleLoading();
+            assembleCurrentStep = 0;
+            const loadingContainer = document.getElementById('assemble-loading-container');
+            const footerControls = document.getElementById('modal-footer-controls');
+            const jsonToggleBtn = document.getElementById('btn-toggle-json');
+            
+            if (loadingContainer) loadingContainer.classList.remove('hidden');
+            if (footerControls) footerControls.classList.add('hidden');
+            if (jsonToggleBtn) jsonToggleBtn.classList.add('pointer-events-none', 'opacity-50');
+
+            updateAssembleProgressUI(assembleCurrentStep);
+
+            assembleProgressTimer = setInterval(() => {
+                assembleCurrentStep++;
+                if (assembleCurrentStep < ASSEMBLE_PROGRESS_STEPS.length) {
+                    updateAssembleProgressUI(assembleCurrentStep);
+                } else {
+                    updateAssembleProgressUI(ASSEMBLE_PROGRESS_STEPS.length - 1);
+                }
+            }, 3000);
+        }
+
+        function updateAssembleProgressUI(stepIndex) {
+            const step = ASSEMBLE_PROGRESS_STEPS[stepIndex] || ASSEMBLE_PROGRESS_STEPS[0];
+            const titleEl = document.getElementById('assemble-loading-title');
+            const descEl = document.getElementById('assemble-loading-desc');
+            const dots = document.querySelectorAll('.loading-dot');
+
+            if (titleEl) {
+                titleEl.style.opacity = '0';
+                setTimeout(() => {
+                    titleEl.textContent = step.title;
+                    titleEl.style.opacity = '1';
+                }, 120);
+            }
+
+            if (descEl) {
+                descEl.style.opacity = '0';
+                setTimeout(() => {
+                    descEl.textContent = step.desc;
+                    descEl.style.opacity = '1';
+                }, 120);
+            }
+
+            dots.forEach((dot, idx) => {
+                if (idx < stepIndex) {
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 transition-all duration-300 loading-dot';
+                } else if (idx === stepIndex) {
+                    dot.className = 'w-3 h-3 rounded-full bg-blue-600 ring-4 ring-blue-100 transition-all duration-300 loading-dot';
+                } else {
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-200 transition-all duration-300 loading-dot';
+                }
+            });
+        }
+
+        function stopAssembleLoading() {
+            if (assembleProgressTimer) {
+                clearInterval(assembleProgressTimer);
+                assembleProgressTimer = null;
+            }
+            const loadingContainer = document.getElementById('assemble-loading-container');
+            const footerControls = document.getElementById('modal-footer-controls');
+            const jsonToggleBtn = document.getElementById('btn-toggle-json');
+            
+            if (loadingContainer) loadingContainer.classList.add('hidden');
+            if (footerControls) footerControls.classList.remove('hidden');
+            if (jsonToggleBtn) jsonToggleBtn.classList.remove('pointer-events-none', 'opacity-50');
+        }
+
         let createdDeckUrl = null;
         let createdCopyUrl = null;
         let createdPptxUrl = null;
 
         function resetModalState() {
+            stopAssembleLoading();
             createdDeckUrl = null;
             createdCopyUrl = null;
             createdPptxUrl = null;
@@ -2937,6 +3456,7 @@
             const successActions = document.getElementById('deck-success-actions');
             const status = document.getElementById('api-status');
             const deckNameEl = document.getElementById('modal-deck-name');
+            const subtitleEl = document.getElementById('modal-deck-subtitle');
             const pptxContainer = document.getElementById('pptx-download-container');
             const pptxCheckboxContainer = document.getElementById('pptx-checkbox-container');
             const jsonContainer = document.getElementById('json-container');
@@ -2945,6 +3465,10 @@
 
             if (deckNameEl) {
                 deckNameEl.textContent = globalSettings.deckName || "Daily Review";
+            }
+
+            if (subtitleEl) {
+                subtitleEl.innerHTML = `Your deck <strong class="font-bold text-slate-900">${globalSettings.deckName || "Daily Review"}</strong> is ready for assembly. <i class="fa-solid fa-circle-check text-emerald-500 ml-0.5"></i>`;
             }
 
             if (status) {
@@ -2976,13 +3500,28 @@
                 toggleIcon.className = "fa-solid fa-chevron-right text-[10px] text-slate-400 ml-0.5 transition-transform";
             }
 
+            const modalTemplateContainer = document.getElementById('modal-template-container');
+            const modalTemplateSelect = document.getElementById('modal-template-select');
+
+            if (modalTemplateContainer) {
+                modalTemplateContainer.classList.remove('hidden');
+            }
+
+            if (modalTemplateSelect) {
+                modalTemplateSelect.innerHTML = getTemplateOptionsHtml();
+            }
+
             if (btn) {
                 btn.classList.remove('hidden');
                 btn.disabled = false;
-                btn.className = "bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0";
+                btn.className = "bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0 cursor-pointer";
                 btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Send to Google Slides`;
             }
         }
+
+        document.getElementById('modal-template-select')?.addEventListener('change', (e) => {
+            handleTemplateSelection(e.target.value);
+        });
 
         document.getElementById('btn-toggle-json')?.addEventListener('click', () => {
             const jsonContainer = document.getElementById('json-container');
@@ -3133,6 +3672,9 @@
                     const data = item.data;
 
                     if (item.defKey === 'mainIntro') return; 
+
+                    const itemDays = getItemIncludedDays(item);
+                    if (itemDays[day] === false) return;
 
                     if (def.hasTitleSlideOptions && data.titleSettings?.include) {
                         recipe.slides.push({
@@ -3792,6 +4334,7 @@
         }
 
         document.getElementById('btn-close-modal').addEventListener('click', () => {
+            stopAssembleLoading();
             const modal = document.getElementById('json-modal');
             const content = document.getElementById('json-modal-content');
             
@@ -3827,10 +4370,10 @@
             const status = document.getElementById('api-status');
             
             btn.disabled = true;
-            btn.className = "bg-blue-600 text-white px-7 py-3 rounded-xl font-bold transition-all flex items-center gap-2.5 shadow-md text-sm shrink-0 opacity-50 cursor-not-allowed";
-            status.classList.remove('hidden');
-            status.textContent = "Building presentation... (this may take 10-20 seconds)";
-            status.className = "text-sm font-semibold text-blue-600 animate-pulse";
+            status.classList.add('hidden');
+            
+            // Start the animated mock status loading experience
+            startAssembleLoading();
 
             try {
                 const response = await fetch(APPS_SCRIPT_URL, {
@@ -3843,21 +4386,34 @@
 
                 const result = await response.json();
 
+                // Stop the loading animation immediately upon receiving response
+                stopAssembleLoading();
+
                 if (result.status === "success") {
                     createdDeckUrl = result.url;
                     createdCopyUrl = result.copyUrl || (result.id ? `https://docs.google.com/presentation/d/${result.id}/copy` : (result.url ? result.url.replace(/\/edit.*$/, '/copy') : null));
                     
-                    status.textContent = "Success!";
-                    status.className = "text-sm font-bold text-emerald-500";
+                    status.innerHTML = `<span class="inline-flex items-center gap-1.5 text-emerald-600 font-bold"><i class="fa-solid fa-circle-check text-emerald-500"></i> Deck assembled successfully!</span>`;
+                    status.className = "text-sm font-bold text-emerald-600 leading-tight";
+                    status.classList.remove('hidden');
+
+                    const subtitleEl = document.getElementById('modal-deck-subtitle');
+                    if (subtitleEl) {
+                        subtitleEl.innerHTML = `Your deck <strong class="font-bold text-slate-900">${globalSettings.deckName || "Daily Review"}</strong> is assembled and ready in your Google Drive! <i class="fa-solid fa-circle-check text-emerald-500 ml-0.5"></i>`;
+                    }
                     
                     btn.classList.add('hidden');
-                    if (successActions) {
-                        successActions.classList.remove('hidden');
+                    const modalTemplateContainer = document.getElementById('modal-template-container');
+                    if (modalTemplateContainer) {
+                        modalTemplateContainer.classList.add('hidden');
                     }
-
                     const pptxCheckboxContainer = document.getElementById('pptx-checkbox-container');
                     if (pptxCheckboxContainer) {
                         pptxCheckboxContainer.classList.add('hidden');
+                    }
+
+                    if (successActions) {
+                        successActions.classList.remove('hidden');
                     }
 
                     if (result.pptxUrl || result.pptxId) {
@@ -3873,11 +4429,15 @@
                     throw new Error(result.message || "Unknown error occurred.");
                 }
             } catch (error) {
+                stopAssembleLoading();
                 console.error("API Error:", error);
-                status.textContent = "Error: Check console for details.";
+                status.textContent = "Error: " + (error.message || "Assembly failed. Check permissions.");
                 status.className = "text-sm font-bold text-rose-500";
+                status.classList.remove('hidden');
                 btn.disabled = false;
-                btn.className = "bg-blue-600 hover:bg-blue-700 text-white px-7 py-3 rounded-xl font-bold transition-all flex items-center gap-2.5 shadow-md text-sm shrink-0";
+                btn.classList.remove('hidden');
+                btn.className = "bg-blue-600 hover:bg-blue-700 text-white px-7 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0 cursor-pointer";
+                btn.innerHTML = `<i class="fa-solid fa-rotate-right"></i> Try Again`;
             }
         });
 
