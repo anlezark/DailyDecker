@@ -72,6 +72,59 @@ export function parseWordWithPhonemes(str) {
     return { word: str.trim(), count: 0 };
 }
 
+export function hasUnexpectedPhonemeSymbol(rawInput) {
+    if (rawInput === undefined || rawInput === null) return false;
+    const str = String(rawInput).trim();
+    if (!str) return false;
+    if (/^\d+$/.test(str)) return false; // valid number
+    const cleaned = str.replace(/[\s,]+/g, '');
+    for (const ch of cleaned) {
+        if (
+            ch === '.' || ch === '*' || ch === '•' ||
+            ch === '-' || ch === '_' || ch === '–' || ch === '—' || ch === '−' || ch === '‑' || ch === '‒' || ch === '―' ||
+            ch === '~' || ch === '〰' ||
+            ch === '^' || ch === '∧' ||
+            ch === '/' || ch === '(' || ch === ')' || ch === '‿'
+        ) {
+            continue;
+        }
+        return true;
+    }
+    return false;
+}
+
+export function formatPhonemeSymbols(rawInput) {
+    if (rawInput === undefined || rawInput === null) return '';
+    if (typeof rawInput === 'number' || (/^\d+$/.test(String(rawInput).trim()))) {
+        const n = parseInt(rawInput, 10);
+        if (n > 0) {
+            return Array(n).fill('—').join(' ');
+        }
+        return '';
+    }
+    const str = String(rawInput);
+    const cleaned = str.replace(/[\s,]+/g, '');
+    if (!cleaned) return '';
+
+    const symbols = [];
+    for (const ch of cleaned) {
+        if (ch === '.' || ch === '*' || ch === '•') {
+            symbols.push('•');
+        } else if (ch === '-' || ch === '_' || ch === '–' || ch === '—' || ch === '−' || ch === '‑' || ch === '‒' || ch === '―') {
+            symbols.push('—');
+        } else if (ch === '~' || ch === '〰') {
+            symbols.push('〰');
+        } else if (ch === '^' || ch === '∧') {
+            symbols.push('∧');
+        } else if (ch === '/' || ch === '(' || ch === ')' || ch === '‿') {
+            symbols.push('‿');
+        } else {
+            symbols.push(ch);
+        }
+    }
+    return symbols.join(' ');
+}
+
 export function getItemIncludedDays(item) {
     if (!item) return { 'Monday': true, 'Tuesday': true, 'Wednesday': true, 'Thursday': true, 'Friday': true };
     if (!item.includedDays) {

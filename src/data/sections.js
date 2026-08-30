@@ -102,16 +102,12 @@ export const SECTION_DEFS = {
         fields: [{ id: 'words', label: 'Words (comma separated)', type: 'text' }]
     },
     'sectReadWordWriteWord': {
-        title: 'Read a Word, Write a Word.', shortDesc: 'Show a word than hide the word.', icon: 'fa-spell-check', color: 'text-sky-600', bg: 'bg-sky-100', type: 'mixed', hasTitleSlideOptions: true,
-        description: 'This section shows a word on a slide, then replaces the word with lines (underscores) - one per phoneme - for students to write the word on their whiteboards. Specify the words below. Use the differentiate checkbox to allow two words on the slide for a mild/spicy choice.',
+        title: 'Read a Word, Write a Word.', shortDesc: 'Show a word then hide the word.', icon: 'fa-spell-check', color: 'text-sky-600', bg: 'bg-sky-100', type: 'mixed', hasTitleSlideOptions: true,
+        description: 'This section shows a word on a slide, then replaces the word with symbols (one per phoneme) for students to write the word on their whiteboards. Specify words and symbols below. Use the differentiate checkbox to allow two words on the slide for a mild/spicy choice.',
         weeklyFields: [
             { id: 'differentiate', label: 'Differentiation: Use two words per slide (mild and spicy)', type: 'checkbox', default: false }
         ],
-        dailyFields: [
-            { id: 'words', label: 'Word(s)', type: 'text', default: '', placeholder: 'cat 3, drive 4', helpText: 'Type word(s) and number of phonemes. Separate by comma if two or more words.' },
-            { id: 'mildWords', label: 'Mild word(s)', type: 'text', default: '', placeholder: 'cat 3, drive 4' },
-            { id: 'spicyWords', label: 'Spicy word(s)', type: 'text', default: '', placeholder: 'Use the same number of mild and spicy words.' }
-        ]
+        dailyFields: []
     },
     'sectF': {
         title: 'Discriminate the Similar Sounds', shortDesc: 'Build auditory discrimination, e.g. pen/pan', icon: 'fa-ear-listen', color: 'text-teal-500', bg: 'bg-teal-100', type: 'daily', hasTitleSlideOptions: true,

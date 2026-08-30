@@ -3,7 +3,7 @@ import { SECTION_DEFS } from '../data/sections.js';
 import { DAYS, SENTENCE_TYPE_DEFINITIONS, SOUNDS_WRITE_LEVELS } from '../data/constants.js';
 import { getPhonicsPoolInfo } from '../data/phonics.js';
 import { buildPyramid } from '../export/recipe.js';
-import { parseWordWithPhonemes } from '../utils/helpers.js';
+import { parseWordWithPhonemes, formatPhonemeSymbols } from '../utils/helpers.js';
 
 let currentPreviewDay = 'Monday';
 let currentSlideSubIndex = 0;
@@ -931,20 +931,30 @@ function renderSectReadWordWriteWordPreview(data, dayData, day, subIndex = 0) {
 
     if (isDiff) {
         // Differentiation TRUE: mild & spicy
-        const mildRaw = (dayData?.mildWords !== undefined && dayData.mildWords !== '' ? dayData.mildWords : (data.mildWords || data.weekly?.mildWords || '')).split(',')[0]?.trim();
-        const spicyRaw = (dayData?.spicyWords !== undefined && dayData.spicyWords !== '' ? dayData.spicyWords : (data.spicyWords || data.weekly?.spicyWords || '')).split(',')[0]?.trim();
+        let mildWord = 'cat';
+        let mildSymbols = '— — —';
+        let spicyWord = 'phone';
+        let spicySymbols = '— — —';
 
-        const mildParsed = parseWordWithPhonemes(mildRaw || 'cat 3');
-        const spicyParsed = parseWordWithPhonemes(spicyRaw || 'phone 3');
+        if (Array.isArray(dayData?.diffEntries) && dayData.diffEntries.length > 0) {
+            const first = dayData.diffEntries[0];
+            mildWord = (first.mildWord !== undefined && first.mildWord !== '') ? first.mildWord : (first.mildWord === '' ? 'cat' : mildWord);
+            mildSymbols = formatPhonemeSymbols(first.mildSymbols) || (first.mildWord ? formatPhonemeSymbols(first.mildWord.length) : '— — —');
+            spicyWord = (first.spicyWord !== undefined && first.spicyWord !== '') ? first.spicyWord : (first.spicyWord === '' ? 'phone' : spicyWord);
+            spicySymbols = formatPhonemeSymbols(first.spicySymbols) || (first.spicyWord ? formatPhonemeSymbols(first.spicyWord.length) : '— — —');
+        } else {
+            const mildRaw = (dayData?.mildWords !== undefined && dayData.mildWords !== '' ? dayData.mildWords : (data.mildWords || data.weekly?.mildWords || '')).split(',')[0]?.trim();
+            const spicyRaw = (dayData?.spicyWords !== undefined && dayData.spicyWords !== '' ? dayData.spicyWords : (data.spicyWords || data.weekly?.spicyWords || '')).split(',')[0]?.trim();
+            const mildParsed = parseWordWithPhonemes(mildRaw || 'cat 3');
+            const spicyParsed = parseWordWithPhonemes(spicyRaw || 'phone 3');
+            mildWord = mildParsed.word || 'cat';
+            mildSymbols = formatPhonemeSymbols(mildParsed.count || 3);
+            spicyWord = spicyParsed.word || 'phone';
+            spicySymbols = formatPhonemeSymbols(spicyParsed.count || 3);
+        }
 
-        const mildWord = mildParsed.word || 'cat';
-        const mildCount = parseInt(mildParsed.count) || 3;
-
-        const spicyWord = spicyParsed.word || 'phone';
-        const spicyCount = parseInt(spicyParsed.count) || 3;
-
-        const mildDisplay = subIndex === 0 ? mildWord : Array(mildCount).fill('_').join('  ');
-        const spicyDisplay = subIndex === 0 ? spicyWord : Array(spicyCount).fill('_').join('  ');
+        const mildDisplay = subIndex === 0 ? mildWord : mildSymbols;
+        const spicyDisplay = subIndex === 0 ? spicyWord : spicySymbols;
 
         return `
             <div class="w-full h-full relative flex flex-col items-center justify-center select-none bg-white p-4 overflow-hidden">
@@ -954,7 +964,7 @@ function renderSectReadWordWriteWordPreview(data, dayData, day, subIndex = 0) {
                     <!-- Mild Row (1 chilli) -->
                     <div class="w-full flex items-center justify-center gap-3">
                         <div class="w-8 flex justify-end shrink-0">${chilliSvg}</div>
-                        <div class="text-3xl sm:text-4xl text-slate-900 edu-font font-medium flex-1 text-left ${subIndex === 1 ? 'tracking-widest' : 'tracking-wide'}">${mildDisplay}</div>
+                        <div class="text-3xl sm:text-4xl text-slate-900 edu-font font-medium flex-1 text-left ${subIndex === 1 ? 'tracking-wider font-mono' : 'tracking-wide'}">${mildDisplay}</div>
                     </div>
 
                     <!-- Subtle Horizontal Divider -->
@@ -963,7 +973,7 @@ function renderSectReadWordWriteWordPreview(data, dayData, day, subIndex = 0) {
                     <!-- Spicy Row (2 chillies) -->
                     <div class="w-full flex items-center justify-center gap-3">
                         <div class="w-8 flex justify-end gap-0.5 shrink-0">${chilliSvg}${chilliSvg}</div>
-                        <div class="text-3xl sm:text-4xl text-slate-900 edu-font font-medium flex-1 text-left ${subIndex === 1 ? 'tracking-widest' : 'tracking-wide'}">${spicyDisplay}</div>
+                        <div class="text-3xl sm:text-4xl text-slate-900 edu-font font-medium flex-1 text-left ${subIndex === 1 ? 'tracking-wider font-mono' : 'tracking-wide'}">${spicyDisplay}</div>
                     </div>
                 </div>
             </div>
@@ -971,18 +981,27 @@ function renderSectReadWordWriteWordPreview(data, dayData, day, subIndex = 0) {
     }
 
     // Differentiation FALSE: single word(s)
-    const wordsRaw = (dayData?.words !== undefined && dayData.words !== '' ? dayData.words : (data.words || data.weekly?.words || '')).split(',')[0]?.trim();
-    const parsed = parseWordWithPhonemes(wordsRaw || 'bread 4');
-    const word = parsed.word || 'bread';
-    const count = parseInt(parsed.count) || 4;
+    let word = 'bread';
+    let symbols = '— — — —';
 
-    const display = subIndex === 0 ? word : Array(count).fill('_').join('  ');
+    if (Array.isArray(dayData?.entries) && dayData.entries.length > 0) {
+        const first = dayData.entries[0];
+        word = (first.word !== undefined && first.word !== '') ? first.word : (first.word === '' ? 'bread' : word);
+        symbols = formatPhonemeSymbols(first.symbols) || (first.word ? formatPhonemeSymbols(first.word.length) : '— — — —');
+    } else {
+        const wordsRaw = (dayData?.words !== undefined && dayData.words !== '' ? dayData.words : (data.words || data.weekly?.words || '')).split(',')[0]?.trim();
+        const parsed = parseWordWithPhonemes(wordsRaw || 'bread 4');
+        word = parsed.word || 'bread';
+        symbols = formatPhonemeSymbols(parsed.count || 4);
+    }
+
+    const display = subIndex === 0 ? word : symbols;
 
     return `
         <div class="w-full h-full relative flex flex-col items-center justify-center select-none bg-white p-4 overflow-hidden">
             ${applyBadge}
 
-            <span class="text-4xl sm:text-5xl text-slate-900 edu-font font-medium ${subIndex === 1 ? 'tracking-widest' : 'tracking-wide'}">${display}</span>
+            <span class="text-4xl sm:text-5xl text-slate-900 edu-font font-medium ${subIndex === 1 ? 'tracking-wider font-mono' : 'tracking-wide'}">${display}</span>
         </div>
     `;
 }

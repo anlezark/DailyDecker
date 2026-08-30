@@ -2,7 +2,7 @@
 import { SECTION_DEFS } from '../data/sections.js';
 import { DAYS, SENTENCE_TYPE_DEFINITIONS, SOUNDS_WRITE_LEVELS } from '../data/constants.js';
 import { getPhonicsPoolInfo } from '../data/phonics.js';
-import { shuffleArray, randomizeCasing, parseWordWithPhonemes, getItemIncludedDays } from '../utils/helpers.js';
+import { shuffleArray, randomizeCasing, parseWordWithPhonemes, formatPhonemeSymbols, getItemIncludedDays } from '../utils/helpers.js';
 
 export function buildPyramid(sentence) {
     const words = (sentence || '').trim().split(/\s+/).filter(w => w);
@@ -563,56 +563,77 @@ export function buildPresentationRecipe(globalSettings, timelineItems, exportPpt
                 const isDiff = data.differentiate === true || data.weekly?.differentiate === true;
 
                 if (isDiff) {
-                    const mildStr = data[day]?.mildWords || "";
-                    const spicyStr = data[day]?.spicyWords || "";
-                    const mildList = mildStr.split(",").map(t => t.trim()).filter(Boolean).map(parseWordWithPhonemes);
-                    const spicyList = spicyStr.split(",").map(t => t.trim()).filter(Boolean).map(parseWordWithPhonemes);
-                    const maxLen = Math.max(mildList.length, spicyList.length);
-
-                    for (let i = 0; i < maxLen; i++) {
-                        const mildItem = mildList[i] || null;
-                        const spicyItem = spicyList[i] || null;
-                        const mildWord = mildItem ? mildItem.word : "";
-                        const spicyWord = spicyItem ? spicyItem.word : "";
-                        const mildCount = mildItem ? (Number(mildItem.count) > 0 ? Number(mildItem.count) : (mildWord ? mildWord.length : 0)) : 0;
-                        const spicyCount = spicyItem ? (Number(spicyItem.count) > 0 ? Number(spicyItem.count) : (spicyWord ? spicyWord.length : 0)) : 0;
-                        const mildUnderscores = mildCount > 0 ? Array(mildCount).fill('_').join(' ') : "";
-                        const spicyUnderscores = spicyCount > 0 ? Array(spicyCount).fill('_').join(' ') : "";
-
-                        recipe.slides.push({
-                            noteId: "[wordReadWrite_diff]",
-                            replacements: {
-                                "{{mild}}": mildWord,
-                                "{{spicy}}": spicyWord
-                            }
-                        });
-                        recipe.slides.push({
-                            noteId: "[wordReadWrite_diff]",
-                            replacements: {
-                                "{{mild}}": mildUnderscores,
-                                "{{spicy}}": spicyUnderscores
-                            }
-                        });
+                    let diffEntries = Array.isArray(data[day]?.diffEntries) ? data[day].diffEntries : null;
+                    if (!diffEntries || diffEntries.length === 0) {
+                        const mildStr = data[day]?.mildWords || "";
+                        const spicyStr = data[day]?.spicyWords || "";
+                        const mildList = mildStr.split(",").map(t => t.trim()).filter(Boolean).map(parseWordWithPhonemes);
+                        const spicyList = spicyStr.split(",").map(t => t.trim()).filter(Boolean).map(parseWordWithPhonemes);
+                        const maxLen = Math.max(mildList.length, spicyList.length);
+                        diffEntries = [];
+                        for (let i = 0; i < maxLen; i++) {
+                            const mildItem = mildList[i] || null;
+                            const spicyItem = spicyList[i] || null;
+                            diffEntries.push({
+                                mildWord: mildItem ? mildItem.word : "",
+                                mildSymbols: mildItem && mildItem.count ? formatPhonemeSymbols(mildItem.count) : "",
+                                spicyWord: spicyItem ? spicyItem.word : "",
+                                spicySymbols: spicyItem && spicyItem.count ? formatPhonemeSymbols(spicyItem.count) : ""
+                            });
+                        }
                     }
-                } else {
-                    const wordsStr = data[day]?.words || "";
-                    const wordsList = wordsStr.split(",").map(t => t.trim()).filter(Boolean).map(parseWordWithPhonemes);
 
-                    wordsList.forEach(itemObj => {
-                        const count = Number(itemObj.count) > 0 ? Number(itemObj.count) : (itemObj.word ? itemObj.word.length : 0);
-                        const underscores = count > 0 ? Array(count).fill('_').join(' ') : (itemObj.word ? '_' : '');
-                        recipe.slides.push({
-                            noteId: "[wordReadWrite]",
-                            replacements: {
-                                "{{word}}": itemObj.word
-                            }
-                        });
-                        recipe.slides.push({
-                            noteId: "[wordReadWrite]",
-                            replacements: {
-                                "{{word}}": underscores
-                            }
-                        });
+                    diffEntries.forEach(entry => {
+                        const mildWord = entry.mildWord || "";
+                        const spicyWord = entry.spicyWord || "";
+                        const mildSymbols = formatPhonemeSymbols(entry.mildSymbols) || (mildWord ? formatPhonemeSymbols(mildWord.length) : "");
+                        const spicySymbols = formatPhonemeSymbols(entry.spicySymbols) || (spicyWord ? formatPhonemeSymbols(spicyWord.length) : "");
+
+                        if (mildWord || spicyWord) {
+                            recipe.slides.push({
+                                noteId: "[wordReadWrite_diff]",
+                                replacements: {
+                                    "{{mild}}": mildWord,
+                                    "{{spicy}}": spicyWord
+                                }
+                            });
+                            recipe.slides.push({
+                                noteId: "[wordReadWrite_diff]",
+                                replacements: {
+                                    "{{mild}}": mildSymbols,
+                                    "{{spicy}}": spicySymbols
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    let entries = Array.isArray(data[day]?.entries) ? data[day].entries : null;
+                    if (!entries || entries.length === 0) {
+                        const wordsStr = data[day]?.words || "";
+                        const wordsList = wordsStr.split(",").map(t => t.trim()).filter(Boolean).map(parseWordWithPhonemes);
+                        entries = wordsList.map(itemObj => ({
+                            word: itemObj.word,
+                            symbols: itemObj.count ? formatPhonemeSymbols(itemObj.count) : ""
+                        }));
+                    }
+
+                    entries.forEach(entry => {
+                        const word = entry.word || "";
+                        const symbols = formatPhonemeSymbols(entry.symbols) || (word ? formatPhonemeSymbols(word.length) : "—");
+                        if (word) {
+                            recipe.slides.push({
+                                noteId: "[wordReadWrite]",
+                                replacements: {
+                                    "{{word}}": word
+                                }
+                            });
+                            recipe.slides.push({
+                                noteId: "[wordReadWrite]",
+                                replacements: {
+                                    "{{word}}": symbols
+                                }
+                            });
+                        }
                     });
                 }
             }

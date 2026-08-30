@@ -15,7 +15,9 @@ import {
 import { 
     showToast, 
     getItemIncludedDays, 
-    parseWordWithPhonemes 
+    parseWordWithPhonemes,
+    formatPhonemeSymbols,
+    hasUnexpectedPhonemeSymbol 
 } from '../utils/helpers.js';
 import { renderTimeline, addTimelineItem } from './timeline.js';
 import { 
@@ -702,6 +704,29 @@ export function renderInspector() {
             if (activeDays.length > 0) {
                 contentHtml += `<div class="space-y-3 border-t border-slate-200 pt-3"><h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Daily Content</h4>`;
                 
+                if (item.defKey === 'sectReadWordWriteWord') {
+                    contentHtml += `
+                        <div class="bg-sky-50/80 border border-sky-200/80 rounded-xl p-3 text-xs text-slate-700 space-y-1.5 mb-2">
+                            <div class="font-bold text-sky-900 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-info text-sky-600"></i>
+                                <span>Symbol Guide</span>
+                            </div>
+                            <div class="text-[11px] text-slate-700 space-y-1">
+                                <div>Type <code class="bg-white px-1 py-0.5 rounded border border-slate-200 text-slate-800 font-mono text-[10px]">-</code> (dash) for <strong class="font-bold text-slate-900">—</strong> (All phonemes)</div>
+                                <div>Type <code class="bg-white px-1 py-0.5 rounded border border-slate-200 text-slate-800 font-mono text-[10px]">0-9</code> for number of phonemes (e.g. 3 will be "— — —")</div>
+                                <div class="text-[10px] font-semibold text-slate-500 pt-1 uppercase tracking-wide">Optional:</div>
+                                <div class="space-y-1 text-[11px]">
+                                    <div>Type <code class="bg-white px-1 py-0.5 rounded border border-slate-200 text-slate-800 font-mono text-[10px]">.</code> (full stop) for <strong class="font-bold text-slate-900">•</strong> (Monograph)</div>
+                                    <div>Type <code class="bg-white px-1 py-0.5 rounded border border-slate-200 text-slate-800 font-mono text-[10px]">-</code> (dash) for <strong class="font-bold text-slate-900">—</strong> (Digraph)</div>
+                                    <div>Type <code class="bg-white px-1 py-0.5 rounded border border-slate-200 text-slate-800 font-mono text-[10px]">~</code> (tilde) for <strong class="font-bold text-slate-900">〰</strong> (Trigraph)</div>
+                                    <div>Type <code class="bg-white px-1 py-0.5 rounded border border-slate-200 text-slate-800 font-mono text-[10px]">^</code> (shift+6) for <strong class="font-bold text-slate-900">∧</strong> (Tetragraph)</div>
+                                    <div>Type <code class="bg-white px-1 py-0.5 rounded border border-slate-200 text-slate-800 font-mono text-[10px]">(</code> (bracket) for <strong class="font-bold text-slate-900">‿</strong> (Split digraph)</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
                 activeDays.forEach(day => {
                     const dayData = (item.data && item.data[day]) || {};
                     contentHtml += `
@@ -778,22 +803,136 @@ export function renderInspector() {
                     } else if (item.defKey === 'sectReadWordWriteWord') {
                         const isDiff = item.data?.differentiate === true || item.data?.weekly?.differentiate === true;
                         if (isDiff) {
+                            let diffEntries = Array.isArray(dayData.diffEntries) ? dayData.diffEntries : null;
+                            if (!diffEntries || diffEntries.length === 0) {
+                                if (dayData.mildWords !== undefined || dayData.spicyWords !== undefined) {
+                                    const mildList = (dayData.mildWords || '').split(',').map(s => parseWordWithPhonemes(s));
+                                    const spicyList = (dayData.spicyWords || '').split(',').map(s => parseWordWithPhonemes(s));
+                                    const maxLen = Math.max(mildList.length, spicyList.length, 1);
+                                    diffEntries = [];
+                                    for (let i = 0; i < maxLen; i++) {
+                                        const m = mildList[i] || { word: '', count: 0 };
+                                        const s = spicyList[i] || { word: '', count: 0 };
+                                        diffEntries.push({
+                                            mildWord: m.word || '',
+                                            mildSymbols: m.count ? Array(m.count).fill('—').join(' ') : '',
+                                            spicyWord: s.word || '',
+                                            spicySymbols: s.count ? Array(s.count).fill('—').join(' ') : ''
+                                        });
+                                    }
+                                } else {
+                                    diffEntries = [{ mildWord: '', mildSymbols: '', spicyWord: '', spicySymbols: '' }];
+                                }
+                            }
+
                             contentHtml += `
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-500 mb-1">Mild word(s)</label>
-                                    <input type="text" data-path='["daily","${day}","mildWords"]' value="${dayData.mildWords !== undefined ? dayData.mildWords : ''}" placeholder="cat 3, drive 4" class="w-full text-xs p-2 bg-white border border-slate-200 rounded-lg">
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-500 mb-1">Spicy word(s)</label>
-                                    <input type="text" data-path='["daily","${day}","spicyWords"]' value="${dayData.spicyWords !== undefined ? dayData.spicyWords : ''}" placeholder="phone 3, sprite 5" class="w-full text-xs p-2 bg-white border border-slate-200 rounded-lg">
+                                <div class="space-y-3 pt-1">
+                                    <div class="space-y-3">
+                                        ${diffEntries.map((entry, idx) => `
+                                            <div class="p-2.5 bg-white border border-slate-200 rounded-xl space-y-2 relative shadow-2xs">
+                                                ${diffEntries.length > 1 ? `
+                                                    <button type="button" class="btn-rwww-remove-diff absolute top-2 right-2 text-slate-400 hover:text-rose-500 p-1 text-xs transition cursor-pointer" data-day="${day}" data-index="${idx}" title="Remove word pair">
+                                                        <i class="fa-solid fa-trash-can"></i>
+                                                    </button>
+                                                ` : ''}
+                                                
+                                                <!-- Mild Word Row -->
+                                                <div class="space-y-1">
+                                                    <div class="grid grid-cols-2 gap-2 items-end">
+                                                        <div>
+                                                            <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Mild word</label>
+                                                            <input type="text" data-day="${day}" data-index="${idx}" data-field="mildWord" value="${entry.mildWord !== undefined ? entry.mildWord : ''}" placeholder="cat" class="rwww-diff-field w-full text-xs p-2 bg-slate-50/50 border border-slate-200 rounded-lg focus:bg-white focus:border-blue-500 focus:outline-none transition">
+                                                        </div>
+                                                        <div>
+                                                            <div class="flex items-center justify-between mb-0.5">
+                                                                <label class="block text-[10px] font-semibold text-slate-600">Symbols</label>
+                                                            </div>
+                                                            <div class="relative flex items-center">
+                                                                <input type="text" data-day="${day}" data-index="${idx}" data-field="mildSymbols" value="${entry.mildSymbols !== undefined ? entry.mildSymbols : ''}" placeholder="————" class="rwww-diff-field w-full text-xs p-2 pr-7 bg-slate-50/50 border border-slate-200 rounded-lg focus:bg-white focus:border-blue-500 focus:outline-none transition font-mono">
+                                                                <span class="rwww-symbol-warning absolute right-2 text-amber-500 text-xs cursor-help ${hasUnexpectedPhonemeSymbol(entry.mildSymbols) ? '' : 'hidden'}" title="Unexpected symbol">
+                                                                    <i class="fa-solid fa-circle-exclamation"></i>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Spicy Word Row -->
+                                                <div class="space-y-1">
+                                                    <div class="grid grid-cols-2 gap-2 items-end">
+                                                        <div>
+                                                            <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Spicy word</label>
+                                                            <input type="text" data-day="${day}" data-index="${idx}" data-field="spicyWord" value="${entry.spicyWord !== undefined ? entry.spicyWord : ''}" placeholder="phone" class="rwww-diff-field w-full text-xs p-2 bg-slate-50/50 border border-slate-200 rounded-lg focus:bg-white focus:border-blue-500 focus:outline-none transition">
+                                                        </div>
+                                                        <div>
+                                                            <div class="flex items-center justify-between mb-0.5">
+                                                                <label class="block text-[10px] font-semibold text-slate-600">Symbols</label>
+                                                            </div>
+                                                            <div class="relative flex items-center">
+                                                                <input type="text" data-day="${day}" data-index="${idx}" data-field="spicySymbols" value="${entry.spicySymbols !== undefined ? entry.spicySymbols : ''}" placeholder="————" class="rwww-diff-field w-full text-xs p-2 pr-7 bg-slate-50/50 border border-slate-200 rounded-lg focus:bg-white focus:border-blue-500 focus:outline-none transition font-mono">
+                                                                <span class="rwww-symbol-warning absolute right-2 text-amber-500 text-xs cursor-help ${hasUnexpectedPhonemeSymbol(entry.spicySymbols) ? '' : 'hidden'}" title="Unexpected symbol">
+                                                                    <i class="fa-solid fa-circle-exclamation"></i>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <button type="button" class="btn-rwww-add-diff w-full py-1.5 bg-sky-50/70 hover:bg-sky-100/70 text-sky-700 border border-sky-200 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer" data-day="${day}">
+                                        <i class="fa-solid fa-plus text-[10px]"></i> Add words
+                                    </button>
                                 </div>
                             `;
                         } else {
+                            let entries = Array.isArray(dayData.entries) ? dayData.entries : null;
+                            if (!entries || entries.length === 0) {
+                                if (dayData.words !== undefined) {
+                                    const wordsList = (dayData.words || '').split(',').map(s => parseWordWithPhonemes(s));
+                                    entries = wordsList.map(w => ({
+                                        word: w.word || '',
+                                        symbols: w.count ? Array(w.count).fill('—').join(' ') : ''
+                                    }));
+                                    if (entries.length === 0) entries = [{ word: '', symbols: '' }];
+                                } else {
+                                    entries = [{ word: '', symbols: '' }];
+                                }
+                            }
+
                             contentHtml += `
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-500 mb-1">Word(s)</label>
-                                    <input type="text" data-path='["daily","${day}","words"]' value="${dayData.words !== undefined ? dayData.words : ''}" placeholder="bread 4, cat 3" class="w-full text-xs p-2 bg-white border border-slate-200 rounded-lg">
-                                    <p class="text-[10px] text-slate-400 mt-1">Type word(s) and number of phonemes. Separate by comma if two or more words.</p>
+                                <div class="space-y-3 pt-1">
+                                    <div class="space-y-2">
+                                        ${entries.map((entry, idx) => `
+                                            <div class="flex items-center gap-2">
+                                                <div class="grid grid-cols-2 gap-2 flex-1 items-end">
+                                                    <div>
+                                                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Word</label>
+                                                        <input type="text" data-day="${day}" data-index="${idx}" data-field="word" value="${entry.word !== undefined ? entry.word : ''}" placeholder="bread" class="rwww-field w-full text-xs p-2 bg-white border border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition">
+                                                    </div>
+                                                    <div>
+                                                        <div class="flex items-center justify-between mb-0.5">
+                                                            <label class="block text-[10px] font-semibold text-slate-500">Symbols</label>
+                                                        </div>
+                                                        <div class="relative flex items-center">
+                                                            <input type="text" data-day="${day}" data-index="${idx}" data-field="symbols" value="${entry.symbols !== undefined ? entry.symbols : ''}" placeholder="————" class="rwww-field w-full text-xs p-2 pr-7 bg-white border border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition font-mono">
+                                                            <span class="rwww-symbol-warning absolute right-2 text-amber-500 text-xs cursor-help ${hasUnexpectedPhonemeSymbol(entry.symbols) ? '' : 'hidden'}" title="Unexpected symbol">
+                                                                <i class="fa-solid fa-circle-exclamation"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                ${entries.length > 1 ? `
+                                                    <button type="button" class="btn-rwww-remove-word text-slate-400 hover:text-rose-500 p-1 text-xs transition cursor-pointer shrink-0 self-end mb-1" data-day="${day}" data-index="${idx}" title="Remove word">
+                                                        <i class="fa-solid fa-trash-can"></i>
+                                                    </button>
+                                                ` : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <button type="button" class="btn-rwww-add-word w-full py-1.5 bg-sky-50/70 hover:bg-sky-100/70 text-sky-700 border border-sky-200 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer" data-day="${day}">
+                                        <i class="fa-solid fa-plus text-[10px]"></i> Add word
+                                    </button>
                                 </div>
                             `;
                         }
@@ -1348,6 +1487,167 @@ export function renderInspector() {
                     }
                 });
             });
+        }
+
+        // Read a Word, Write a Word listeners
+        if (item.defKey === 'sectReadWordWriteWord') {
+            const isDiff = item.data?.differentiate === true || item.data?.weekly?.differentiate === true;
+
+            if (isDiff) {
+                const handleDiffUpdate = (e) => {
+                    const d = e.target.dataset.day;
+                    const idx = parseInt(e.target.dataset.index) || 0;
+                    const fld = e.target.dataset.field;
+                    if (!item.data[d]) item.data[d] = {};
+                    if (!Array.isArray(item.data[d].diffEntries)) {
+                        item.data[d].diffEntries = [{ mildWord: '', mildSymbols: '', spicyWord: '', spicySymbols: '' }];
+                    }
+                    if (!item.data[d].diffEntries[idx]) {
+                        item.data[d].diffEntries[idx] = { mildWord: '', mildSymbols: '', spicyWord: '', spicySymbols: '' };
+                    }
+                    item.data[d].diffEntries[idx][fld] = e.target.value;
+
+                    // Update warning icon visibility if this was a symbol input
+                    if (fld === 'mildSymbols' || fld === 'spicySymbols') {
+                        const container = e.target.parentElement;
+                        const warnIcon = container ? container.querySelector('.rwww-symbol-warning') : null;
+                        if (warnIcon) {
+                            if (hasUnexpectedPhonemeSymbol(e.target.value)) {
+                                warnIcon.classList.remove('hidden');
+                            } else {
+                                warnIcon.classList.add('hidden');
+                            }
+                        }
+                    }
+
+                    saveState();
+                    refreshInspectorSlidePreview();
+                };
+
+                const handleDiffBlur = (e) => {
+                    const fld = e.target.dataset.field;
+                    if (fld === 'mildSymbols' || fld === 'spicySymbols') {
+                        const formatted = formatPhonemeSymbols(e.target.value);
+                        if (formatted && formatted !== e.target.value) {
+                            e.target.value = formatted;
+                            handleDiffUpdate(e);
+                        }
+                    }
+                };
+
+                content.querySelectorAll('.rwww-diff-field').forEach(input => {
+                    input.addEventListener('input', handleDiffUpdate);
+                    input.addEventListener('change', handleDiffUpdate);
+                    input.addEventListener('blur', handleDiffBlur);
+                });
+
+                content.querySelectorAll('.btn-rwww-add-diff').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const d = btn.dataset.day;
+                        if (!item.data[d]) item.data[d] = {};
+                        if (!Array.isArray(item.data[d].diffEntries)) {
+                            item.data[d].diffEntries = [{ mildWord: '', mildSymbols: '', spicyWord: '', spicySymbols: '' }];
+                        }
+                        item.data[d].diffEntries.push({ mildWord: '', mildSymbols: '', spicyWord: '', spicySymbols: '' });
+                        saveState();
+                        renderInspector();
+                        refreshInspectorSlidePreview();
+                    });
+                });
+
+                content.querySelectorAll('.btn-rwww-remove-diff').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const d = btn.dataset.day;
+                        const idx = parseInt(btn.dataset.index);
+                        if (item.data[d] && Array.isArray(item.data[d].diffEntries)) {
+                            item.data[d].diffEntries.splice(idx, 1);
+                            if (item.data[d].diffEntries.length === 0) {
+                                item.data[d].diffEntries.push({ mildWord: '', mildSymbols: '', spicyWord: '', spicySymbols: '' });
+                            }
+                            saveState();
+                            renderInspector();
+                            refreshInspectorSlidePreview();
+                        }
+                    });
+                });
+            } else {
+                const handleWordUpdate = (e) => {
+                    const d = e.target.dataset.day;
+                    const idx = parseInt(e.target.dataset.index) || 0;
+                    const fld = e.target.dataset.field;
+                    if (!item.data[d]) item.data[d] = {};
+                    if (!Array.isArray(item.data[d].entries)) {
+                        item.data[d].entries = [{ word: '', symbols: '' }];
+                    }
+                    if (!item.data[d].entries[idx]) {
+                        item.data[d].entries[idx] = { word: '', symbols: '' };
+                    }
+                    item.data[d].entries[idx][fld] = e.target.value;
+
+                    // Update warning icon visibility if this was a symbol input
+                    if (fld === 'symbols') {
+                        const container = e.target.parentElement;
+                        const warnIcon = container ? container.querySelector('.rwww-symbol-warning') : null;
+                        if (warnIcon) {
+                            if (hasUnexpectedPhonemeSymbol(e.target.value)) {
+                                warnIcon.classList.remove('hidden');
+                            } else {
+                                warnIcon.classList.add('hidden');
+                            }
+                        }
+                    }
+
+                    saveState();
+                    refreshInspectorSlidePreview();
+                };
+
+                const handleWordBlur = (e) => {
+                    const fld = e.target.dataset.field;
+                    if (fld === 'symbols') {
+                        const formatted = formatPhonemeSymbols(e.target.value);
+                        if (formatted && formatted !== e.target.value) {
+                            e.target.value = formatted;
+                            handleWordUpdate(e);
+                        }
+                    }
+                };
+
+                content.querySelectorAll('.rwww-field').forEach(input => {
+                    input.addEventListener('input', handleWordUpdate);
+                    input.addEventListener('change', handleWordUpdate);
+                    input.addEventListener('blur', handleWordBlur);
+                });
+
+                content.querySelectorAll('.btn-rwww-add-word').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const d = btn.dataset.day;
+                        if (!item.data[d]) item.data[d] = {};
+                        if (!Array.isArray(item.data[d].entries)) {
+                            item.data[d].entries = [{ word: '', symbols: '' }];
+                        }
+                        item.data[d].entries.push({ word: '', symbols: '' });
+                        saveState();
+                        renderInspector();
+                        refreshInspectorSlidePreview();
+                    });
+                });
+
+                content.querySelectorAll('.btn-rwww-remove-word').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const d = btn.dataset.day;
+                        const idx = parseInt(btn.dataset.index);
+                        if (item.data[d] && Array.isArray(item.data[d].entries)) {
+                            item.data[d].entries.splice(idx, 1);
+                            if (item.data[d].entries.length === 0) {
+                                item.data[d].entries.push({ word: '', symbols: '' });
+                            }
+                            saveState();
+                            renderInspector();
+                            refreshInspectorSlidePreview();
+                        }
+                    });
+                });
+            }
         }
 
         updatePreviewSubDots(item, item.data);
