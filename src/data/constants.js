@@ -14,7 +14,11 @@ export const DAY_ABBR = {
 };
 
 export const DEFAULT_TEMPLATE_ID = "12f9hl__t2nghjPeZSO1Ag1P-dLmJXXDKzCSVejT2QbY";
+export const NUMERACY_DEFAULT_TEMPLATE_ID = "1gnBku6pZ9ig25AdZD-iCHc0VKOkvjqjmyqbl3xvhPr8";
+export const NUMERACY_DEFAULT_TEMPLATE_LABEL = "Default Numeracy Template";
 export const STATE_KEY = 'reviewBuilder_v6_state';
+export const NUMERACY_STATE_KEY = 'reviewBuilder_v6_numeracy_state';
+
 
 export const SENTENCE_TYPE_DEFINITIONS = {
     'Declarative': 'Make a statement or express an idea.\ne.g.: "The cat is big."',
@@ -48,4 +52,4 @@ export const COMMON_DIGRAPHS = [
     { id: 'or-er', label: 'or (/er/)', tag: 'digraph_or-er' }
 ];
 
-export const STANDARD_STARTER_DESCRIPTION = 'This is a Deck Starter. Drag this to the Deck Sequencer to load the following set of sections to your deck. This will overwrite any sections currently in your deck sequence.';
+export const STANDARD_STARTER_DESCRIPTION = 'This is a Deck Starter. Drag this to the Deck Sequencer to load the following set of activities to your deck. This will overwrite any activities currently in your deck sequence.';

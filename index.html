@@ -28,7 +28,7 @@
 </head>
 <body class="h-screen flex flex-col overflow-hidden text-slate-800">
 
-    <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shrink-0 z-10 relative shadow-sm">
+    <header class="bg-white border-b border-slate-200 px-6 py-3.5 flex justify-between items-center shrink-0 z-10 relative shadow-sm">
         <div class="flex items-center gap-3">
             <div class="bg-blue-600 text-white p-2 rounded-lg"><i class="fa-solid fa-layer-group"></i></div>
             <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -39,10 +39,23 @@
                 <i class="fa-solid fa-circle-info text-blue-500"></i> About
             </button>
         </div>
-        <div class="flex items-center gap-3">
-            <button id="btn-open-folder-header" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2 border border-blue-200">
-                <i class="fa-solid fa-folder-open"></i> Open Drive Folder
+
+        <!-- Subject Workspace Switcher -->
+        <div id="workspace-switcher" class="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200 shadow-2xs">
+            <button id="btn-workspace-literacy" type="button" class="relative px-4 py-1.5 rounded-lg transition-all flex flex-col items-center justify-center bg-white text-blue-700 shadow-xs border border-slate-200/80 cursor-pointer min-w-[76px]" title="Literacy Daily Review">
+                <span class="font-extrabold text-[15px] leading-tight font-mono lowercase">a</span>
+                <span class="text-[11px] font-bold tracking-tight -mt-0.5">Literacy</span>
             </button>
+            <button id="btn-workspace-numeracy" type="button" class="relative px-4 py-1.5 rounded-lg transition-all flex flex-col items-center justify-center text-slate-600 hover:text-slate-900 cursor-pointer min-w-[86px]" title="Numeracy Daily Review (In development)">
+                <span class="font-extrabold text-[15px] leading-tight font-mono text-slate-700">1</span>
+                <div class="flex items-center gap-1 -mt-0.5">
+                    <span class="text-[11px] font-bold tracking-tight">Numeracy</span>
+                    <span class="text-[8px] uppercase tracking-wider font-extrabold bg-amber-100 text-amber-800 border border-amber-300/80 px-1 py-0.2 rounded-full leading-none whitespace-nowrap">In dev</span>
+                </div>
+            </button>
+        </div>
+
+        <div class="flex items-center gap-3">
             <button id="btn-assemble" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold transition-colors shadow-md flex items-center gap-2">
                 <i class="fa-solid fa-wand-magic-sparkles"></i> Assemble Deck
             </button>
@@ -54,7 +67,7 @@
         <!-- Library Panel -->
         <div class="w-1/4 bento-box flex flex-col overflow-hidden">
             <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 font-bold text-slate-700 flex justify-between items-center shrink-0">
-                <span><i class="fa-solid fa-book-open text-blue-500 mr-2"></i> Section Library</span>
+                <span><i class="fa-solid fa-book-open text-blue-500 mr-2"></i> Library</span>
             </div>
             <div class="p-4 overflow-y-auto flex-1">
                 <div id="library-parts" class="flex flex-col gap-3">
@@ -72,12 +85,12 @@
                         </div>
                     </div>
 
-                    <!-- Part 2: All Sections -->
+                    <!-- Part 2: All Activities -->
                     <div class="library-part border border-slate-200 rounded-xl overflow-hidden bg-white shadow-2xs">
                         <button type="button" class="library-part-header w-full px-4 py-3 bg-slate-100/80 hover:bg-slate-200/80 text-left font-bold text-slate-700 flex items-center justify-between transition-colors select-none" data-part="all-sections">
                             <div class="flex items-center gap-2.5">
                                 <i class="fa-solid fa-cubes text-blue-500 text-base"></i>
-                                <span class="text-sm font-bold text-slate-800">All Sections</span>
+                                <span class="text-sm font-bold text-slate-800">All Activities</span>
                                 <span class="text-[10px] font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full" id="all-sections-count">0</span>
                             </div>
                             <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform duration-200 part-chevron"></i>
@@ -210,7 +223,7 @@
                                 <span>What if I need a section that is not included in the library?</span>
                             </div>
                             <p class="text-slate-600 text-xs sm:text-sm pl-5">
-                                Use the 'Generic Section' as a placeholder, adding a reminder note that you can later edit in PowerPoint/Google Slides.
+                                Use the 'Placeholder' activity, adding a reminder note that you can later edit in PowerPoint/Google Slides.
                             </p>
                         </div>
 
@@ -220,16 +233,105 @@
                                 <span>Is this secure?</span>
                             </div>
                             <p class="text-slate-600 text-xs sm:text-sm pl-5">
-                                Your slide deck will be placed in a shared Google drive. Avoid adding sensitive information to your Deck.
+                                Your slide deck will be processed in a shared Google drive. Avoid including any sensitive information to your Deck.
+                            </p>
+                        </div>
+
+                        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div class="font-bold text-slate-800 mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-robot text-blue-600 text-xs"></i>
+                                <span>Does this site use AI?</span>
+                            </div>
+                            <p class="text-slate-600 text-xs sm:text-sm pl-5">
+                                Yes, the code is mostly AI generated using Google's AI Studio.
+                            </p>
+                        </div>
+
+                        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div class="font-bold text-slate-800 mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-user text-amber-600 text-xs"></i>
+                                <span>Who are you?</span>
+                            </div>
+                            <p class="text-slate-600 text-xs sm:text-sm pl-5">
+                                Hi, my name is Tom. I'm a full-time primary school teacher from NSW, Australia. I built Daily Deck to try and save time on certain classroom prep tasks. I'm not sure if I've reached the break-even point yet. If the site can help other teachers at all, then that's an absolute bonus.
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+                <button id="btn-open-contact" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl font-bold transition-all text-sm shadow-sm cursor-pointer flex items-center gap-2">
+                    <i class="fa-solid fa-envelope"></i> Get in touch
+                </button>
                 <button id="btn-close-about" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-bold transition-all text-sm shadow-sm cursor-pointer">
                     Got it
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact / Get in Touch Modal -->
+    <div id="contact-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 sm:p-6 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden transform scale-95 transition-transform" id="contact-modal-content">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+                <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2.5">
+                    <i class="fa-solid fa-envelope text-emerald-600"></i> Get in touch
+                </h2>
+                <button id="btn-close-contact-x" class="text-slate-400 hover:text-slate-600 p-1 transition-colors cursor-pointer">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <form id="contact-form" class="p-6 overflow-y-auto flex-1 space-y-4 text-sm">
+                <p class="text-slate-600 leading-relaxed bg-emerald-50/60 border border-emerald-100 rounded-xl p-3.5 text-xs sm:text-sm">
+                    If you have questions, suggestions, feedback or just want to say hi, please use the form below. Bear in mind that Daily Deck is a passion project maintained by a full-time teacher and you may not get a response right away.
+                </p>
+
+                <!-- Honeypot field (hidden from real users, traps bots) -->
+                <div class="hidden" aria-hidden="true">
+                    <label for="contact-website">Website</label>
+                    <input type="text" id="contact-website" name="website" tabindex="-1" autocomplete="off">
+                </div>
+
+                <!-- Feedback Alert Container -->
+                <div id="contact-feedback" class="hidden"></div>
+
+                <div>
+                    <label for="contact-name" class="block text-xs font-bold text-slate-700 mb-1">Name</label>
+                    <input type="text" id="contact-name" maxlength="100" required placeholder="Your name" class="w-full text-sm p-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+
+                <div>
+                    <label for="contact-email" class="block text-xs font-bold text-slate-700 mb-1">
+                        Email <span class="font-normal text-slate-400">(optional - if you would like a reply)</span>
+                    </label>
+                    <input type="email" id="contact-email" maxlength="150" placeholder="your.email@example.com" class="w-full text-sm p-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+
+                <div>
+                    <label for="contact-category" class="block text-xs font-bold text-slate-700 mb-1">Category</label>
+                    <select id="contact-category" class="w-full text-sm p-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
+                        <option value="Feedback">Feedback</option>
+                        <option value="Bug Report">Bug Report</option>
+                        <option value="Feature Request">Feature Request</option>
+                        <option value="Question">Question</option>
+                        <option value="Friendly Encouragement">Friendly Encouragement</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="contact-message" class="block text-xs font-bold text-slate-700 mb-1">Message</label>
+                    <textarea id="contact-message" rows="4" maxlength="3000" required placeholder="Write your message here..." class="w-full text-sm p-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none resize-y"></textarea>
+                </div>
+            </form>
+
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3 shrink-0">
+                <button type="button" id="btn-cancel-contact" class="text-slate-600 hover:text-slate-800 bg-white hover:bg-slate-100 border border-slate-200 px-4 py-2 rounded-xl font-semibold transition-all text-sm shadow-sm cursor-pointer">
+                    Cancel
+                </button>
+                <button type="submit" form="contact-form" id="btn-send-contact" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl font-bold transition-all text-sm shadow-sm cursor-pointer flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> Send
                 </button>
             </div>
         </div>

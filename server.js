@@ -9,8 +9,14 @@ const app = express();
 const PORT = 3000;
 const HOST = '0.0.0.0';
 
-// Serve static files from root directory
-app.use(express.static(__dirname));
+// Serve static files from root directory with no-cache in dev to prevent stale script caching
+app.use(express.static(__dirname, {
+  setHeaders: (res) => {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  }
+}));
 
 // Fallback to index.html
 app.get('*', (req, res) => {

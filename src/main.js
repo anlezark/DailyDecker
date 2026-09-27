@@ -8,6 +8,8 @@ import {
     setTimelineItems, 
     selectedItemId, 
     setSelectedItemId, 
+    currentWorkspace,
+    setCurrentWorkspace,
     saveState, 
     loadState 
 } from './state/state.js';
@@ -241,7 +243,7 @@ export function loadDeckStarter(starterKey) {
         const titleEl = document.getElementById('starter-modal-title');
         const bodyEl = document.getElementById('starter-modal-body');
         if (titleEl) titleEl.textContent = `Load "${starter.title}" Deck Starter?`;
-        if (bodyEl) bodyEl.textContent = `Loading the "${starter.title}" Deck Starter will replace all sections currently in your deck sequence. Do you want to proceed?`;
+        if (bodyEl) bodyEl.textContent = `Loading the "${starter.title}" Deck Starter will replace all activities currently in your deck sequence. Do you want to proceed?`;
         
         if (modal && content) {
             modal.classList.remove('hidden');
@@ -285,6 +287,8 @@ export function executeLoadDeckStarter(starterKey) {
     showToast(`Loaded "${starter.title}" Deck Starter!`, 'fa-circle-check text-emerald-400');
 }
 
+let contactModalOpenedAt = 0;
+
 export function openAboutModal() {
     const modal = document.getElementById('about-modal');
     const content = document.getElementById('about-modal-content');
@@ -299,6 +303,36 @@ export function openAboutModal() {
 export function closeAboutModal() {
     const modal = document.getElementById('about-modal');
     const content = document.getElementById('about-modal-content');
+    if (!modal || !content) return;
+    modal.classList.add('opacity-0');
+    content.classList.add('scale-95');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+export function openContactModal() {
+    const modal = document.getElementById('contact-modal');
+    const content = document.getElementById('contact-modal-content');
+    const feedbackEl = document.getElementById('contact-feedback');
+    if (!modal || !content) return;
+
+    contactModalOpenedAt = Date.now();
+    if (feedbackEl) {
+        feedbackEl.classList.add('hidden');
+        feedbackEl.innerHTML = '';
+    }
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95', 'opacity-0');
+    }, 10);
+}
+
+export function closeContactModal() {
+    const modal = document.getElementById('contact-modal');
+    const content = document.getElementById('contact-modal-content');
     if (!modal || !content) return;
     modal.classList.add('opacity-0');
     content.classList.add('scale-95');
@@ -327,6 +361,204 @@ export function closePrivacyModal() {
     setTimeout(() => {
         modal.classList.add('hidden');
     }, 300);
+}
+
+export function renderLibrary() {
+    const startersList = document.getElementById('part-starters-content');
+    const startersCountEl = document.getElementById('starters-count');
+    const allSectionsList = document.getElementById('all-sections-list');
+    const allSectionsCountEl = document.getElementById('all-sections-count');
+
+    if (currentWorkspace === 'numeracy') {
+        // Numeracy Workspace: Empty folders
+        if (startersList) {
+            startersList.innerHTML = `
+                <div class="py-6 px-4 text-center select-none">
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-600 flex items-center justify-center mx-auto mb-2 text-sm font-mono font-bold">1</div>
+                    <p class="text-xs font-semibold text-slate-600">No starter decks yet</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Starter decks will appear here once defined.</p>
+                </div>
+            `;
+        }
+        if (startersCountEl) startersCountEl.textContent = '0';
+
+        // Numeracy Workspace: Populate All Activities
+        const numeracySectionKeys = ['mainIntro', 'sectHundredsChart', 'numeracyPlaceholder'];
+        if (allSectionsCountEl) allSectionsCountEl.textContent = numeracySectionKeys.length;
+
+        if (allSectionsList) {
+            allSectionsList.innerHTML = '';
+            numeracySectionKeys.forEach(key => {
+                const def = SECTION_DEFS[key];
+                if (!def) return;
+                const el = document.createElement('div');
+                el.className = 'p-3 bg-white border border-slate-200 rounded-xl cursor-grab hover:border-amber-300 hover:shadow-sm transition-all flex items-center gap-3 group';
+                el.dataset.key = key;
+                el.onclick = () => selectItem(key, true);
+                el.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg ${def.bg} ${def.color} flex items-center justify-center shrink-0">
+                        <i class="fa-solid ${def.icon}"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-semibold text-slate-700 text-sm group-hover:text-amber-600 transition-colors truncate">${def.title}</div>
+                        <div class="text-[10px] text-slate-400 truncate">${def.shortDesc}</div>
+                    </div>
+                    <i class="fa-solid fa-grip-vertical ml-auto text-slate-300 shrink-0 pl-2"></i>
+                `;
+                allSectionsList.appendChild(el);
+            });
+
+            if (window.Sortable && !allSectionsList._sortable) {
+                allSectionsList._sortable = new window.Sortable(allSectionsList, {
+                    group: { name: 'shared', pull: 'clone', put: false },
+                    animation: 150,
+                    sort: false,
+                    ghostClass: 'drag-ghost'
+                });
+            }
+        }
+    } else {
+        // Literacy Workspace: Populate Starters
+        if (startersList) {
+            startersList.innerHTML = '';
+            Object.keys(STARTER_DEFS).forEach(key => {
+                const starter = STARTER_DEFS[key];
+                const el = document.createElement('div');
+                el.className = `p-3 bg-white border border-slate-200 rounded-xl cursor-grab hover:${starter.hoverBorder} hover:shadow-2xs transition-all flex items-center gap-3 group`;
+                el.dataset.key = key;
+                el.onclick = () => selectItem(key, true);
+                el.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg ${starter.bg} ${starter.color} flex items-center justify-center shrink-0 font-bold text-sm">
+                        <i class="fa-solid ${starter.icon}"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-semibold text-slate-700 text-sm group-hover:${starter.color} transition-colors truncate">${starter.title}</div>
+                        <div class="text-[10px] text-slate-400 truncate">${starter.shortDesc}</div>
+                    </div>
+                    <span class="text-[9px] font-bold uppercase tracking-wider ${starter.badgeClass} px-1.5 py-0.5 rounded border shrink-0">${starter.badge}</span>
+                    <i class="fa-solid fa-grip-vertical ml-auto text-slate-300 shrink-0 pl-1"></i>
+                `;
+                startersList.appendChild(el);
+            });
+
+            if (window.Sortable && !startersList._sortable) {
+                startersList._sortable = new window.Sortable(startersList, {
+                    group: { name: 'shared', pull: 'clone', put: false },
+                    animation: 150,
+                    sort: false,
+                    ghostClass: 'drag-ghost'
+                });
+            }
+        }
+        if (startersCountEl) startersCountEl.textContent = Object.keys(STARTER_DEFS).length;
+
+        // Literacy Workspace: Populate All Sections
+        const sectionKeys = Object.keys(SECTION_DEFS).filter(key => SECTION_DEFS[key] && SECTION_DEFS[key].workspace !== 'numeracy' && key !== 'placeholder');
+        if (allSectionsCountEl) allSectionsCountEl.textContent = sectionKeys.length;
+
+        if (allSectionsList) {
+            allSectionsList.innerHTML = '';
+            sectionKeys.forEach(key => {
+                const def = SECTION_DEFS[key];
+                const el = document.createElement('div');
+                el.className = 'p-3 bg-white border border-slate-200 rounded-xl cursor-grab hover:border-blue-300 hover:shadow-sm transition-all flex items-center gap-3 group';
+                el.dataset.key = key;
+                el.onclick = () => selectItem(key, true);
+                el.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg ${def.bg} ${def.color} flex items-center justify-center shrink-0">
+                        <i class="fa-solid ${def.icon}"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-semibold text-slate-700 text-sm group-hover:text-blue-600 transition-colors truncate">${def.title}</div>
+                        <div class="text-[10px] text-slate-400 truncate">${def.shortDesc}</div>
+                    </div>
+                    <i class="fa-solid fa-grip-vertical ml-auto text-slate-300 shrink-0 pl-2"></i>
+                `;
+                allSectionsList.appendChild(el);
+            });
+
+            if (window.Sortable && !allSectionsList._sortable) {
+                allSectionsList._sortable = new window.Sortable(allSectionsList, {
+                    group: { name: 'shared', pull: 'clone', put: false },
+                    animation: 150,
+                    sort: false,
+                    ghostClass: 'drag-ghost'
+                });
+            }
+        }
+    }
+}
+
+export function updateWorkspaceUI() {
+    const litBtn = document.getElementById('btn-workspace-literacy');
+    const numBtn = document.getElementById('btn-workspace-numeracy');
+
+    if (currentWorkspace === 'numeracy') {
+        if (litBtn) {
+            litBtn.className = "relative px-4 py-1.5 rounded-lg transition-all flex flex-col items-center justify-center text-slate-600 hover:text-slate-900 cursor-pointer min-w-[76px]";
+            litBtn.innerHTML = `
+                <span class="font-extrabold text-[15px] leading-tight font-mono text-slate-700 lowercase">a</span>
+                <span class="text-[11px] font-bold tracking-tight -mt-0.5">Literacy</span>
+            `;
+        }
+        if (numBtn) {
+            numBtn.className = "relative px-4 py-1.5 rounded-lg transition-all flex flex-col items-center justify-center bg-white text-amber-700 shadow-xs border border-slate-200/80 cursor-pointer min-w-[86px]";
+            numBtn.innerHTML = `
+                <span class="font-extrabold text-[15px] leading-tight font-mono text-amber-700">1</span>
+                <div class="flex items-center gap-1 -mt-0.5">
+                    <span class="text-[11px] font-bold tracking-tight">Numeracy</span>
+                    <span class="text-[8px] uppercase tracking-wider font-extrabold bg-amber-100 text-amber-800 border border-amber-300/80 px-1 py-0.2 rounded-full leading-none whitespace-nowrap">In dev</span>
+                </div>
+            `;
+        }
+    } else {
+        if (litBtn) {
+            litBtn.className = "relative px-4 py-1.5 rounded-lg transition-all flex flex-col items-center justify-center bg-white text-blue-700 shadow-xs border border-slate-200/80 cursor-pointer min-w-[76px]";
+            litBtn.innerHTML = `
+                <span class="font-extrabold text-[15px] leading-tight font-mono lowercase">a</span>
+                <span class="text-[11px] font-bold tracking-tight -mt-0.5">Literacy</span>
+            `;
+        }
+        if (numBtn) {
+            numBtn.className = "relative px-4 py-1.5 rounded-lg transition-all flex flex-col items-center justify-center text-slate-600 hover:text-slate-900 cursor-pointer min-w-[86px]";
+            numBtn.innerHTML = `
+                <span class="font-extrabold text-[15px] leading-tight font-mono text-slate-700">1</span>
+                <div class="flex items-center gap-1 -mt-0.5">
+                    <span class="text-[11px] font-bold tracking-tight">Numeracy</span>
+                    <span class="text-[8px] uppercase tracking-wider font-extrabold bg-amber-100 text-amber-800 border border-amber-300/80 px-1 py-0.2 rounded-full leading-none whitespace-nowrap">In dev</span>
+                </div>
+            `;
+        }
+    }
+}
+
+export function setWorkspace(workspace) {
+    if (currentWorkspace === workspace) return;
+    
+    // Save current workspace state before switching
+    saveState();
+
+    // Switch workspace
+    setCurrentWorkspace(workspace);
+
+    // Load new workspace state
+    loadState();
+
+    // Update UI elements
+    updateWorkspaceUI();
+    renderLibrary();
+    renderTimeline();
+    selectItem(null); // Reset selection to show Global Settings
+    syncTemplateSelects();
+
+    const deckNameEl = document.getElementById('timeline-filename');
+    if (deckNameEl) deckNameEl.textContent = globalSettings.deckName;
+
+    if (workspace === 'numeracy') {
+        showToast('Switched to Numeracy workspace', 'fa-calculator text-amber-500');
+    } else {
+        showToast('Switched to Literacy workspace', 'fa-book-open text-blue-500');
+    }
 }
 
 export function openDriveFolder(e) {
@@ -369,84 +601,17 @@ export function init() {
         });
     });
 
-    // Populate Library - Part 1: Deck Starters
-    const startersList = document.getElementById('part-starters-content');
-    if (startersList) {
-        startersList.innerHTML = '';
-        Object.keys(STARTER_DEFS).forEach(key => {
-            const starter = STARTER_DEFS[key];
-            const el = document.createElement('div');
-            el.className = `p-3 bg-white border border-slate-200 rounded-xl cursor-grab hover:${starter.hoverBorder} hover:shadow-2xs transition-all flex items-center gap-3 group`;
-            el.dataset.key = key;
-            el.onclick = () => selectItem(key, true);
-            el.innerHTML = `
-                <div class="w-8 h-8 rounded-lg ${starter.bg} ${starter.color} flex items-center justify-center shrink-0 font-bold text-sm">
-                    <i class="fa-solid ${starter.icon}"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="font-semibold text-slate-700 text-sm group-hover:${starter.color} transition-colors truncate">${starter.title}</div>
-                    <div class="text-[10px] text-slate-400 truncate">${starter.shortDesc}</div>
-                </div>
-                <span class="text-[9px] font-bold uppercase tracking-wider ${starter.badgeClass} px-1.5 py-0.5 rounded border shrink-0">${starter.badge}</span>
-                <i class="fa-solid fa-grip-vertical ml-auto text-slate-300 shrink-0 pl-1"></i>
-            `;
-            startersList.appendChild(el);
-        });
-
-        const startersCountEl = document.getElementById('starters-count');
-        if (startersCountEl) startersCountEl.textContent = Object.keys(STARTER_DEFS).length;
-
-        if (window.Sortable) {
-            new window.Sortable(startersList, {
-                group: { name: 'shared', pull: 'clone', put: false },
-                animation: 150,
-                sort: false,
-                ghostClass: 'drag-ghost'
-            });
-        }
-    }
-
-    // Populate Library - Part 2: All Sections
-    const allSectionsList = document.getElementById('all-sections-list');
-    const sectionKeys = Object.keys(SECTION_DEFS);
-    const countEl = document.getElementById('all-sections-count');
-    if (countEl) countEl.textContent = sectionKeys.length;
-
-    if (allSectionsList) {
-        allSectionsList.innerHTML = '';
-        sectionKeys.forEach(key => {
-            const def = SECTION_DEFS[key];
-            const el = document.createElement('div');
-            el.className = 'p-3 bg-white border border-slate-200 rounded-xl cursor-grab hover:border-blue-300 hover:shadow-sm transition-all flex items-center gap-3 group';
-            el.dataset.key = key;
-            el.onclick = () => selectItem(key, true);
-            el.innerHTML = `
-                <div class="w-8 h-8 rounded-lg ${def.bg} ${def.color} flex items-center justify-center shrink-0">
-                    <i class="fa-solid ${def.icon}"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="font-semibold text-slate-700 text-sm group-hover:text-blue-600 transition-colors truncate">${def.title}</div>
-                    <div class="text-[10px] text-slate-400 truncate">${def.shortDesc}</div>
-                </div>
-                <i class="fa-solid fa-grip-vertical ml-auto text-slate-300 shrink-0 pl-2"></i>
-            `;
-            allSectionsList.appendChild(el);
-        });
-
-        if (window.Sortable) {
-            new window.Sortable(allSectionsList, {
-                group: { name: 'shared', pull: 'clone', put: false },
-                animation: 150,
-                sort: false,
-                ghostClass: 'drag-ghost'
-            });
-        }
-    }
-
     // Preload Timeline OR Load State
     if (!loadState()) {
         setTimelineItems([]);
     }
+    
+    // Update Workspace Switcher UI
+    updateWorkspaceUI();
+
+    // Populate Library according to active workspace
+    renderLibrary();
+
     const deckNameEl = document.getElementById('timeline-filename');
     if (deckNameEl) deckNameEl.textContent = globalSettings.deckName;
     renderTimeline();
@@ -492,6 +657,7 @@ export function init() {
     document.getElementById('btn-reset')?.addEventListener('click', (e) => {
         e.stopPropagation(); 
         setTimelineItems([]);
+        renderTimeline();
         selectItem(null);
         saveState();
     });
@@ -505,8 +671,6 @@ export function init() {
             generateAndShowAssemblyModal();
         }, 200);
     });
-
-    document.getElementById('btn-open-folder-header')?.addEventListener('click', openDriveFolder);
 
     // Starters modal buttons
     document.getElementById('btn-starter-cancel')?.addEventListener('click', closeStarterModal);
@@ -595,6 +759,119 @@ export function init() {
         if (e.target === document.getElementById('about-modal')) closeAboutModal();
     });
 
+    // Contact / Get in touch modal buttons & form
+    document.getElementById('btn-open-contact')?.addEventListener('click', () => {
+        closeAboutModal();
+        setTimeout(() => {
+            openContactModal();
+        }, 150);
+    });
+    document.getElementById('btn-close-contact-x')?.addEventListener('click', closeContactModal);
+    document.getElementById('btn-cancel-contact')?.addEventListener('click', closeContactModal);
+    document.getElementById('contact-modal')?.addEventListener('click', (e) => {
+        if (e.target === document.getElementById('contact-modal')) closeContactModal();
+    });
+
+    document.getElementById('contact-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const nameInput = document.getElementById('contact-name');
+        const emailInput = document.getElementById('contact-email');
+        const categorySelect = document.getElementById('contact-category');
+        const messageInput = document.getElementById('contact-message');
+        const honeypotInput = document.getElementById('contact-website');
+        const btnSend = document.getElementById('btn-send-contact');
+        const feedbackEl = document.getElementById('contact-feedback');
+
+        const name = nameInput ? nameInput.value.trim() : '';
+        const email = emailInput ? emailInput.value.trim() : '';
+        const category = categorySelect ? categorySelect.value : 'Feedback';
+        const message = messageInput ? messageInput.value.trim() : '';
+        const honeypot = honeypotInput ? honeypotInput.value : '';
+        const elapsedMs = contactModalOpenedAt ? (Date.now() - contactModalOpenedAt) : 5000;
+
+        if (!message) {
+            showToast('Please enter a message before sending.', 'fa-triangle-exclamation text-amber-400');
+            if (messageInput) messageInput.focus();
+            return;
+        }
+
+        // Client-side rate limit check (30-second cooldown)
+        const lastSent = Number(localStorage.getItem('dailyDeckLastContactSent') || '0');
+        if (Date.now() - lastSent < 30000) {
+            if (feedbackEl) {
+                feedbackEl.className = 'p-3.5 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs flex items-start gap-2.5';
+                feedbackEl.innerHTML = `<i class="fa-solid fa-clock text-amber-500 text-sm mt-0.5 shrink-0"></i><div>Please wait a moment before sending another message.</div>`;
+                feedbackEl.classList.remove('hidden');
+            }
+            return;
+        }
+
+        if (feedbackEl) {
+            feedbackEl.classList.add('hidden');
+            feedbackEl.innerHTML = '';
+        }
+
+        const originalBtnHtml = btnSend ? btnSend.innerHTML : '<i class="fa-solid fa-paper-plane"></i> Send';
+        if (btnSend) {
+            btnSend.disabled = true;
+            btnSend.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Sending...';
+        }
+
+        try {
+            const response = await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8'
+                },
+                body: JSON.stringify({
+                    action: 'contact',
+                    name,
+                    email,
+                    category,
+                    message,
+                    honeypot,
+                    elapsedMs
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                localStorage.setItem('dailyDeckLastContactSent', String(Date.now()));
+                if (nameInput) nameInput.value = '';
+                if (emailInput) emailInput.value = '';
+                if (categorySelect) categorySelect.value = 'Feedback';
+                if (messageInput) messageInput.value = '';
+
+                showToast('Message sent! Thanks for getting in touch.', 'fa-circle-check text-emerald-400');
+                closeContactModal();
+            } else {
+                throw new Error(result.message || 'Could not send message.');
+            }
+        } catch (err) {
+            if (feedbackEl) {
+                feedbackEl.className = 'p-3.5 bg-rose-50 border border-rose-200 text-rose-900 rounded-xl text-xs flex items-start gap-2.5';
+                feedbackEl.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-500 text-sm mt-0.5 shrink-0"></i><div>${err.message || 'Failed to send message. Please try again.'}</div>`;
+                feedbackEl.classList.remove('hidden');
+            }
+        } finally {
+            if (btnSend) {
+                btnSend.disabled = false;
+                btnSend.innerHTML = originalBtnHtml;
+            }
+        }
+    });
+
+    // Workspace Switcher buttons
+    document.getElementById('btn-workspace-literacy')?.addEventListener('click', () => {
+        setWorkspace('literacy');
+    });
+
+    document.getElementById('btn-workspace-numeracy')?.addEventListener('click', () => {
+        setWorkspace('numeracy');
+    });
+
     // Assembly / JSON modal handlers
     document.getElementById('btn-close-modal')?.addEventListener('click', closeJsonModal);
 
@@ -643,6 +920,13 @@ export function init() {
         const btn = document.getElementById('btn-send-api');
         const successActions = document.getElementById('deck-success-actions');
         const status = document.getElementById('api-status');
+
+        if (!currentRecipe.templateId) {
+            status.textContent = "Please select or configure a Google Slides template ID before assembling.";
+            status.className = "text-sm font-bold text-amber-600";
+            status.classList.remove('hidden');
+            return;
+        }
         
         btn.disabled = true;
         status.classList.add('hidden');

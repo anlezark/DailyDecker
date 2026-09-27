@@ -1,13 +1,14 @@
 // Inspector panel rendering and form bindings
 import { SECTION_DEFS } from '../data/sections.js';
 import { STARTER_DEFS } from '../data/starters.js';
-import { DAYS, DAY_ABBR, SENTENCE_TYPE_DEFINITIONS, SOUNDS_WRITE_LEVELS, COMMON_DIGRAPHS, DEFAULT_TEMPLATE_ID } from '../data/constants.js';
+import { DAYS, DAY_ABBR, SENTENCE_TYPE_DEFINITIONS, SOUNDS_WRITE_LEVELS, COMMON_DIGRAPHS, DEFAULT_TEMPLATE_ID, NUMERACY_DEFAULT_TEMPLATE_ID, NUMERACY_DEFAULT_TEMPLATE_LABEL } from '../data/constants.js';
 import { getPhonicsPoolInfo } from '../data/phonics.js';
 import { 
     globalSettings, 
     timelineItems, 
     selectedItemId, 
     selectedLibraryKey, 
+    currentWorkspace,
     setSelectedItemId, 
     setSelectedLibraryKey, 
     saveState 
@@ -17,14 +18,18 @@ import {
     getItemIncludedDays, 
     parseWordWithPhonemes,
     formatPhonemeSymbols,
-    hasUnexpectedPhonemeSymbol 
+    hasUnexpectedPhonemeSymbol,
+    getHundredsChartInstruction,
+    getHundredsChartMultiplesList,
+    getHundredsChartDefaultRange
 } from '../utils/helpers.js';
 import { renderTimeline, addTimelineItem } from './timeline.js';
 import { 
     generateSlidePreviewHtml, 
     getPreviewSlideCount,
     setPreviewSubIndex,
-    getPreviewSubIndex
+    getPreviewSubIndex,
+    getPreviewDay
 } from './preview.js';
 
 export function refreshInspectorSlidePreview() {
@@ -48,21 +53,27 @@ export function refreshInspectorSlidePreview() {
 export function getSpeakerNotesText(itemOrDefKey, itemData = null) {
     const defKey = typeof itemOrDefKey === 'string' ? itemOrDefKey : itemOrDefKey?.defKey;
     let defaultPrompt = 'Find picture of kids playing in park.';
-    if (defKey === 'generic') {
-        defaultPrompt = 'Make a slide with a grammar quiz.';
+    if (defKey === 'numeracyPlaceholder') {
+        defaultPrompt = 'Insert a word problem here.';
+    } else if (defKey === 'generic' || defKey === 'placeholder') {
+        defaultPrompt = currentWorkspace === 'numeracy'
+            ? 'Insert a word problem here.'
+            : 'Make a slide with a grammar quiz.';
     }
 
     let prompt = '';
     const d = (typeof itemOrDefKey === 'object' && itemOrDefKey?.data) ? itemOrDefKey.data : itemData;
+    const activeDay = (typeof getPreviewDay === 'function' ? getPreviewDay() : null) || 'Monday';
 
-    if (d?.Monday) {
-        if (defKey === 'generic') {
-            if (d.Monday.notes && d.Monday.notes.trim()) {
-                prompt = d.Monday.notes.trim();
+    if (d) {
+        const dayObj = d[activeDay] || d.Monday;
+        if (defKey === 'generic' || defKey === 'placeholder' || defKey === 'numeracyPlaceholder') {
+            if (dayObj?.notes && dayObj.notes.trim()) {
+                prompt = dayObj.notes.trim();
             }
         } else {
-            if (d.Monday.prompt && d.Monday.prompt.trim()) {
-                prompt = d.Monday.prompt.trim();
+            if (dayObj?.prompt && dayObj.prompt.trim()) {
+                prompt = dayObj.prompt.trim();
             }
         }
     }
@@ -75,7 +86,7 @@ function updateSpeakerNotesMockup(itemOrDefKey, itemData = null) {
     const notesContainer = document.getElementById('slide-preview-speaker-notes');
     if (!notesContainer) return;
     const defKey = typeof itemOrDefKey === 'string' ? itemOrDefKey : itemOrDefKey?.defKey;
-    if (defKey !== 'sectA' && defKey !== 'generic') {
+    if (defKey !== 'sectA' && defKey !== 'generic' && defKey !== 'placeholder' && defKey !== 'numeracyPlaceholder') {
         notesContainer.classList.add('hidden');
         return;
     }
@@ -144,17 +155,29 @@ export function updateLibrarySelection() {
 
 export function getTemplateOptionsHtml() {
     const customTemplates = Array.isArray(globalSettings.customTemplates) ? globalSettings.customTemplates : [];
-    const currentOptKey = globalSettings.templateOptionKey || (globalSettings.templateName === 'Jesmond PS K-2' ? 'jesmond_ps_k2' : globalSettings.templateId || DEFAULT_TEMPLATE_ID);
+    const isNumeracy = currentWorkspace === 'numeracy';
+    const currentOptKey = globalSettings.templateOptionKey || (isNumeracy ? '__numeracy_default__' : (globalSettings.templateName === 'Jesmond PS K-2' ? 'jesmond_ps_k2' : globalSettings.templateId || DEFAULT_TEMPLATE_ID));
 
-    let html = `
-        <option value="${DEFAULT_TEMPLATE_ID}" ${(currentOptKey === DEFAULT_TEMPLATE_ID || globalSettings.templateName === 'Default Template' || (!globalSettings.templateOptionKey && globalSettings.templateId === DEFAULT_TEMPLATE_ID)) ? 'selected' : ''}>Default Template</option>
+    let html = '';
+    if (isNumeracy) {
+        html += `<option value="__numeracy_default__" ${(currentOptKey === '__numeracy_default__' || currentOptKey === NUMERACY_DEFAULT_TEMPLATE_ID || globalSettings.templateId === NUMERACY_DEFAULT_TEMPLATE_ID) ? 'selected' : ''}>${NUMERACY_DEFAULT_TEMPLATE_LABEL} (Default)</option>`;
+    }
+
+    html += `
+        <option value="${DEFAULT_TEMPLATE_ID}" ${(currentOptKey === DEFAULT_TEMPLATE_ID || (!isNumeracy && (globalSettings.templateName === 'Default Template' || (!globalSettings.templateOptionKey && globalSettings.templateId === DEFAULT_TEMPLATE_ID)))) ? 'selected' : ''}>Default Template</option>
         <option value="jesmond_ps_k2" ${(currentOptKey === 'jesmond_ps_k2' || globalSettings.templateName === 'Jesmond PS K-2') ? 'selected' : ''}>Jesmond PS K-2</option>
     `;
 
+    if (!isNumeracy) {
+        html += `<option value="__numeracy_default__" ${(currentOptKey === '__numeracy_default__' || currentOptKey === NUMERACY_DEFAULT_TEMPLATE_ID || globalSettings.templateId === NUMERACY_DEFAULT_TEMPLATE_ID) ? 'selected' : ''}>${NUMERACY_DEFAULT_TEMPLATE_LABEL}</option>`;
+    }
+
     if (customTemplates.length > 0) {
+        html += `<optgroup label="Custom Saved Templates">`;
         html += customTemplates.map(ct => 
             `<option value="${ct.id}" ${currentOptKey === ct.id ? 'selected' : ''}>${ct.name || 'Custom Template'}</option>`
         ).join('');
+        html += `</optgroup>`;
     }
 
     html += `
@@ -177,7 +200,14 @@ export function handleTemplateSelection(val) {
         openCustomTemplateModal();
         return;
     }
-    if (val === 'jesmond_ps_k2') {
+    if (val === '__numeracy_default__' || val === NUMERACY_DEFAULT_TEMPLATE_ID) {
+        globalSettings.templateId = NUMERACY_DEFAULT_TEMPLATE_ID;
+        globalSettings.templateName = NUMERACY_DEFAULT_TEMPLATE_LABEL;
+        globalSettings.templateOptionKey = '__numeracy_default__';
+        saveState();
+        syncTemplateSelects();
+        showToast(`Selected "${NUMERACY_DEFAULT_TEMPLATE_LABEL}"`, 'fa-palette text-amber-500');
+    } else if (val === 'jesmond_ps_k2') {
         globalSettings.templateId = DEFAULT_TEMPLATE_ID;
         globalSettings.templateName = 'Jesmond PS K-2';
         globalSettings.templateOptionKey = 'jesmond_ps_k2';
@@ -279,12 +309,14 @@ export function renderInspector() {
                         <input type="text" id="g-author" value="${globalSettings.preparedBy || ''}" placeholder="your name" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
 
+                    ${currentWorkspace !== 'numeracy' ? `
                     <div class="mb-3">
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Current Phonics Level</label>
                         <select id="g-phonics" class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                             ${phonicsOptions}
                         </select>
                     </div>
+                    ` : ''}
                     
                     <div class="mb-3">
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Year Level</label>
@@ -347,7 +379,7 @@ export function renderInspector() {
             globalSettings.preparedBy = e.target.value;
             saveState();
         });
-        document.getElementById('g-phonics').addEventListener('change', (e) => {
+        document.getElementById('g-phonics')?.addEventListener('change', (e) => {
             globalSettings.phonicsLevel = e.target.value;
             saveState();
         });
@@ -422,7 +454,7 @@ export function renderInspector() {
 
                     <div>
                         <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                            Included Sections (${starter.sections.length})
+                            Included Activities (${starter.sections.length})
                         </h4>
                         <div class="space-y-1.5">
                             ${sectionItemsHtml}
@@ -441,9 +473,12 @@ export function renderInspector() {
             // Section definition selected
             const def = SECTION_DEFS[selectedLibraryKey];
             if (!def) return;
-            header.className = 'bg-blue-50 border-b border-blue-100 px-4 py-3 font-bold text-blue-800 shrink-0 transition-colors flex items-center justify-start';
+            const isNumeracy = currentWorkspace === 'numeracy';
+            header.className = isNumeracy
+                ? 'bg-amber-50 border-b border-amber-100 px-4 py-3 font-bold text-amber-900 shrink-0 transition-colors flex items-center justify-start'
+                : 'bg-blue-50 border-b border-blue-100 px-4 py-3 font-bold text-blue-800 shrink-0 transition-colors flex items-center justify-start';
             title.className = 'flex items-center gap-2 truncate text-left w-full';
-            title.innerHTML = `<i class="fa-solid ${def.icon} text-blue-500 shrink-0"></i><span class="truncate font-bold">${def.title}</span>`;
+            title.innerHTML = `<i class="fa-solid ${def.icon} ${isNumeracy ? 'text-amber-500' : 'text-blue-500'} shrink-0"></i><span class="truncate font-bold">${def.title}</span>`;
 
             const isDailyOrMixed = def.type === 'daily' || def.type === 'mixed';
             const previewHtml = generateSlidePreviewHtml(selectedLibraryKey, true, globalSettings);
@@ -453,13 +488,13 @@ export function renderInspector() {
                     <!-- Slide Preview Frame -->
                     <div class="bg-slate-50/70 rounded-2xl p-3.5 border border-slate-200 shadow-2xs space-y-2.5">
                         <div class="flex items-center gap-1.5 px-0.5">
-                            <i class="fa-solid fa-image text-blue-500 text-sm"></i>
+                            <i class="fa-solid fa-image ${isNumeracy ? 'text-amber-500' : 'text-blue-500'} text-sm"></i>
                             <span class="text-xs font-bold uppercase tracking-wider text-slate-600">SLIDE PREVIEW</span>
                         </div>
-                        <div class="w-full aspect-[16/9] rounded-2xl border border-blue-200/90 bg-white relative overflow-hidden flex flex-col items-center justify-center p-3 shadow-2xs" id="slide-preview-frame">
+                        <div class="w-full aspect-[16/9] rounded-2xl ${isNumeracy ? 'border border-amber-200/90' : 'border border-blue-200/90'} bg-white relative overflow-hidden flex flex-col items-center justify-center p-3 shadow-2xs" id="slide-preview-frame">
                             ${previewHtml}
                         </div>
-                        <div id="slide-preview-speaker-notes" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-left shadow-2xs ${(selectedLibraryKey === 'sectA' || selectedLibraryKey === 'generic') ? '' : 'hidden'}">
+                        <div id="slide-preview-speaker-notes" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-left shadow-2xs ${(selectedLibraryKey === 'sectA' || selectedLibraryKey === 'generic' || selectedLibraryKey === 'placeholder' || selectedLibraryKey === 'numeracyPlaceholder') ? '' : 'hidden'}">
                             <div class="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5 flex items-center gap-1">
                                 <i class="fa-solid fa-note-sticky text-amber-500 text-[9px]"></i>
                                 <span>Speaker Notes</span>
@@ -472,9 +507,9 @@ export function renderInspector() {
                         <div class="text-center text-[11px] text-slate-400 font-normal">Preview may not match template.</div>
                     </div>
 
-                    <div class="p-3 bg-blue-50/70 border border-blue-100 rounded-xl text-xs text-blue-900">
+                    <div class="p-3 ${isNumeracy ? 'bg-amber-50/70 border border-amber-100 text-amber-900' : 'bg-blue-50/70 border border-blue-100 text-blue-900'} rounded-xl text-xs">
                         <p class="font-semibold mb-1">${def.title}</p>
-                        <p class="text-blue-700 leading-relaxed">${def.description || def.shortDesc}</p>
+                        <p class="${isNumeracy ? 'text-amber-800' : 'text-blue-700'} leading-relaxed">${def.description || def.shortDesc}</p>
                     </div>
 
                     ${(def.type === 'static' || (!def.fields?.length && !def.weeklyFields?.length && !def.dailyFields?.length && !def.hasTitleSlideOptions && selectedLibraryKey !== 'customisable' && selectedLibraryKey !== 'sectDigraphs')) ? `
@@ -490,7 +525,7 @@ export function renderInspector() {
                     ` : ''}
 
                     <div class="pt-2 border-t border-slate-100">
-                        <button id="btn-add-section-inspector" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-sm hover:shadow flex items-center justify-center gap-2 cursor-pointer">
+                        <button id="btn-add-section-inspector" type="button" class="w-full ${isNumeracy ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'} text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-sm hover:shadow flex items-center justify-center gap-2 cursor-pointer">
                             <i class="fa-solid fa-plus"></i> Add to Deck Sequencer
                         </button>
                     </div>
@@ -518,24 +553,27 @@ export function renderInspector() {
 
         const isEditable = item.defKey !== 'mainIntro' && item.defKey !== 'dayDivider' && item.defKey !== 'dayDividerPlain' && item.defKey !== 'finished';
         const displayTitle = item.customTitle || def.title;
+        const isNumeracy = currentWorkspace === 'numeracy';
 
-        header.className = 'bg-blue-600 border-b border-blue-700 px-4 py-3 font-bold text-white shrink-0 transition-colors flex items-center justify-between';
+        header.className = isNumeracy
+            ? 'bg-amber-500 border-b border-amber-600 px-4 py-3 font-bold text-white shrink-0 transition-colors flex items-center justify-between'
+            : 'bg-blue-600 border-b border-blue-700 px-4 py-3 font-bold text-white shrink-0 transition-colors flex items-center justify-between';
         title.className = 'flex items-center gap-2 truncate text-left flex-1 min-w-0';
         
         let titleHtml = '';
         if (isEditable) {
             titleHtml = `
                 <div class="flex items-center gap-2 flex-1 min-w-0 mr-2 text-left">
-                    <i class="fa-solid ${def.icon} text-blue-200 shrink-0"></i>
+                    <i class="fa-solid ${def.icon} ${isNumeracy ? 'text-amber-100' : 'text-blue-200'} shrink-0"></i>
                     <div id="inspector-section-display" class="truncate cursor-pointer hover:underline flex items-center gap-1.5 flex-1" title="Click to rename">
                         <span id="section-title-text" class="truncate font-bold">${displayTitle}</span>
-                        <i class="fa-solid fa-pencil text-[10px] text-blue-200 shrink-0"></i>
+                        <i class="fa-solid fa-pencil text-[10px] ${isNumeracy ? 'text-amber-100' : 'text-blue-200'} shrink-0"></i>
                     </div>
-                    <input id="inspector-section-input" type="text" class="hidden text-xs text-slate-800 bg-white px-2 py-1 rounded border border-blue-300 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 font-normal" value="${displayTitle}">
+                    <input id="inspector-section-input" type="text" class="hidden text-xs text-slate-800 bg-white px-2 py-1 rounded border ${isNumeracy ? 'border-amber-300 focus:ring-amber-400' : 'border-blue-300 focus:ring-blue-400'} w-full focus:outline-none focus:ring-2 font-normal" value="${displayTitle}">
                 </div>
             `;
         } else {
-            titleHtml = `<i class="fa-solid ${def.icon} text-blue-200 shrink-0"></i><span class="truncate font-bold">${displayTitle}</span>`;
+            titleHtml = `<i class="fa-solid ${def.icon} ${isNumeracy ? 'text-amber-100' : 'text-blue-200'} shrink-0"></i><span class="truncate font-bold">${displayTitle}</span>`;
         }
 
         title.innerHTML = titleHtml;
@@ -550,13 +588,13 @@ export function renderInspector() {
         contentHtml += `
             <div class="bg-slate-50/70 rounded-2xl p-3.5 border border-slate-200 shadow-2xs space-y-2.5">
                 <div class="flex items-center gap-1.5 px-0.5">
-                    <i class="fa-solid fa-image text-blue-500 text-sm"></i>
+                    <i class="fa-solid fa-image ${isNumeracy ? 'text-amber-500' : 'text-blue-500'} text-sm"></i>
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-600">SLIDE PREVIEW</span>
                 </div>
-                <div class="w-full aspect-[16/9] rounded-2xl border border-blue-200/90 bg-white relative overflow-hidden flex flex-col items-center justify-center p-3 shadow-2xs" id="slide-preview-frame">
+                <div class="w-full aspect-[16/9] rounded-2xl ${isNumeracy ? 'border border-amber-200/90' : 'border border-blue-200/90'} bg-white relative overflow-hidden flex flex-col items-center justify-center p-3 shadow-2xs" id="slide-preview-frame">
                     ${previewHtml}
                 </div>
-                <div id="slide-preview-speaker-notes" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-left shadow-2xs ${(item.defKey === 'sectA' || item.defKey === 'generic') ? '' : 'hidden'}">
+                <div id="slide-preview-speaker-notes" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-left shadow-2xs ${(item.defKey === 'sectA' || item.defKey === 'generic' || item.defKey === 'placeholder' || item.defKey === 'numeracyPlaceholder') ? '' : 'hidden'}">
                     <div class="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5 flex items-center gap-1">
                         <i class="fa-solid fa-note-sticky text-amber-500 text-[9px]"></i>
                         <span>Speaker Notes</span>
@@ -600,14 +638,28 @@ export function renderInspector() {
         if (def.hasTitleSlideOptions) {
             if (!item.data.titleSettings) {
                 let defaultTitle = def.title.includes(': ') ? def.title.split(': ')[1] : def.title;
+                let defaultInstructions = '';
                 if (item.defKey === 'sectH') defaultTitle = 'Vocabulary';
                 if (item.defKey === 'sectJ') defaultTitle = 'Finish the sentence';
+                if (item.defKey === 'sectHundredsChart') {
+                    defaultTitle = 'Multiples';
+                    defaultInstructions = 'We are learning to skip count';
+                }
                 const defaultInclude = item.defKey !== 'sectSimpleCompound' && item.defKey !== 'sectSentenceTypes';
                 item.data.titleSettings = {
                     include: defaultInclude,
                     title: item.customTitle || defaultTitle,
-                    instructions: ''
+                    instructions: defaultInstructions
                 };
+            } else if (item.defKey === 'sectHundredsChart' && item.data.titleSettings.title === 'Hundreds Chart' && !item.data.titleSettings.instructions) {
+                item.data.titleSettings.title = 'Multiples';
+                item.data.titleSettings.instructions = 'We are learning to skip count';
+            }
+            if (item.data.titleSettings.title === 'Generic Section') {
+                item.data.titleSettings.title = 'Placeholder';
+            }
+            if (item.customTitle === 'Generic Section') {
+                item.customTitle = 'Placeholder';
             }
             const ts = item.data.titleSettings;
             contentHtml += `
@@ -632,8 +684,95 @@ export function renderInspector() {
             `;
         }
 
+        // Hundreds Chart custom UI
+        if (item.defKey === 'sectHundredsChart') {
+            const rawChartSize = item.data.chartSize || item.data.weekly?.chartSize || '1–100';
+            const chartSize = String(rawChartSize).includes('120') ? '1–120' : '1–100';
+            const multiples = item.data.multiplesOf !== undefined ? item.data.multiplesOf : (item.data.weekly?.multiplesOf !== undefined ? item.data.weekly.multiplesOf : '6');
+            const multiplesList = getHundredsChartMultiplesList(multiples, chartSize);
+            const defRange = getHundredsChartDefaultRange(multiples, chartSize);
+
+            const rawMin = item.data.rangeMin !== undefined ? Number(item.data.rangeMin) : (item.data.weekly?.rangeMin !== undefined ? Number(item.data.weekly.rangeMin) : defRange.min);
+            const rawMax = item.data.rangeMax !== undefined ? Number(item.data.rangeMax) : (item.data.weekly?.rangeMax !== undefined ? Number(item.data.weekly.rangeMax) : defRange.max);
+
+            const rangeMin = multiplesList.includes(rawMin) ? rawMin : defRange.min;
+            const rangeMax = (multiplesList.includes(rawMax) && rawMax >= rangeMin) ? rawMax : defRange.max;
+
+            // Keep item.data normalized
+            item.data.chartSize = chartSize;
+            item.data.rangeMin = rangeMin;
+            item.data.rangeMax = rangeMax;
+
+            const progression = item.data.progression || item.data.weekly?.progression || 'single';
+            const instructions = item.data.instructions !== undefined ? item.data.instructions : (item.data.weekly?.instructions !== undefined ? item.data.weekly.instructions : getHundredsChartInstruction(multiples));
+
+            const CHART_SIZE_OPTIONS = ['1–100', '1–120'];
+            const MULTIPLES_OPTIONS = ['Blank', '2 (even)', '2 (odd)', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+            const isBlank = multiples === 'Blank' || multiplesList.length === 0;
+
+            contentHtml += `
+                <div class="space-y-3.5 border-t border-slate-200 pt-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Chart Size</label>
+                        <select id="hc-chart-size-select" class="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800 cursor-pointer">
+                            ${CHART_SIZE_OPTIONS.map(opt => `<option value="${opt}" ${chartSize === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Highlight multiple of</label>
+                        <select id="hc-multiples-select" class="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800 cursor-pointer">
+                            ${MULTIPLES_OPTIONS.map(opt => `<option value="${opt}" ${multiples === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                        </select>
+                    </div>
+
+                    <div class="${isBlank ? 'opacity-40 pointer-events-none grayscale' : ''} transition-all">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Highlight range:</label>
+                        <div class="flex items-center gap-2">
+                            <select id="hc-range-min" class="w-24 text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg text-center font-semibold text-slate-800 cursor-pointer">
+                                ${isBlank ? `<option value="">—</option>` : multiplesList.map(n => `<option value="${n}" ${n === rangeMin ? 'selected' : ''}>${n}</option>`).join('')}
+                            </select>
+                            <span class="text-xs text-slate-400 font-medium">to</span>
+                            <select id="hc-range-max" class="w-24 text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg text-center font-semibold text-slate-800 cursor-pointer">
+                                ${isBlank ? `<option value="">—</option>` : multiplesList.map(n => `<option value="${n}" ${n === rangeMax ? 'selected' : ''}>${n}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="${isBlank ? 'opacity-40 pointer-events-none grayscale' : ''} transition-all">
+                        <div class="grid grid-cols-1 gap-2">
+                            <button type="button" data-progression="single" class="hc-progression-card w-full text-left p-2.5 rounded-xl border transition-all flex items-start gap-2.5 cursor-pointer ${progression === 'single' ? 'border-amber-500 bg-amber-50/70 ring-1 ring-amber-400/40 shadow-2xs' : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100/70'}">
+                                <span class="mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${progression === 'single' ? 'border-amber-600 bg-amber-500 text-white' : 'border-slate-300 bg-white'}">
+                                    ${progression === 'single' ? '<span class="w-1.5 h-1.5 rounded-full bg-white"></span>' : ''}
+                                </span>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xs font-bold ${progression === 'single' ? 'text-amber-950' : 'text-slate-700'}">Single slide</div>
+                                    <div class="text-[11px] ${progression === 'single' ? 'text-amber-800' : 'text-slate-500'} leading-snug mt-0.5">All multiples shown on a single slide.</div>
+                                </div>
+                            </button>
+
+                            <button type="button" data-progression="animate" class="hc-progression-card w-full text-left p-2.5 rounded-xl border transition-all flex items-start gap-2.5 cursor-pointer ${progression === 'animate' ? 'border-amber-500 bg-amber-50/70 ring-1 ring-amber-400/40 shadow-2xs' : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100/70'}">
+                                <span class="mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${progression === 'animate' ? 'border-amber-600 bg-amber-500 text-white' : 'border-slate-300 bg-white'}">
+                                    ${progression === 'animate' ? '<span class="w-1.5 h-1.5 rounded-full bg-white"></span>' : ''}
+                                </span>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xs font-bold ${progression === 'animate' ? 'text-amber-950' : 'text-slate-700'}">Animate on</div>
+                                    <div class="text-[11px] ${progression === 'animate' ? 'text-amber-800' : 'text-slate-500'} leading-snug mt-0.5">Multiples build up as you click through slides.</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Instructions:</label>
+                        <input type="text" id="hc-instructions" value="${instructions}" placeholder="Skip count by 6s." class="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800">
+                    </div>
+                </div>
+            `;
+        }
+
         // Weekly fields
-        if (def.fields && def.type === 'weekly') {
+        else if (def.fields && def.type === 'weekly') {
             contentHtml += `<div class="space-y-3 border-t border-slate-200 pt-3">`;
             def.fields.forEach(f => {
                 const val = item.data[f.id] !== undefined ? item.data[f.id] : (f.default !== undefined ? f.default : '');
@@ -1375,6 +1514,114 @@ export function renderInspector() {
                     saveState();
                 });
             }
+        }
+
+        // Hundreds Chart listeners
+        if (item.defKey === 'sectHundredsChart') {
+            const selChartSize = content.querySelector('#hc-chart-size-select');
+            const selMultiples = content.querySelector('#hc-multiples-select');
+            const selMin = content.querySelector('#hc-range-min');
+            const selMax = content.querySelector('#hc-range-max');
+            const progCards = content.querySelectorAll('.hc-progression-card');
+            const inputInst = content.querySelector('#hc-instructions');
+
+            selChartSize?.addEventListener('change', (e) => {
+                const newSize = e.target.value;
+                const currentMult = item.data.multiplesOf || '6';
+                const multList = getHundredsChartMultiplesList(currentMult, newSize);
+                const defRange = getHundredsChartDefaultRange(currentMult, newSize);
+
+                item.data.chartSize = newSize;
+                const currentMin = Number(item.data.rangeMin);
+                item.data.rangeMin = multList.includes(currentMin) ? currentMin : defRange.min;
+                item.data.rangeMax = defRange.max;
+
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.chartSize = newSize;
+                item.data.weekly.rangeMin = item.data.rangeMin;
+                item.data.weekly.rangeMax = item.data.rangeMax;
+
+                saveState();
+                renderInspector();
+            });
+
+            selMultiples?.addEventListener('change', (e) => {
+                const val = e.target.value;
+                const currentSize = item.data.chartSize || '1–100';
+                const defRange = getHundredsChartDefaultRange(val, currentSize);
+
+                item.data.multiplesOf = val;
+                item.data.rangeMin = defRange.min;
+                item.data.rangeMax = defRange.max;
+
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.multiplesOf = val;
+                item.data.weekly.rangeMin = defRange.min;
+                item.data.weekly.rangeMax = defRange.max;
+
+                const newInst = getHundredsChartInstruction(val);
+                item.data.instructions = newInst;
+                item.data.weekly.instructions = newInst;
+
+                saveState();
+                renderInspector();
+            });
+
+            selMin?.addEventListener('change', (e) => {
+                const minVal = parseInt(e.target.value, 10);
+                let maxVal = parseInt(selMax?.value, 10);
+                if (!isNaN(minVal)) {
+                    if (!isNaN(maxVal) && minVal > maxVal) {
+                        maxVal = minVal;
+                        if (selMax) selMax.value = String(maxVal);
+                    }
+                    item.data.rangeMin = minVal;
+                    item.data.rangeMax = maxVal;
+                    if (!item.data.weekly) item.data.weekly = {};
+                    item.data.weekly.rangeMin = minVal;
+                    item.data.weekly.rangeMax = maxVal;
+                    saveState();
+                    refreshInspectorSlidePreview();
+                }
+            });
+
+            selMax?.addEventListener('change', (e) => {
+                const maxVal = parseInt(e.target.value, 10);
+                let minVal = parseInt(selMin?.value, 10);
+                if (!isNaN(maxVal)) {
+                    if (!isNaN(minVal) && maxVal < minVal) {
+                        minVal = maxVal;
+                        if (selMin) selMin.value = String(minVal);
+                    }
+                    item.data.rangeMin = minVal;
+                    item.data.rangeMax = maxVal;
+                    if (!item.data.weekly) item.data.weekly = {};
+                    item.data.weekly.rangeMin = minVal;
+                    item.data.weekly.rangeMax = maxVal;
+                    saveState();
+                    refreshInspectorSlidePreview();
+                }
+            });
+
+            progCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const newProg = card.dataset.progression || 'single';
+                    item.data.progression = newProg;
+                    if (!item.data.weekly) item.data.weekly = {};
+                    item.data.weekly.progression = newProg;
+                    saveState();
+                    renderInspector();
+                });
+            });
+
+            inputInst?.addEventListener('input', (e) => {
+                const val = e.target.value;
+                item.data.instructions = val;
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.instructions = val;
+                saveState();
+                refreshInspectorSlidePreview();
+            });
         }
 
         // Customisable listeners

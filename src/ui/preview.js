@@ -3,7 +3,8 @@ import { SECTION_DEFS } from '../data/sections.js';
 import { DAYS, SENTENCE_TYPE_DEFINITIONS, SOUNDS_WRITE_LEVELS } from '../data/constants.js';
 import { getPhonicsPoolInfo } from '../data/phonics.js';
 import { buildPyramid } from '../export/recipe.js';
-import { parseWordWithPhonemes, formatPhonemeSymbols } from '../utils/helpers.js';
+import { parseWordWithPhonemes, formatPhonemeSymbols, randomizeCasing, getHundredsChartInstruction, getHundredsChartHighlightedNumbers, getHundredsChartMax, getHundredsChartMultiplesList, getHundredsChartDefaultRange } from '../utils/helpers.js';
+import { currentWorkspace } from '../state/state.js';
 
 let currentPreviewDay = 'Monday';
 let currentSlideSubIndex = 0;
@@ -148,7 +149,11 @@ export function generateSlidePreviewHtml(itemOrDefKey, isLibrary = false, global
         case 'sectWriteSimpleCompoundSentence':
             return renderSectWriteSimpleCompoundSentencePreview();
         case 'generic':
+        case 'placeholder':
+        case 'numeracyPlaceholder':
             return renderGenericPreview(dayData, customTitle, data, day);
+        case 'sectHundredsChart':
+            return renderHundredsChartPreview(data, customTitle);
         case 'customisable':
             return renderCustomisablePreview(data, customTitle);
         case 'finished':
@@ -171,13 +176,15 @@ function renderMainIntroPreview(globalSettings) {
     const yearLevel = globalSettings.yearLevel || 'Kindergarten';
     const term = globalSettings.term || 1;
     const week = globalSettings.week || 1;
+    const isNumeracy = currentWorkspace === 'numeracy';
+    const reviewTitle = isNumeracy ? 'Numeracy Daily Review' : 'Literacy Daily Review';
 
     return `
         <div class="w-full h-full flex items-center justify-between p-3 select-none bg-white relative overflow-hidden">
             <!-- Center Main Content -->
             <div class="flex-1 flex flex-col items-center justify-center text-center pr-2">
                 <div class="text-2xl font-bold text-slate-900 edu-font tracking-wide mb-1.5 leading-tight">${yearLevel}</div>
-                <div class="text-[11px] font-medium text-slate-700 edu-font leading-snug">Literacy Daily Review</div>
+                <div class="text-[11px] font-medium text-slate-700 edu-font leading-snug">${reviewTitle}</div>
                 <div class="text-[11px] font-medium text-slate-700 edu-font leading-snug">Term ${term} Week ${week}</div>
             </div>
 
@@ -446,7 +453,6 @@ function renderSectCPreview(phonicsPool) {
     if (poolVowels.length === 0) poolVowels = standardVowels;
     if (poolConsonants.length === 0) poolConsonants = ['b', 'c', 'd', 'f', 'g', 'm', 's', 't'];
 
-    const randomizeCasing = (letter) => (Math.random() > 0.7 ? letter.toUpperCase() : letter);
     const shuffle = (array) => {
         const arr = [...array];
         for (let i = arr.length - 1; i > 0; i--) {
@@ -1677,7 +1683,7 @@ function renderSectWriteSimpleCompoundSentencePreview() {
 function renderGenericPreview(dayData, customTitle, data = {}, day = 'Monday') {
     const content = (dayData?.word !== undefined && dayData.word !== '') 
         ? dayData.word 
-        : (data?.Monday?.word ? data.Monday.word : (customTitle || 'General Content'));
+        : (data?.Monday?.word ? data.Monday.word : (customTitle || 'Placeholder'));
 
     return `
         <div class="w-full h-full flex items-center justify-center p-4 text-center select-none bg-white">
@@ -1702,6 +1708,75 @@ function renderFinishedPreview(day) {
         <div class="w-full h-full flex flex-col items-center justify-center select-none bg-white text-center">
             <h2 class="text-2xl font-extrabold text-slate-900 mb-0.5">Finished!</h2>
             <div class="text-[10px] text-slate-400">Daily Review Complete</div>
+        </div>
+    `;
+}
+
+function renderHundredsChartPreview(data = {}, customTitle = 'Hundreds Chart') {
+    const rawChartSize = data.chartSize || data.weekly?.chartSize || '1–100';
+    const chartSize = String(rawChartSize).includes('120') ? '1–120' : '1–100';
+    const chartMax = getHundredsChartMax(chartSize);
+    const multiplesOf = data.multiplesOf !== undefined ? data.multiplesOf : (data.weekly?.multiplesOf !== undefined ? data.weekly.multiplesOf : '6');
+    const multiplesList = getHundredsChartMultiplesList(multiplesOf, chartSize);
+    const defRange = getHundredsChartDefaultRange(multiplesOf, chartSize);
+
+    const rawMin = data.rangeMin !== undefined ? Number(data.rangeMin) : (data.weekly?.rangeMin !== undefined ? Number(data.weekly.rangeMin) : defRange.min);
+    const rawMax = data.rangeMax !== undefined ? Number(data.rangeMax) : (data.weekly?.rangeMax !== undefined ? Number(data.weekly.rangeMax) : defRange.max);
+
+    const rangeMin = multiplesList.includes(rawMin) ? rawMin : defRange.min;
+    const rangeMax = (multiplesList.includes(rawMax) && rawMax >= rangeMin) ? rawMax : defRange.max;
+    const progression = data.progression || data.weekly?.progression || 'single';
+    const instructions = data.instructions !== undefined ? data.instructions : (data.weekly?.instructions !== undefined ? data.weekly.instructions : getHundredsChartInstruction(multiplesOf));
+
+    const highlighted = getHundredsChartHighlightedNumbers(multiplesOf, rangeMin, rangeMax, chartSize);
+    const is120 = chartMax === 120;
+
+    let cellsHtml = '';
+    for (let num = 1; num <= chartMax; num++) {
+        const isHighlighted = highlighted.has(num);
+        const cellStyle = isHighlighted
+            ? 'background-color: #eeff41; color: #020617; font-weight: 700;'
+            : 'background-color: #ffffff; color: #334155; font-weight: 500;';
+        const fontSizeClass = is120 ? 'text-[5.5px] sm:text-[6.5px]' : 'text-[6.5px] sm:text-[7.5px]';
+        cellsHtml += `
+            <div class="flex items-center justify-center border border-slate-300 ${fontSizeClass} select-none transition-colors leading-none" style="aspect-ratio: 1 / 1; ${cellStyle}">
+                ${num}
+            </div>
+        `;
+    }
+
+    const gridStyle = is120
+        ? 'width: min(100%, 116px); aspect-ratio: 10 / 12;'
+        : 'width: min(100%, 140px); aspect-ratio: 1 / 1;';
+
+    const isBlank = multiplesOf === 'Blank' || multiplesList.length === 0;
+    const rangeLabel = isBlank ? 'None' : `${rangeMin} – ${rangeMax}`;
+    const progLabel = (!isBlank && progression === 'animate') ? `Animate (${highlighted.size} slides)` : 'Single slide';
+
+    return `
+        <div class="w-full h-full flex flex-col items-center justify-between p-2 sm:p-2.5 select-none bg-white relative overflow-hidden">
+            <!-- Header Bar / Instruction (tag: {{content}}) -->
+            <div class="w-full flex items-center justify-between border-b border-slate-100 pb-1 px-1">
+                <span class="text-[8px] sm:text-[9px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 uppercase tracking-wider">${customTitle || 'Hundreds Chart'} (${chartSize})</span>
+                <h3 class="text-xs sm:text-[13px] font-bold text-slate-800 edu-font truncate flex-1 px-2 text-center">${instructions}</h3>
+                <div class="w-5 h-5 rounded-full bg-amber-400 border border-amber-500/30 flex items-center justify-center text-amber-950 shadow-2xs shrink-0">
+                    <i class="fa-solid fa-table-cells text-[9px]"></i>
+                </div>
+            </div>
+
+            <!-- 10x10 or 10x12 Grid -->
+            <div class="flex-1 flex items-center justify-center my-auto w-full py-0.5">
+                <div class="grid grid-cols-10 border-2 border-slate-400 rounded-xs bg-white shadow-xs" style="${gridStyle}">
+                    ${cellsHtml}
+                </div>
+            </div>
+
+            <!-- Subtle footer showing active multiples, range, and progression -->
+            <div class="w-full flex items-center justify-between text-[7.5px] sm:text-[8px] text-slate-400 px-1 pt-0.5 border-t border-slate-100">
+                <span>Multiples: <strong class="text-slate-600 font-semibold">${multiplesOf}</strong></span>
+                <span>Range: <strong class="text-slate-600 font-semibold">${rangeLabel}</strong></span>
+                <span>Mode: <strong class="text-slate-600 font-semibold">${progLabel}</strong></span>
+            </div>
         </div>
     `;
 }

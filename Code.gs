@@ -15,16 +15,34 @@ function doPost(e) {
   try {
     // 1. Parse the incoming JSON payload
     var requestData = JSON.parse(e.postData.contents);
+
+    // 1.5 Route Contact Form requests if action === "contact"
+    if (requestData.action === "contact") {
+      return handleContactSubmission(requestData);
+    }
+
     var templateId = requestData.templateId;
     var deckName = requestData.deckName || "Automated Daily Review";
     var slidesToBuild = requestData.slides || [];
     var folderId = requestData.folderId || null;
     
     // 2. Make a copy of the master template library
-    var templateFile = DriveApp.getFileById(templateId);
+    var templateFile;
+    try {
+      templateFile = DriveApp.getFileById(templateId);
+    } catch (tplErr) {
+      throw new Error("Could not access Slide Template (ID: " + templateId + "). Please open this template in Google Slides, click 'Share', and ensure General Access is set to 'Anyone with the link can view' (or shared with " + Session.getEffectiveUser().getEmail() + "). Error details: " + tplErr.message);
+    }
+
     var newFile;
     if (folderId) {
-      newFile = templateFile.makeCopy(deckName, DriveApp.getFolderById(folderId));
+      var targetFolder;
+      try {
+        targetFolder = DriveApp.getFolderById(folderId);
+      } catch (folderErr) {
+        throw new Error("Could not access Target Google Drive Folder (ID: " + folderId + "). Please check your folder ID in Global Settings or verify sharing access. Error details: " + folderErr.message);
+      }
+      newFile = templateFile.makeCopy(deckName, targetFolder);
     } else {
       newFile = templateFile.makeCopy(deckName);
     }
@@ -68,6 +86,35 @@ function doPost(e) {
         // If we need to inject a specific prompt into the speaker notes (Sections A & K)
         if (instruction.injectNotes) {
           newSlide.getNotesPage().getSpeakerNotesShape().getText().setText(instruction.injectNotes);
+        }
+
+        // If there are actions/mutations to apply to this slide (table fills, shape colors, hiding elements, etc.)
+        if (instruction.actions && instruction.actions.length > 0) {
+          applySlideActions(newSlide, instruction.actions);
+        }
+
+        // Backward compatibility: If we need to highlight numbers in a table (Hundreds Chart)
+        if (instruction.highlightNumbers && instruction.highlightNumbers.length > 0) {
+          var targetNums = {};
+          for (var h = 0; h < instruction.highlightNumbers.length; h++) {
+            targetNums[instruction.highlightNumbers[h]] = true;
+          }
+          var color = instruction.highlightColor || '#eeff41';
+          var tables = newSlide.getTables();
+          for (var t = 0; t < tables.length; t++) {
+            var table = tables[t];
+            var numRows = table.getNumRows();
+            var numCols = table.getNumColumns();
+            for (var r = 0; r < numRows; r++) {
+              for (var c = 0; c < numCols; c++) {
+                var cell = table.getCell(r, c);
+                var num = parseInt(cell.getText().asString().trim(), 10);
+                if (!isNaN(num) && targetNums[num]) {
+                  cell.getFill().setSolidFill(color);
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -155,4 +202,293 @@ function doPost(e) {
 // Simple GET response for browser testing
 function doGet(e) {
   return ContentService.createTextOutput("The Slide Assembly API is active and listening for POST requests.");
+}
+
+/**
+ * Handles "Get in touch" contact form submissions with anti-spam protections:
+ * 1. Honeypot check (silent drop if hidden field is populated)
+ * 2. Minimum elapsed time check (silent drop if submitted in < 2 seconds)
+ * 3. Server-side rate limiting via CacheService (cooldown & hourly cap)
+ * 4. Input sanitization and MailApp delivery to owner's email
+ */
+function handleContactSubmission(requestData) {
+  // 1. Honeypot check: If a bot filled out the hidden field, pretend it succeeded
+  if (requestData.honeypot && String(requestData.honeypot).trim() !== "") {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "success",
+      message: "Thank you! Your message has been sent."
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 2. Submission speed check: Reject automated instant submissions (< 2 seconds)
+  if (requestData.elapsedMs !== undefined && Number(requestData.elapsedMs) < 2000) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "success",
+      message: "Thank you! Your message has been sent."
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 3. Validate & sanitize inputs
+  var name = String(requestData.name || "Anonymous").trim().substring(0, 100);
+  var email = String(requestData.email || "").trim().substring(0, 150);
+  var category = String(requestData.category || "Feedback").trim().substring(0, 60);
+  var message = String(requestData.message || "").trim().substring(0, 3000);
+
+  if (!message) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: "Please enter a message before sending."
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 4. Server-side rate limiting via CacheService to protect email quota
+  try {
+    var cache = CacheService.getScriptCache();
+    if (cache) {
+      var recentBurst = cache.get("contact_cooldown");
+      if (recentBurst) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          message: "Please wait a moment before sending another message."
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      var hourlyCount = Number(cache.get("contact_hourly_count") || "0");
+      if (hourlyCount >= 15) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          message: "Message limit reached for now. Please try again later."
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      // Set 20-second cooldown between messages & increment 1-hour counter
+      cache.put("contact_cooldown", "1", 20);
+      cache.put("contact_hourly_count", String(hourlyCount + 1), 3600);
+    }
+  } catch (cacheErr) {
+    // Continue if CacheService is unavailable
+  }
+
+  // 5. Check remaining daily email quota
+  var remainingQuota = MailApp.getRemainingDailyQuota();
+  if (remainingQuota <= 1) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: "Daily email limit reached. Please try again tomorrow."
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 6. Send email to the script owner (email address is never exposed in code)
+  var ownerEmail = Session.getEffectiveUser().getEmail();
+  var subject = "[Daily Deck - " + category + "] Message from " + name;
+  var body = [
+    "New message from Daily Deck Contact Form",
+    "----------------------------------------",
+    "Name: " + name,
+    "Email: " + (email ? email : "Not provided"),
+    "Category: " + category,
+    "Sent: " + new Date().toString(),
+    "----------------------------------------",
+    "",
+    message
+  ].join("\n");
+
+  var mailOptions = {};
+  if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    mailOptions.replyTo = email;
+  }
+
+  MailApp.sendEmail(ownerEmail, subject, body, mailOptions);
+
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "success",
+    message: "Thank you! Your message has been sent."
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Universal Slide Action / Mutation Engine
+ * 
+ * Executes declarative visual operations on slide elements:
+ * - Table cells: Fill background, font color, bold text by matching cell content or coordinates.
+ * - Shapes/Images/Groups: Fill background, border stroke, text color, replace text, or remove elements by Alt Text Title/Description.
+ * - Shapes by token/text: Fill or remove shapes containing specific marker text.
+ */
+function applySlideActions(newSlide, actions) {
+  if (!actions || !actions.length) return;
+
+  for (var a = 0; a < actions.length; a++) {
+    var act = actions[a];
+    if (!act) continue;
+
+    var targetType = act.target || act.type;
+
+    // 1. Target: Table Cells by matching text or number
+    // Example: { target: 'tableCell', matchText: ['6', '12', '18'], fill: '#eeff41' }
+    if (targetType === 'tableCell' || targetType === 'tableCellByText' || targetType === 'fillTableCellByText') {
+      var matchMap = {};
+      if (Array.isArray(act.matchText)) {
+        for (var m = 0; m < act.matchText.length; m++) {
+          matchMap[String(act.matchText[m]).trim()] = true;
+        }
+      } else if (act.matchText !== undefined) {
+        matchMap[String(act.matchText).trim()] = true;
+      }
+
+      var tables = newSlide.getTables();
+      for (var t = 0; t < tables.length; t++) {
+        var table = tables[t];
+        var numRows = table.getNumRows();
+        var numCols = table.getNumColumns();
+        for (var r = 0; r < numRows; r++) {
+          for (var c = 0; c < numCols; c++) {
+            var cell = table.getCell(r, c);
+            var cellStr = cell.getText().asString().trim();
+            if (matchMap[cellStr]) {
+              if (act.fill) {
+                cell.getFill().setSolidFill(act.fill);
+              }
+              if (act.textColor) {
+                cell.getText().getTextStyle().setForegroundColor(act.textColor);
+              }
+              if (act.bold !== undefined) {
+                cell.getText().getTextStyle().setBold(act.bold);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Target: Table Cell by Row / Column Coordinate
+    // Example: { target: 'tableCellByCoordinate', row: 1, col: 2, fill: '#3b82f6', textColor: '#ffffff' }
+    else if (targetType === 'tableCellByCoordinate') {
+      var tables = newSlide.getTables();
+      var tIdx = act.tableIndex || 0;
+      if (tables.length > tIdx) {
+        var table = tables[tIdx];
+        if (act.row >= 0 && act.row < table.getNumRows() && act.col >= 0 && act.col < table.getNumColumns()) {
+          var cell = table.getCell(act.row, act.col);
+          if (act.fill) {
+            cell.getFill().setSolidFill(act.fill);
+          }
+          if (act.textColor) {
+            cell.getText().getTextStyle().setForegroundColor(act.textColor);
+          }
+          if (act.bold !== undefined) {
+            cell.getText().getTextStyle().setBold(act.bold);
+          }
+          if (act.text !== undefined) {
+            cell.getText().setText(act.text);
+          }
+        }
+      }
+    }
+
+    // 3. Target: Shape / Element by Alt Text Title or Description
+    // Example: { target: 'shapeByName', name: 'counter_3', fill: '#ef4444' }
+    // Example: { target: 'shapeByName', name: 'solution_box', remove: true }
+    else if (targetType === 'shapeByName' || targetType === 'shapeByTitle') {
+      var targetNames = {};
+      if (Array.isArray(act.name)) {
+        for (var n = 0; n < act.name.length; n++) {
+          targetNames[String(act.name[n]).trim().toLowerCase()] = true;
+        }
+      } else if (act.name !== undefined) {
+        targetNames[String(act.name).trim().toLowerCase()] = true;
+      }
+
+      var allElements = getAllSlideElements(newSlide);
+      for (var e = 0; e < allElements.length; e++) {
+        var el = allElements[e];
+        var title = (el.getTitle() || '').trim().toLowerCase();
+        var desc = (el.getDescription() || '').trim().toLowerCase();
+
+        if (targetNames[title] || targetNames[desc]) {
+          if (act.remove === true || act.visible === false) {
+            try { el.remove(); } catch(err) {}
+            continue;
+          }
+          if (el.getPageElementType() === SlidesApp.PageElementType.SHAPE) {
+            var sh = el.asShape();
+            if (act.fill) {
+              sh.getFill().setSolidFill(act.fill);
+            }
+            if (act.stroke) {
+              sh.getBorder().getLineFill().setSolidFill(act.stroke);
+            }
+            if (act.strokeWeight !== undefined) {
+              sh.getBorder().setWeight(act.strokeWeight);
+            }
+            if (act.text !== undefined) {
+              sh.getText().setText(act.text);
+            }
+            if (act.textColor) {
+              sh.getText().getTextStyle().setForegroundColor(act.textColor);
+            }
+          }
+        }
+      }
+    }
+
+    // 4. Target: Shape by Text / Token Match
+    // Example: { target: 'shapeByText', matchText: '{{counter_1}}', fill: '#10b981', clearText: true }
+    else if (targetType === 'shapeByText') {
+      var allElements = getAllSlideElements(newSlide);
+      var matchText = String(act.matchText || act.token || '').trim();
+      if (matchText) {
+        for (var e = 0; e < allElements.length; e++) {
+          var el = allElements[e];
+          if (el.getPageElementType() === SlidesApp.PageElementType.SHAPE) {
+            var sh = el.asShape();
+            var txt = sh.getText().asString();
+            if (txt.indexOf(matchText) !== -1) {
+              if (act.remove === true || act.visible === false) {
+                try { el.remove(); } catch(err) {}
+                continue;
+              }
+              if (act.fill) {
+                sh.getFill().setSolidFill(act.fill);
+              }
+              if (act.stroke) {
+                sh.getBorder().getLineFill().setSolidFill(act.stroke);
+              }
+              if (act.clearText) {
+                sh.getText().setText('');
+              } else if (act.text !== undefined) {
+                sh.getText().setText(act.text);
+              }
+              if (act.textColor) {
+                sh.getText().getTextStyle().setForegroundColor(act.textColor);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Recursively collects all elements from a slide (including children inside Groups)
+ */
+function getAllSlideElements(slide) {
+  var results = [];
+  var topLevel = slide.getPageElements();
+  for (var i = 0; i < topLevel.length; i++) {
+    collectElementsRecursive(topLevel[i], results);
+  }
+  return results;
+}
+
+function collectElementsRecursive(element, results) {
+  results.push(element);
+  if (element.getPageElementType() === SlidesApp.PageElementType.GROUP) {
+    try {
+      var children = element.asGroup().getChildren();
+      for (var c = 0; c < children.length; c++) {
+        collectElementsRecursive(children[c], results);
+      }
+    } catch(gErr) {}
+  }
 }

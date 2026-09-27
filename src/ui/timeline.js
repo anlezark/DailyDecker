@@ -11,6 +11,7 @@ import {
     setSelectedItemId, 
     selectedLibraryKey, 
     setSelectedLibraryKey, 
+    currentWorkspace,
     saveState 
 } from '../state/state.js';
 import { getLimitedDaysBadge } from '../utils/helpers.js';
@@ -70,16 +71,30 @@ export function addTimelineItem(defKey, index = -1, skipSelectAndRender = false)
         newItem.data.includeLISC = true;
     }
 
+    if (defKey === 'sectHundredsChart') {
+        newItem.data.chartSize = '1–100';
+        newItem.data.multiplesOf = '6';
+        newItem.data.rangeMin = 6;
+        newItem.data.rangeMax = 96;
+        newItem.data.progression = 'single';
+        newItem.data.instructions = 'Skip count by 6s.';
+    }
+
     if (def.hasTitleSlideOptions) {
         let defaultTitle = def.title.includes(': ') ? def.title.split(': ')[1] : def.title;
+        let defaultInstructions = '';
         if (defKey === 'sectH') defaultTitle = 'Vocabulary'; 
         if (defKey === 'sectJ') defaultTitle = 'Finish the sentence';
+        if (defKey === 'sectHundredsChart') {
+            defaultTitle = 'Multiples';
+            defaultInstructions = 'We are learning to skip count';
+        }
         const defaultInclude = defKey !== 'sectSimpleCompound' && defKey !== 'sectSentenceTypes';
         
         newItem.data.titleSettings = {
             include: defaultInclude,
             title: defaultTitle,
-            instructions: ''
+            instructions: defaultInstructions
         };
     }
 
@@ -168,18 +183,26 @@ export function renderTimeline() {
     list.innerHTML = '';
 
     if (timelineItems.length === 0) {
+        const isNumeracy = currentWorkspace === 'numeracy';
         const emptyEl = document.createElement('div');
         emptyEl.className = 'empty-state-placeholder pointer-events-none select-none flex flex-col items-center justify-center text-center p-8 my-auto min-h-[360px] border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/70 shadow-2xs transition-all';
         emptyEl.innerHTML = `
-            <div class="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 text-2xl mb-4 shadow-2xs">
-                <i class="fa-solid fa-layer-group"></i>
+            <div class="w-14 h-14 rounded-2xl ${isNumeracy ? 'bg-amber-50 border border-amber-100 text-amber-600' : 'bg-blue-50 border border-blue-100 text-blue-600'} flex items-center justify-center text-2xl mb-4 shadow-2xs">
+                <i class="fa-solid ${isNumeracy ? 'fa-calculator' : 'fa-layer-group'}"></i>
             </div>
-            <h3 class="text-base sm:text-lg font-bold text-slate-800 mb-3">Your Deck is empty. Let's built it.</h3>
+            <h3 class="text-base sm:text-lg font-bold text-slate-800 mb-3">${isNumeracy ? 'Your Numeracy Deck is empty.' : "Your Deck is empty. Let's built it."}</h3>
             <div class="text-xs sm:text-sm text-slate-600 space-y-2.5 max-w-md leading-relaxed">
+                ${isNumeracy ? `
                 <div class="flex items-center justify-start text-left gap-2.5 bg-amber-50/90 border border-amber-200/80 px-4 py-2.5 rounded-xl text-amber-900 shadow-2xs">
                     <i class="fa-solid fa-arrow-left text-amber-500 shrink-0 text-sm"></i>
-                    <span>Add a <strong>Deck Starter</strong> from the menu on the left, or add individual sections.</span>
+                    <span>Add activities from the <strong>Library</strong> on the left.</span>
                 </div>
+                ` : `
+                <div class="flex items-center justify-start text-left gap-2.5 bg-amber-50/90 border border-amber-200/80 px-4 py-2.5 rounded-xl text-amber-900 shadow-2xs">
+                    <i class="fa-solid fa-arrow-left text-amber-500 shrink-0 text-sm"></i>
+                    <span>Add a <strong>Deck Starter</strong> from the menu on the left, or add individual activities.</span>
+                </div>
+                `}
                 <div class="flex items-center justify-start text-left gap-2.5 bg-blue-50/90 border border-blue-200/80 px-4 py-2.5 rounded-xl text-blue-900 shadow-2xs">
                     <i class="fa-solid fa-arrow-right text-blue-500 shrink-0 text-sm"></i>
                     <span>Edit your <strong>Global settings</strong> on the right.</span>
@@ -190,6 +213,10 @@ export function renderTimeline() {
         return;
     }
 
+    const isNumeracy = currentWorkspace === 'numeracy';
+    const selectedRing = isNumeracy ? 'border-amber-500 shadow-md ring-2 ring-amber-100' : 'border-blue-500 shadow-md ring-2 ring-blue-100';
+    const hoverBorder = isNumeracy ? 'hover:border-amber-300' : 'hover:border-blue-300';
+
     timelineItems.forEach(item => {
         const def = SECTION_DEFS[item.defKey];
         if (!def) return;
@@ -198,7 +225,7 @@ export function renderTimeline() {
         const dayBadge = getLimitedDaysBadge(item);
         const badgeHtml = dayBadge ? `<span class="text-[10px] font-bold text-amber-800 bg-amber-100/90 border border-amber-300/80 px-1.5 py-0.5 rounded leading-none shadow-2xs font-mono tracking-tight" title="Active on: ${dayBadge}">${dayBadge}</span>` : '';
         
-        el.className = `timeline-item p-3 bg-white border ${isSelected ? 'border-blue-500 shadow-md ring-2 ring-blue-100' : 'border-slate-200'} rounded-xl cursor-pointer hover:border-blue-300 transition-all flex items-center gap-3`;
+        el.className = `timeline-item p-3 bg-white border ${isSelected ? selectedRing : 'border-slate-200'} rounded-xl cursor-pointer ${hoverBorder} transition-all flex items-center gap-3`;
         el.onclick = (e) => { e.stopPropagation(); selectItem(item.id); };
 
         el.innerHTML = `

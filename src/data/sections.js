@@ -37,12 +37,12 @@ export const SECTION_DEFS = {
     },
     'sectA': { 
         title: 'Talk About the Picture', shortDesc: 'Students talk about picture prompt.', icon: 'fa-image', color: 'text-blue-500', bg: 'bg-blue-100', type: 'daily', hasTitleSlideOptions: true,
-        description: 'This section includes a picture placeholder for students to practise oral language. Pictures will be inserted in PowerPoint or Google Slides. Write prompts below, which will be inserted in the speakers notes section for reference.',
+        description: 'This activity includes a picture placeholder for students to practise oral language. Pictures will be inserted in PowerPoint or Google Slides. Write prompts below, which will be inserted in the speakers notes section for reference.',
         fields: [{ id: 'prompt', label: 'Teacher Prompt', type: 'textarea' }]
     },
     'sectB': { 
         title: 'Say the Sound', shortDesc: 'Grapheme recognition', icon: 'fa-bolt', color: 'text-amber-500', bg: 'bg-amber-100', type: 'weekly', hasTitleSlideOptions: true,
-        description: 'This section includes a single grapheme on each slide. Students can recite the phoneme. The pool of graphemes used will depend on the level set in Global Settings. There will be one slide per grapheme from the pool, unless you choose to restrict or expand the number of slides below. The most recent phoneme set will always be included.',
+        description: 'This activity includes a single grapheme on each slide. Students can recite the phoneme. The pool of graphemes used will depend on the level set in Global Settings. There will be one slide per grapheme from the pool, unless you choose to restrict or expand the number of slides below. The most recent phoneme set will always be included.',
         fields: []
     },
     'sectC': { 
@@ -52,7 +52,7 @@ export const SECTION_DEFS = {
     },
     'sectDigraphs': {
         title: 'Digraphs', shortDesc: 'consonant and vowel digraphs', icon: 'fa-spell-check', color: 'text-violet-500', bg: 'bg-violet-100', type: 'weekly', hasTitleSlideOptions: true,
-        description: 'This section flashes a digraph slide for students to recite learnt digraphs (or trigraphs, tetragraphs, etc!). Select common digraphs below and/or add further digraphs.',
+        description: 'This activity flashes a digraph slide for students to recite learnt digraphs (or trigraphs, tetragraphs, etc!). Select common digraphs below and/or add further digraphs.',
         fields: []
     },
     'sectShortVowelBB': {
@@ -76,7 +76,7 @@ export const SECTION_DEFS = {
     },
     'sectD': {
         title: 'Heart Words', shortDesc: 'Read high-frequency words on a heart.', icon: 'fa-heart', color: 'text-red-500', bg: 'bg-red-100', type: 'mixed', hasTitleSlideOptions: true,
-        description: 'This section includes slides with a single high frequency word in a heart on each slide. Include your set of heart words in the text box below, separated by commas. Optionally, the final heart word(s) can be on the "write it" slide for students to write on their whiteboards.\n\nNote: The "High Frequency Words" section is identical, without the fun heart.',
+        description: 'This activity includes slides with a single high frequency word in a heart on each slide. Include your set of heart words in the text box below, separated by commas. Optionally, the final heart word(s) can be on the "write it" slide for students to write on their whiteboards.\n\nNote: The "High Frequency Words" activity is identical, without the fun heart.',
         weeklyFields: [
             { id: 'words', label: 'Heart Words (comma separated)', type: 'textarea', default: 'a, the, is, are, I, am, and, to, we, me, my, she, he, has, have, you, they, was, that, this, for' }
         ],
@@ -87,7 +87,7 @@ export const SECTION_DEFS = {
     },
     'sectHFW': {
         title: 'High Frequency Words', shortDesc: 'Read high frequency words.', icon: 'fa-font', color: 'text-purple-500', bg: 'bg-purple-100', type: 'mixed', hasTitleSlideOptions: true,
-        description: 'This section includes slides with a single high frequency word on each slide. Include your set of words in the text box below, separated by commas. Optionally, the final word(s) can be on the "write it" slide for students to write on their whiteboards.\n\nNote: The "Heart Words" section is identical, except it features a fun heart.',
+        description: 'This activity includes slides with a single high frequency word on each slide. Include your set of words in the text box below, separated by commas. Optionally, the final word(s) can be on the "write it" slide for students to write on their whiteboards.\n\nNote: The "Heart Words" activity is identical, except it features a fun heart.',
         weeklyFields: [
             { id: 'words', label: 'Word list (comma separated)', type: 'textarea', default: 'a, the, is, are, I, am, and, to, we, me, my, she, he, has, have, you, they, was, that, this, for' }
         ],
@@ -98,12 +98,12 @@ export const SECTION_DEFS = {
     },
     'sectE': {
         title: 'Read the Word', shortDesc: 'Say the sounds and read the word.', icon: 'fa-comment-dots', color: 'text-cyan-500', bg: 'bg-cyan-100', type: 'daily', hasTitleSlideOptions: true,
-        description: 'This section shows a single word for students to decode. Write a few words below, comma separated. If the word is a "non-word" add an asterisk to use the alien word slide, e.g. hat, dog, fen*.',
+        description: 'This activity shows a single word for students to decode. Write a few words below, comma separated. If the word is a "non-word" add an asterisk to use the alien word slide, e.g. hat, dog, fen*.',
         fields: [{ id: 'words', label: 'Words (comma separated)', type: 'text' }]
     },
     'sectReadWordWriteWord': {
         title: 'Read a Word, Write a Word.', shortDesc: 'Show a word then hide the word.', icon: 'fa-spell-check', color: 'text-sky-600', bg: 'bg-sky-100', type: 'mixed', hasTitleSlideOptions: true,
-        description: 'This section shows a word on a slide, then replaces the word with symbols (one per phoneme) for students to write the word on their whiteboards. Specify words and symbols below. Use the differentiate checkbox to allow two words on the slide for a mild/spicy choice.',
+        description: 'This activity shows a word on a slide, then replaces the word with symbols (one per phoneme) for students to write the word on their whiteboards. Specify words and symbols below. Use the differentiate checkbox to allow two words on the slide for a mild/spicy choice.',
         weeklyFields: [
             { id: 'differentiate', label: 'Differentiation: Use two words per slide (mild and spicy)', type: 'checkbox', default: false }
         ],
@@ -111,12 +111,12 @@ export const SECTION_DEFS = {
     },
     'sectF': {
         title: 'Discriminate the Similar Sounds', shortDesc: 'Build auditory discrimination, e.g. pen/pan', icon: 'fa-ear-listen', color: 'text-teal-500', bg: 'bg-teal-100', type: 'daily', hasTitleSlideOptions: true,
-        description: 'This section shows minimal pairs (e.g. pen/pan) for students to practise hearing and saying commonly confused sounds.',
+        description: 'This activity shows minimal pairs (e.g. pen/pan) for students to practise hearing and saying commonly confused sounds.',
         fields: [{ id: 'pair', label: 'Word Pair', type: 'select', options: ['Pen/Pan', 'Pat/Pet', 'Marry/Merry', 'Axe/Ex', 'Al/L'] }]
     },
     'sectG': {
         title: 'Write a letter', shortDesc: 'Handwriting practice', icon: 'fa-pen', color: 'text-orange-500', bg: 'bg-orange-100', type: 'daily', hasTitleSlideOptions: true,
-        description: 'This section shows a letter formation slide for students to practice handwriting.',
+        description: 'This activity shows a letter formation slide for students to practice handwriting.',
         fields: [{ id: 'letter', label: 'Target Letter', type: 'text' }]
     },
     'sectH': {
@@ -129,7 +129,7 @@ export const SECTION_DEFS = {
     },
     'sectI': {
         title: 'Read the sentence', shortDesc: 'Read a simple sentence', icon: 'fa-glasses', color: 'text-violet-500', bg: 'bg-violet-100', type: 'daily', hasTitleSlideOptions: true,
-        description: 'This section shows a simple sentence for students to read. The "Pyramid" type breaks down the sentence into a triangle, adding a word each line. The "Picture" type features a picture placeholder for visual prompt above the sentence.',
+        description: 'This activity shows a simple sentence for students to read. The "Pyramid" type breaks down the sentence into a triangle, adding a word each line. The "Picture" type features a picture placeholder for visual prompt above the sentence.',
         fields: [
             { id: 'style', label: 'Style', type: 'select', default: 'Pyramid', options: ['Pyramid', 'Picture'] },
             { id: 'sent', label: 'Sentence', type: 'text', default: 'The cat sat on Sam', placeholder: 'The cat sat on Sam' }
@@ -137,17 +137,17 @@ export const SECTION_DEFS = {
     },
     'sectJ': {
         title: 'Sentences', shortDesc: 'Multipurpose sentence slide', icon: 'fa-pen-to-square', color: 'text-fuchsia-500', bg: 'bg-fuchsia-100', type: 'daily', hasTitleSlideOptions: true,
-        description: 'This multipurpose section features a simple sentence slide. Use underscores as a "fill the blank" option, e.g. "The ___ sat on ___."',
+        description: 'This multipurpose activity features a simple sentence slide. Use underscores as a "fill the blank" option, e.g. "The ___ sat on ___."',
         fields: [{ id: 'sent', label: 'Sentence', type: 'text' }]
     },
     'sectK': {
         title: 'Label and write a sentence', shortDesc: 'Add labels to picture then write a sentence.', icon: 'fa-tags', color: 'text-sky-500', bg: 'bg-sky-100', type: 'daily', hasTitleSlideOptions: true,
-        description: 'This section features a picture placeholder, space to add labels and space to write a sentence. Picture will need to be added in PowerPoint/Google Slides. Prompts below will be inserted in the speaker notes section.',
+        description: 'This activity features a picture placeholder, space to add labels and space to write a sentence. Picture will need to be added in PowerPoint/Google Slides. Prompts below will be inserted in the speaker notes section.',
         fields: [{ id: 'prompt', label: 'Teacher Prompt', type: 'textarea' }]
     },
     'sectSimpleCompound': {
         title: 'Simple or Compound Sentences', shortDesc: 'Practise identifying sentences', icon: 'fa-code-branch', color: 'text-amber-600', bg: 'bg-amber-100', type: 'mixed', hasTitleSlideOptions: true,
-        description: 'In this section, students read a sentence and identify whether it is simple or compound.',
+        description: 'In this activity, students read a sentence and identify whether it is simple or compound.',
         weeklyFields: [
             { id: 'includeInstructions', label: 'Include review slides', type: 'checkbox', default: true }
         ]
@@ -184,13 +184,41 @@ export const SECTION_DEFS = {
         fields: []
     },
     'generic': {
-        title: 'Generic Section', shortDesc: 'Multipurpose placeholder', icon: 'fa-cube', color: 'text-slate-500', bg: 'bg-slate-200', type: 'daily', hasTitleSlideOptions: true,
-        description: 'This section can be used as a placeholder or general purpose slide for sections not included in this builder. Add short text below, include prompt to be inserted in the speakers notes.',
+        title: 'Placeholder', shortDesc: 'Multipurpose placeholder', icon: 'fa-cube', color: 'text-slate-500', bg: 'bg-slate-200', type: 'daily', hasTitleSlideOptions: true,
+        workspace: 'literacy',
+        description: 'This activity can be used as a placeholder or general purpose slide for activities not included in this builder. Add short text below, include prompt to be inserted in the speakers notes.',
         fields: [{ id: 'word', label: 'Content', type: 'text' }, { id: 'notes', label: 'Speaker\'s notes', type: 'textarea' }]
+    },
+    'numeracyPlaceholder': {
+        title: 'Placeholder', shortDesc: 'Multipurpose placeholder', icon: 'fa-cube', color: 'text-amber-600', bg: 'bg-amber-100', type: 'daily', hasTitleSlideOptions: true,
+        workspace: 'numeracy',
+        description: 'This activity can be used as a placeholder or general purpose slide for activities not included in this builder. Add short text below, include prompt to be inserted in the speakers notes.',
+        fields: [{ id: 'word', label: 'Content', type: 'text' }, { id: 'notes', label: 'Speaker\'s notes', type: 'textarea' }]
+    },
+    'sectHundredsChart': {
+        title: 'Hundreds Chart',
+        shortDesc: 'Hundreds chart for skip counting',
+        icon: 'fa-table-cells',
+        color: 'text-amber-600',
+        bg: 'bg-amber-100',
+        type: 'weekly',
+        workspace: 'numeracy',
+        hasTitleSlideOptions: true,
+        templateTag: '[hundredsChart]',
+        contentTag: '{{content}}',
+        description: 'This activity displays a hundreds chart with the option to highlight certain numbers to practice counting skills and multiples.',
+        fields: [
+            { id: 'chartSize', label: 'Chart Size', type: 'select', options: ['1–100', '1–120'], default: '1–100' },
+            { id: 'multiplesOf', label: 'Highlight multiple of', type: 'select', options: ['Blank', '2 (even)', '2 (odd)', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'], default: '6' },
+            { id: 'rangeMin', label: 'Highlight range from', type: 'select', default: 6 },
+            { id: 'rangeMax', label: 'to', type: 'select', default: 96 },
+            { id: 'progression', label: 'Highlight progression', type: 'select', options: ['single', 'animate'], default: 'single' },
+            { id: 'instructions', label: 'Instructions:', type: 'text', default: 'Skip count by 6s.' }
+        ]
     },
     'customisable': {
         title: 'Customisable Section', shortDesc: 'specify your own slide', icon: 'fa-sliders', color: 'text-indigo-500', bg: 'bg-indigo-100', type: 'weekly', hasTitleSlideOptions: true,
-        description: 'Use this section to specify and customise any new slide in your template. The template tag and content tags (if used) must match your template.',
+        description: 'Use this activity to specify and customise any new slide in your template. The template tag and content tags (if used) must match your template.',
         fields: []
     },
     'finished': { 
@@ -198,3 +226,6 @@ export const SECTION_DEFS = {
         description: 'A simple slide to indicate the day\'s set of slides is done.' 
     }
 };
+
+SECTION_DEFS['placeholder'] = SECTION_DEFS['generic'];
+

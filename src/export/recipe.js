@@ -2,7 +2,7 @@
 import { SECTION_DEFS } from '../data/sections.js';
 import { DAYS, SENTENCE_TYPE_DEFINITIONS, SOUNDS_WRITE_LEVELS } from '../data/constants.js';
 import { getPhonicsPoolInfo } from '../data/phonics.js';
-import { shuffleArray, randomizeCasing, parseWordWithPhonemes, formatPhonemeSymbols, getItemIncludedDays } from '../utils/helpers.js';
+import { shuffleArray, randomizeCasing, parseWordWithPhonemes, formatPhonemeSymbols, getItemIncludedDays, getHundredsChartInstruction, getHundredsChartHighlightedNumbers, getHundredsChartDefaultRange } from '../utils/helpers.js';
 
 export function buildPyramid(sentence) {
     const words = (sentence || '').trim().split(/\s+/).filter(w => w);
@@ -798,12 +798,65 @@ export function buildPresentationRecipe(globalSettings, timelineItems, exportPpt
                 });
             }
 
-            else if (item.defKey === 'generic') {
+            else if (item.defKey === 'generic' || item.defKey === 'placeholder' || item.defKey === 'numeracyPlaceholder') {
                 recipe.slides.push({
                     noteId: "[generic_stimulus]",
                     replacements: { "{{content}}": data[day]?.word || "" },
                     injectNotes: data[day]?.notes || ""
                 });
+            }
+
+            else if (item.defKey === 'sectHundredsChart') {
+                const rawChartSize = data.chartSize || data.weekly?.chartSize || '1–100';
+                const chartSize = String(rawChartSize).includes('120') ? '1–120' : '1–100';
+                const noteId = chartSize === '1–120' ? '[hundredsChart120]' : '[hundredsChart]';
+                const multiplesOf = data.multiplesOf !== undefined ? data.multiplesOf : (data.weekly?.multiplesOf !== undefined ? data.weekly.multiplesOf : '6');
+                const defRange = getHundredsChartDefaultRange(multiplesOf, chartSize);
+
+                const rangeMin = data.rangeMin !== undefined ? data.rangeMin : (data.weekly?.rangeMin !== undefined ? data.weekly.rangeMin : defRange.min);
+                const rangeMax = data.rangeMax !== undefined ? data.rangeMax : (data.weekly?.rangeMax !== undefined ? data.weekly.rangeMax : defRange.max);
+                const progression = data.progression || data.weekly?.progression || 'single';
+                const instructions = data.instructions !== undefined ? data.instructions : (data.weekly?.instructions !== undefined ? data.weekly.instructions : getHundredsChartInstruction(multiplesOf));
+
+                const highlightedSet = getHundredsChartHighlightedNumbers(multiplesOf, rangeMin, rangeMax, chartSize);
+                const highlightNumbers = Array.from(highlightedSet).sort((a, b) => a - b);
+
+                if (progression === 'animate' && highlightNumbers.length > 0) {
+                    for (let i = 0; i < highlightNumbers.length; i++) {
+                        const stepNumbers = highlightNumbers.slice(0, i + 1);
+                        recipe.slides.push({
+                            noteId: noteId,
+                            replacements: {
+                                "{{content}}": instructions
+                            },
+                            actions: [
+                                {
+                                    target: "tableCell",
+                                    matchText: stepNumbers.map(n => n.toString()),
+                                    fill: "#eeff41"
+                                }
+                            ],
+                            highlightNumbers: stepNumbers,
+                            highlightColor: "#eeff41"
+                        });
+                    }
+                } else {
+                    recipe.slides.push({
+                        noteId: noteId,
+                        replacements: {
+                            "{{content}}": instructions
+                        },
+                        actions: highlightNumbers.length > 0 ? [
+                            {
+                                target: "tableCell",
+                                matchText: highlightNumbers.map(n => n.toString()),
+                                fill: "#eeff41"
+                            }
+                        ] : [],
+                        highlightNumbers: highlightNumbers,
+                        highlightColor: "#eeff41"
+                    });
+                }
             }
 
             else if (item.defKey === 'customisable') {

@@ -58,7 +58,12 @@ export function shuffleArray(array) {
 }
 
 export function randomizeCasing(str) {
-    return Math.random() < 0.3 ? str.toUpperCase() : str.toLowerCase();
+    if (!str || typeof str !== 'string') return str;
+    const trimmed = str.trim();
+    if (trimmed.length === 1) {
+        return Math.random() < 0.3 ? trimmed.toUpperCase() : trimmed.toLowerCase();
+    }
+    return trimmed.toLowerCase();
 }
 
 export function parseWordWithPhonemes(str) {
@@ -151,4 +156,80 @@ export function getLimitedDaysBadge(item) {
         return '[None]';
     }
     return `[${activeAbbrs.join(' ')}]`;
+}
+
+export function getHundredsChartInstruction(multiplesOf) {
+    if (!multiplesOf || multiplesOf === 'Blank') {
+        return 'Hundreds Chart';
+    }
+    if (multiplesOf === '2 (even)') {
+        return 'Skip count by 2s (even numbers).';
+    }
+    if (multiplesOf === '2 (odd)') {
+        return 'Skip count by 2s (odd numbers).';
+    }
+    return `Skip count by ${multiplesOf}s.`;
+}
+
+export function getHundredsChartMax(chartSize = '1–100') {
+    return String(chartSize).includes('120') ? 120 : 100;
+}
+
+export function getHundredsChartMultiplesList(multiplesOf, chartSize = '1–100') {
+    const chartMax = getHundredsChartMax(chartSize);
+    const list = [];
+
+    if (!multiplesOf || multiplesOf === 'Blank') {
+        return list;
+    }
+
+    if (multiplesOf === '2 (even)') {
+        for (let n = 2; n <= chartMax; n += 2) {
+            list.push(n);
+        }
+    } else if (multiplesOf === '2 (odd)') {
+        for (let n = 1; n <= chartMax; n += 2) {
+            list.push(n);
+        }
+    } else {
+        const mult = parseInt(multiplesOf, 10);
+        if (!isNaN(mult) && mult > 0) {
+            for (let n = mult; n <= chartMax; n += mult) {
+                list.push(n);
+            }
+        }
+    }
+    return list;
+}
+
+export function getHundredsChartDefaultRange(multiplesOf, chartSize = '1–100') {
+    const list = getHundredsChartMultiplesList(multiplesOf, chartSize);
+    if (list.length === 0) {
+        return { min: 1, max: getHundredsChartMax(chartSize) };
+    }
+    return { min: list[0], max: list[list.length - 1] };
+}
+
+export function getHundredsChartHighlightedNumbers(multiplesOf, rangeMin, rangeMax, chartSize = '1–100') {
+    const list = getHundredsChartMultiplesList(multiplesOf, chartSize);
+    const highlighted = new Set();
+
+    if (list.length === 0) {
+        return highlighted;
+    }
+
+    const defaultMin = list[0];
+    const defaultMax = list[list.length - 1];
+    const parsedMin = parseInt(rangeMin, 10);
+    const parsedMax = parseInt(rangeMax, 10);
+
+    const min = !isNaN(parsedMin) && list.includes(parsedMin) ? parsedMin : defaultMin;
+    const max = !isNaN(parsedMax) && list.includes(parsedMax) ? parsedMax : defaultMax;
+
+    for (const n of list) {
+        if (n >= min && n <= max) {
+            highlighted.add(n);
+        }
+    }
+    return highlighted;
 }
