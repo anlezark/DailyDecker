@@ -3,7 +3,7 @@ import { SECTION_DEFS } from '../data/sections.js';
 import { DAYS, SENTENCE_TYPE_DEFINITIONS, SOUNDS_WRITE_LEVELS } from '../data/constants.js';
 import { getPhonicsPoolInfo } from '../data/phonics.js';
 import { buildPyramid } from '../export/recipe.js';
-import { parseWordWithPhonemes, formatPhonemeSymbols, randomizeCasing, getHundredsChartInstruction, getHundredsChartHighlightedNumbers, getHundredsChartMax, getHundredsChartMultiplesList, getHundredsChartDefaultRange } from '../utils/helpers.js';
+import { parseWordWithPhonemes, formatPhonemeSymbols, randomizeCasing, getHundredsChartInstruction, getHundredsChartHighlightedNumbers, getHundredsChartMax, getHundredsChartMultiplesList, getHundredsChartDefaultRange, parseMabNumbersList, decomposeMabNumber } from '../utils/helpers.js';
 import { currentWorkspace } from '../state/state.js';
 
 let currentPreviewDay = 'Monday';
@@ -73,6 +73,16 @@ export function getPreviewSlideCount(itemOrDefKey, timelineItemData = null) {
 
     if (defKey === 'sectCompoundSentences') {
         return ['cs_def', 'cs_stim'];
+    }
+
+    if (defKey === 'sectNumberMAB') {
+        const day = currentPreviewDay || 'Monday';
+        const dayData = (data && data[day]) || (data && data.Monday) || {};
+        const parsed = parseMabNumbersList(dayData.numbers);
+        if (parsed.length > 1) {
+            return parsed.map(n => `Number: ${n}`);
+        }
+        return [];
     }
 
     return [];
@@ -154,6 +164,8 @@ export function generateSlidePreviewHtml(itemOrDefKey, isLibrary = false, global
             return renderGenericPreview(dayData, customTitle, data, day);
         case 'sectHundredsChart':
             return renderHundredsChartPreview(data, customTitle);
+        case 'sectNumberMAB':
+            return renderNumberMABPreview(data, dayData, day, subIdx, customTitle);
         case 'customisable':
             return renderCustomisablePreview(data, customTitle);
         case 'finished':
@@ -1776,6 +1788,222 @@ function renderHundredsChartPreview(data = {}, customTitle = 'Hundreds Chart') {
                 <span>Multiples: <strong class="text-slate-600 font-semibold">${multiplesOf}</strong></span>
                 <span>Range: <strong class="text-slate-600 font-semibold">${rangeLabel}</strong></span>
                 <span>Mode: <strong class="text-slate-600 font-semibold">${progLabel}</strong></span>
+            </div>
+        </div>
+    `;
+}
+
+function renderMabSvgBlock(type, scale = 1) {
+    if (type === 1000) {
+        const w = Math.max(18, Math.round(78 * scale));
+        const h = Math.max(20, Math.round(86 * scale));
+        let gridLines = '';
+        for (let i = 1; i < 10; i++) {
+            const f = i / 10;
+            // Left face horizontal-ish & vertical lines
+            const ly1 = 22 + f * 44;
+            const ly2 = 44 + f * 44;
+            gridLines += `<line x1="4" y1="${ly1.toFixed(1)}" x2="40" y2="${ly2.toFixed(1)}" stroke="#1e293b" stroke-width="0.55" opacity="0.65"/>`;
+            const lx = 4 + f * 36;
+            const lTopY = 22 + f * 22;
+            const lBotY = 66 + f * 22;
+            gridLines += `<line x1="${lx.toFixed(1)}" y1="${lTopY.toFixed(1)}" x2="${lx.toFixed(1)}" y2="${lBotY.toFixed(1)}" stroke="#1e293b" stroke-width="0.55" opacity="0.65"/>`;
+
+            // Right face horizontal-ish & vertical lines
+            const ry1 = 44 + f * 44;
+            const ry2 = 22 + f * 44;
+            gridLines += `<line x1="40" y1="${ry1.toFixed(1)}" x2="76" y2="${ry2.toFixed(1)}" stroke="#1e293b" stroke-width="0.55" opacity="0.65"/>`;
+            const rx = 40 + f * 36;
+            const rTopY = 44 - f * 22;
+            const rBotY = 88 - f * 22;
+            gridLines += `<line x1="${rx.toFixed(1)}" y1="${rTopY.toFixed(1)}" x2="${rx.toFixed(1)}" y2="${rBotY.toFixed(1)}" stroke="#1e293b" stroke-width="0.55" opacity="0.65"/>`;
+
+            // Top face grid lines
+            const tx1 = 4 + f * 36;
+            const ty1 = 22 - f * 20;
+            const tx2 = 40 + f * 36;
+            const ty2 = 44 - f * 20;
+            gridLines += `<line x1="${tx1.toFixed(1)}" y1="${ty1.toFixed(1)}" x2="${tx2.toFixed(1)}" y2="${ty2.toFixed(1)}" stroke="#1e293b" stroke-width="0.55" opacity="0.65"/>`;
+
+            const ux1 = 4 + f * 36;
+            const uy1 = 22 + f * 22;
+            const ux2 = 40 + f * 36;
+            const uy2 = 2 + f * 22;
+            gridLines += `<line x1="${ux1.toFixed(1)}" y1="${uy1.toFixed(1)}" x2="${ux2.toFixed(1)}" y2="${uy2.toFixed(1)}" stroke="#1e293b" stroke-width="0.55" opacity="0.65"/>`;
+        }
+        return `
+            <svg width="${w}" height="${h}" viewBox="0 0 80 90" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+                <!-- Top face -->
+                <polygon points="40,2 76,22 40,44 4,22" fill="#ff3b3b" stroke="#0f172a" stroke-width="1.2" stroke-linejoin="round"/>
+                <!-- Left face -->
+                <polygon points="4,22 40,44 40,88 4,66" fill="#c81e1e" stroke="#0f172a" stroke-width="1.2" stroke-linejoin="round"/>
+                <!-- Right face -->
+                <polygon points="40,44 76,22 76,66 40,88" fill="#ef2323" stroke="#0f172a" stroke-width="1.2" stroke-linejoin="round"/>
+                ${gridLines}
+            </svg>
+        `;
+    }
+
+    if (type === 100) {
+        const w = Math.max(14, Math.round(52 * scale));
+        const h = Math.max(20, Math.round(84 * scale));
+        let gridLines = '';
+        for (let i = 1; i < 10; i++) {
+            const f = i / 10;
+            // Front-right 10x10 face lines
+            const hy1 = 30 + f * 52;
+            const hy2 = 6 + f * 52;
+            gridLines += `<line x1="12" y1="${hy1.toFixed(1)}" x2="50" y2="${hy2.toFixed(1)}" stroke="#0f172a" stroke-width="0.6" opacity="0.7"/>`;
+            const vx = 12 + f * 38;
+            const vTop = 30 - f * 24;
+            const vBot = 82 - f * 24;
+            gridLines += `<line x1="${vx.toFixed(1)}" y1="${vTop.toFixed(1)}" x2="${vx.toFixed(1)}" y2="${vBot.toFixed(1)}" stroke="#0f172a" stroke-width="0.6" opacity="0.7"/>`;
+            // Left thickness ticks
+            gridLines += `<line x1="6" y1="${(26 + f * 52).toFixed(1)}" x2="12" y2="${hy1.toFixed(1)}" stroke="#0f172a" stroke-width="0.6" opacity="0.7"/>`;
+            // Top thickness ticks
+            gridLines += `<line x1="${(6 + f * 38).toFixed(1)}" y1="${(26 - f * 24).toFixed(1)}" x2="${vx.toFixed(1)}" y2="${vTop.toFixed(1)}" stroke="#0f172a" stroke-width="0.6" opacity="0.7"/>`;
+        }
+        return `
+            <svg width="${w}" height="${h}" viewBox="0 0 54 86" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+                <!-- Top thin edge -->
+                <polygon points="6,26 44,2 50,6 12,30" fill="#29b6f6" stroke="#0f172a" stroke-width="1.2" stroke-linejoin="round"/>
+                <!-- Left thin edge -->
+                <polygon points="6,26 12,30 12,82 6,78" fill="#0277bd" stroke="#0f172a" stroke-width="1.2" stroke-linejoin="round"/>
+                <!-- Front-right 10x10 face -->
+                <polygon points="12,30 50,6 50,58 12,82" fill="#039be5" stroke="#0f172a" stroke-width="1.2" stroke-linejoin="round"/>
+                ${gridLines}
+            </svg>
+        `;
+    }
+
+    if (type === 10) {
+        const w = Math.max(6, Math.round(13 * scale));
+        const h = Math.max(18, Math.round(70 * scale));
+        let segLines = '';
+        for (let i = 1; i < 10; i++) {
+            const y = 8 + i * 6.8;
+            segLines += `<polyline points="2,${y.toFixed(1)} 10,${(y + 4).toFixed(1)} 18,${y.toFixed(1)}" stroke="#0f172a" stroke-width="0.85" fill="none"/>`;
+        }
+        return `
+            <svg width="${w}" height="${h}" viewBox="0 0 20 82" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+                <!-- Top diamond -->
+                <polygon points="10,4 18,8 10,12 2,8" fill="#22c55e" stroke="#0f172a" stroke-width="1.2" stroke-linejoin="round"/>
+                <!-- Left face -->
+                <polygon points="2,8 10,12 10,80 2,76" fill="#15803d" stroke="#0f172a" stroke-width="1.2" stroke-linejoin="round"/>
+                <!-- Right face -->
+                <polygon points="10,12 18,8 18,76 10,80" fill="#16a34a" stroke="#0f172a" stroke-width="1.2" stroke-linejoin="round"/>
+                ${segLines}
+            </svg>
+        `;
+    }
+
+    // Ones cube (type === 1)
+    const w = Math.max(6, Math.round(12 * scale));
+    const h = Math.max(7, Math.round(13 * scale));
+    return `
+        <svg width="${w}" height="${h}" viewBox="0 0 20 22" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
+            <!-- Top diamond -->
+            <polygon points="10,2 18,6.5 10,11 2,6.5" fill="#fef08a" stroke="#0f172a" stroke-width="1.4" stroke-linejoin="round"/>
+            <!-- Left face -->
+            <polygon points="2,6.5 10,11 10,20 2,15.5" fill="#eab308" stroke="#0f172a" stroke-width="1.4" stroke-linejoin="round"/>
+            <!-- Right face -->
+            <polygon points="10,11 18,6.5 18,15.5 10,20" fill="#facc15" stroke="#0f172a" stroke-width="1.4" stroke-linejoin="round"/>
+        </svg>
+    `;
+}
+
+function renderNumberMABPreview(data = {}, dayData = {}, day = 'Monday', subIdx = 0, customTitle = 'Number - MAB blocks') {
+    const rawPv = data.maxPlaceValue !== undefined ? data.maxPlaceValue : (data.weekly?.maxPlaceValue !== undefined ? data.weekly.maxPlaceValue : 2);
+    const maxPv = Math.min(4, Math.max(1, parseInt(rawPv, 10) || 2));
+    const instructions = data.instructions !== undefined ? data.instructions : (data.weekly?.instructions !== undefined ? data.weekly.instructions : 'What is the number?');
+
+    let dayNumbers = parseMabNumbersList(dayData?.numbers);
+    if (dayNumbers.length === 0 && data?.Monday?.numbers) {
+        dayNumbers = parseMabNumbersList(data.Monday.numbers);
+    }
+
+    // Default sample number if daily boxes are currently empty
+    const defaultByPv = { 1: 4, 2: 24, 3: 124, 4: 1111 };
+    const isSample = dayNumbers.length === 0;
+    const activeNumber = isSample
+        ? (defaultByPv[maxPv] || 24)
+        : dayNumbers[Math.min(subIdx, dayNumbers.length - 1)] || dayNumbers[0];
+
+    const parts = decomposeMabNumber(activeNumber);
+
+    // Estimate horizontal footprint to scale cleanly inside preview frame
+    const rawUnits =
+        (parts.thousands > 0 ? parts.thousands * 78 + 10 : 0) +
+        (parts.hundreds > 0 ? parts.hundreds * 52 + 10 : 0) +
+        (parts.tens > 0 ? parts.tens * 15 + 8 : 0) +
+        (parts.ones > 0 ? Math.ceil(parts.ones / 5) * 14 + 6 : 0);
+
+    const scale = rawUnits > 220 ? Math.max(0.42, 220 / rawUnits) : 1;
+
+    const groupsHtml = [];
+
+    if (parts.thousands > 0) {
+        let items = '';
+        for (let i = 0; i < parts.thousands; i++) {
+            items += renderMabSvgBlock(1000, scale);
+        }
+        groupsHtml.push(`<div class="flex items-end gap-1">${items}</div>`);
+    }
+
+    if (parts.hundreds > 0) {
+        let items = '';
+        for (let i = 0; i < parts.hundreds; i++) {
+            items += renderMabSvgBlock(100, scale);
+        }
+        groupsHtml.push(`<div class="flex items-end gap-1">${items}</div>`);
+    }
+
+    if (parts.tens > 0) {
+        let items = '';
+        for (let i = 0; i < parts.tens; i++) {
+            const extraMargin = (i === 5) ? 'ml-1' : '';
+            items += `<div class="${extraMargin} flex items-end">${renderMabSvgBlock(10, scale)}</div>`;
+        }
+        groupsHtml.push(`<div class="flex items-end gap-0.5">${items}</div>`);
+    }
+
+    if (parts.ones > 0) {
+        const cols = Math.ceil(parts.ones / 5);
+        let colsHtml = '';
+        for (let c = 0; c < cols; c++) {
+            const countInCol = Math.min(5, parts.ones - c * 5);
+            let stackHtml = '';
+            for (let r = 0; r < countInCol; r++) {
+                stackHtml += renderMabSvgBlock(1, scale);
+            }
+            colsHtml += `<div class="flex flex-col-reverse items-center gap-0.5">${stackHtml}</div>`;
+        }
+        groupsHtml.push(`<div class="flex items-end gap-1">${colsHtml}</div>`);
+    }
+
+    return `
+        <div class="w-full h-full flex flex-col items-center justify-between p-2.5 select-none bg-white relative overflow-hidden">
+            <!-- Top-left subtle number indicator + Top-right Recite Badge -->
+            <div class="w-full flex items-start justify-between z-10">
+                <span class="text-[8.5px] font-semibold text-slate-400">
+                    ${isSample ? `Sample: ${activeNumber}` : `${day} · #${Math.min(subIdx + 1, dayNumbers.length)} (${activeNumber})`}
+                </span>
+                <div class="w-6 h-6 rounded-full bg-amber-300 flex flex-col items-center justify-center text-slate-900 shadow-2xs border border-amber-400/60 shrink-0">
+                    <i class="fa-solid fa-users text-[7px] leading-none"></i>
+                    <span class="text-[4px] font-bold edu-font leading-none mt-0.5">Recite</span>
+                </div>
+            </div>
+
+            <!-- Center MAB Blocks Cluster (Left-to-right: 1000s -> 100s -> 10s -> 1s) -->
+            <div class="flex-1 flex items-end justify-center gap-2.5 sm:gap-3.5 my-auto pb-1 max-w-full overflow-hidden">
+                ${groupsHtml.join('')}
+            </div>
+
+            <!-- Bottom {{content}} Instruction -->
+            <div class="w-full text-center pt-1">
+                <div class="text-sm sm:text-[15px] font-bold text-slate-900 edu-font leading-tight truncate px-2">
+                    ${instructions || 'What is the number?'}
+                </div>
             </div>
         </div>
     `;

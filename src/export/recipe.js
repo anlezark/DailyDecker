@@ -2,7 +2,7 @@
 import { SECTION_DEFS } from '../data/sections.js';
 import { DAYS, SENTENCE_TYPE_DEFINITIONS, SOUNDS_WRITE_LEVELS } from '../data/constants.js';
 import { getPhonicsPoolInfo } from '../data/phonics.js';
-import { shuffleArray, randomizeCasing, parseWordWithPhonemes, formatPhonemeSymbols, getItemIncludedDays, getHundredsChartInstruction, getHundredsChartHighlightedNumbers, getHundredsChartDefaultRange } from '../utils/helpers.js';
+import { shuffleArray, randomizeCasing, parseWordWithPhonemes, formatPhonemeSymbols, getItemIncludedDays, getHundredsChartInstruction, getHundredsChartHighlightedNumbers, getHundredsChartDefaultRange, parseMabNumbersList, decomposeMabNumber, generateMabSmartFillNumbers } from '../utils/helpers.js';
 
 export function buildPyramid(sentence) {
     const words = (sentence || '').trim().split(/\s+/).filter(w => w);
@@ -857,6 +857,45 @@ export function buildPresentationRecipe(globalSettings, timelineItems, exportPpt
                         highlightColor: "#eeff41"
                     });
                 }
+            }
+
+            else if (item.defKey === 'sectNumberMAB') {
+                const rawPv = data.maxPlaceValue !== undefined ? data.maxPlaceValue : (data.weekly?.maxPlaceValue !== undefined ? data.weekly.maxPlaceValue : 2);
+                const maxPv = Math.min(4, Math.max(1, parseInt(rawPv, 10) || 2));
+
+                const rawSlidesPerDay = data.slidesPerDay !== undefined ? data.slidesPerDay : (data.weekly?.slidesPerDay !== undefined ? data.weekly.slidesPerDay : 6);
+                const slidesPerDay = Math.min(30, Math.max(1, parseInt(rawSlidesPerDay, 10) || 6));
+
+                const easyMode = data.easyMode !== undefined ? Boolean(data.easyMode) : (data.weekly?.easyMode !== undefined ? Boolean(data.weekly.easyMode) : false);
+                const instructions = data.instructions !== undefined ? data.instructions : (data.weekly?.instructions !== undefined ? data.weekly.instructions : 'What is the number?');
+
+                let rawDayStr = data[day]?.numbers;
+                if (!rawDayStr || !String(rawDayStr).trim()) {
+                    rawDayStr = generateMabSmartFillNumbers(maxPv, slidesPerDay, easyMode);
+                }
+
+                const dayNumbers = parseMabNumbersList(rawDayStr);
+                dayNumbers.forEach(num => {
+                    const parts = decomposeMabNumber(num);
+                    recipe.slides.push({
+                        noteId: "[numberMAB]",
+                        replacements: {
+                            "{{content}}": instructions
+                        },
+                        actions: [
+                            {
+                                target: "mabLayout",
+                                number: parts.value,
+                                counts: {
+                                    MAB_1000: parts.thousands,
+                                    MAB_100: parts.hundreds,
+                                    MAB_10: parts.tens,
+                                    MAB_1: parts.ones
+                                }
+                            }
+                        ]
+                    });
+                });
             }
 
             else if (item.defKey === 'customisable') {

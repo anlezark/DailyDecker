@@ -233,3 +233,85 @@ export function getHundredsChartHighlightedNumbers(multiplesOf, rangeMin, rangeM
     }
     return highlighted;
 }
+
+export function generateSingleMabNumber(digits = 2, easyMode = false) {
+    const dCount = Math.min(4, Math.max(1, parseInt(digits, 10) || 1));
+    let result = 0;
+
+    for (let pos = 0; pos < dCount; pos++) {
+        const isLeading = (pos === dCount - 1);
+        let min = (easyMode || isLeading) ? 1 : 0;
+        let max = 9;
+
+        if (pos === 0) {
+            // Ones
+            max = easyMode ? 6 : 9;
+        } else if (pos === 1) {
+            // Tens
+            max = easyMode ? 4 : 9;
+        } else if (pos === 2) {
+            // Hundreds (overall <= 4, easyMode <= 2)
+            max = easyMode ? 2 : 4;
+        } else if (pos === 3) {
+            // Thousands (overall <= 4, easyMode <= 2)
+            max = easyMode ? 2 : 4;
+        }
+
+        const digit = Math.floor(Math.random() * (max - min + 1)) + min;
+        result += digit * Math.pow(10, pos);
+    }
+
+    return Math.max(1, result);
+}
+
+export function generateMabSmartFillNumbers(maxPlaceValue = 2, slidesPerDay = 6, easyMode = false) {
+    const pv = Math.min(4, Math.max(1, parseInt(maxPlaceValue, 10) || 2));
+    const count = Math.min(30, Math.max(1, parseInt(slidesPerDay, 10) || 6));
+    const lowerPv = pv > 1 ? pv - 1 : 1;
+
+    const numbers = [];
+    const used = new Set();
+
+    for (let i = 0; i < count; i++) {
+        const targetDigits = (i < 2) ? lowerPv : pv;
+        let candidate = generateSingleMabNumber(targetDigits, easyMode);
+        let attempts = 0;
+        while (used.has(candidate) && attempts < 35) {
+            candidate = generateSingleMabNumber(targetDigits, easyMode);
+            attempts++;
+        }
+        used.add(candidate);
+        numbers.push(candidate);
+    }
+
+    return numbers.join(', ');
+}
+
+export function parseMabNumbersList(rawStr) {
+    if (rawStr === undefined || rawStr === null) return [];
+    const str = String(rawStr).trim();
+    if (!str) return [];
+
+    return str
+        .split(',')
+        .map(part => {
+            const cleaned = part.replace(/[^0-9]/g, '');
+            if (!cleaned) return null;
+            const val = parseInt(cleaned, 10);
+            if (isNaN(val) || val <= 0) return null;
+            return Math.min(9999, val);
+        })
+        .filter(val => val !== null);
+}
+
+export function decomposeMabNumber(num) {
+    const n = Math.min(9999, Math.max(0, parseInt(num, 10) || 0));
+    return {
+        value: n,
+        thousands: Math.floor(n / 1000),
+        hundreds: Math.floor((n % 1000) / 100),
+        tens: Math.floor((n % 100) / 10),
+        ones: n % 10
+    };
+}
+

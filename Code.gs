@@ -199,9 +199,10 @@ function doPost(e) {
   }
 }
 
-// Simple GET response for browser testing
+// Simple GET response for browser testing (and forces MailApp permission check when clicked with 'Run' in the editor)
 function doGet(e) {
-  return ContentService.createTextOutput("The Slide Assembly API is active and listening for POST requests.");
+  var remainingQuota = MailApp.getRemainingDailyQuota();
+  return ContentService.createTextOutput("The Slide Assembly API is active and listening for POST requests. Remaining email quota: " + remainingQuota);
 }
 
 /**
@@ -212,6 +213,7 @@ function doGet(e) {
  * 4. Input sanitization and MailApp delivery to owner's email
  */
 function handleContactSubmission(requestData) {
+  requestData = requestData || {};
   // 1. Honeypot check: If a bot filled out the hidden field, pretend it succeeded
   if (requestData.honeypot && String(requestData.honeypot).trim() !== "") {
     return ContentService.createTextOutput(JSON.stringify({
@@ -463,6 +465,170 @@ function applySlideActions(newSlide, actions) {
               }
             }
           }
+        }
+      }
+    }
+
+    // 5. Target: MAB Blocks Dynamic Layout (Number - MAB blocks activity)
+    // Example: { target: 'mabLayout', counts: { MAB_1000: 1, MAB_100: 2, MAB_10: 3, MAB_1: 4 } }
+    else if (targetType === 'mabLayout') {
+      var counts = act.counts || {};
+      var orderKeys = ['MAB_1000', 'MAB_100', 'MAB_10', 'MAB_1'];
+      var allElements = getAllSlideElements(newSlide);
+      var seeds = {};
+
+      for (var e = 0; e < allElements.length; e++) {
+        var el = allElements[e];
+        var title = (el.getTitle() || '').trim().toUpperCase();
+        var desc = (el.getDescription() || '').trim().toUpperCase();
+        for (var k = 0; k < orderKeys.length; k++) {
+          var key = orderKeys[k];
+          if (!seeds[key] && (title === key || desc === key)) {
+            seeds[key] = {
+              el: el,
+              w: el.getWidth(),
+              h: el.getHeight(),
+              left: el.getLeft(),
+              top: el.getTop()
+            };
+          }
+        }
+      }
+
+      var zoneTop = 9999;
+      var zoneBottom = 0;
+      for (var k = 0; k < orderKeys.length; k++) {
+        var s = seeds[orderKeys[k]];
+        if (s) {
+          if (s.top < zoneTop) zoneTop = s.top;
+          if (s.top + s.h > zoneBottom) zoneBottom = s.top + s.h;
+        }
+      }
+      if (zoneTop === 9999) zoneTop = 35;
+      if (zoneBottom <= zoneTop) zoneBottom = 325;
+      var zoneHeight = Math.max(120, zoneBottom - zoneTop);
+
+      var pageWidth = 720;
+      try {
+        pageWidth = newSlide.getParentPresentation().getPageWidth() || 720;
+      } catch (pwErr) {}
+      var maxAllowedWidth = pageWidth * 0.86;
+
+      var activeGroups = [];
+      for (var k = 0; k < orderKeys.length; k++) {
+        var key = orderKeys[k];
+        var seed = seeds[key];
+        var count = Math.max(0, parseInt(counts[key], 10) || 0);
+
+        if (!seed) continue;
+
+        if (count <= 0) {
+          try { seed.el.remove(); } catch (remErr) {}
+          continue;
+        }
+
+        var rawW = 0;
+        var rawH = 0;
+        var hGap = 0;
+        var vGap = 0;
+        var extra5 = 0;
+
+        if (key === 'MAB_1') {
+          var cols = Math.ceil(count / 5);
+          var rows = Math.min(count, 5);
+          hGap = seed.w * 0.28;
+          vGap = seed.h * 0.18;
+          rawW = cols * seed.w + (cols - 1) * hGap;
+          rawH = rows * seed.h + (rows - 1) * vGap;
+        } else if (key === 'MAB_10') {
+          hGap = seed.w * 0.25;
+          extra5 = count > 5 ? seed.w * 0.30 : 0;
+          rawW = count * seed.w + (count - 1) * hGap + extra5;
+          rawH = seed.h;
+        } else {
+          hGap = seed.w * 0.08;
+          rawW = count * seed.w + (count - 1) * hGap;
+          rawH = seed.h;
+        }
+
+        activeGroups.push({
+          key: key,
+          seed: seed,
+          count: count,
+          rawW: rawW,
+          rawH: rawH,
+          hGap: hGap,
+          vGap: vGap,
+          extra5: extra5
+        });
+      }
+
+      if (activeGroups.length > 0) {
+        var baseGroupGap = 28;
+        var totalRawWidth = 0;
+        var maxRawHeight = 0;
+
+        for (var g = 0; g < activeGroups.length; g++) {
+          totalRawWidth += activeGroups[g].rawW;
+          if (activeGroups[g].rawH > maxRawHeight) {
+            maxRawHeight = activeGroups[g].rawH;
+          }
+        }
+        totalRawWidth += (activeGroups.length - 1) * baseGroupGap;
+
+        var scale = Math.min(
+          1.0,
+          totalRawWidth > 0 ? (maxAllowedWidth / totalRawWidth) : 1.0,
+          maxRawHeight > 0 ? (zoneHeight / maxRawHeight) : 1.0
+        );
+
+        var totalScaledWidth = totalRawWidth * scale;
+        var maxScaledHeight = maxRawHeight * scale;
+        var scaledGroupGap = baseGroupGap * scale;
+
+        var curX = (pageWidth - totalScaledWidth) / 2;
+        var baselineY = Math.min(zoneBottom, zoneTop + (zoneHeight + maxScaledHeight) / 2);
+
+        for (var g = 0; g < activeGroups.length; g++) {
+          var grp = activeGroups[g];
+          var instances = [];
+          for (var d = 0; d < grp.count - 1; d++) {
+            try {
+              instances.push(grp.seed.el.duplicate());
+            } catch (dupErr) {}
+          }
+          instances.push(grp.seed.el);
+
+          var scaledW = grp.seed.w * scale;
+          var scaledH = grp.seed.h * scale;
+          var scaledHGap = grp.hGap * scale;
+          var scaledVGap = grp.vGap * scale;
+          var scaledExtra5 = grp.extra5 * scale;
+
+          for (var idx = 0; idx < instances.length; idx++) {
+            var inst = instances[idx];
+            var itemLeft = curX;
+            var itemTop = baselineY - scaledH;
+
+            if (grp.key === 'MAB_1') {
+              var col = Math.floor(idx / 5);
+              var rowFromBottom = idx % 5;
+              itemLeft = curX + col * (scaledW + scaledHGap);
+              itemTop = baselineY - scaledH - rowFromBottom * (scaledH + scaledVGap);
+            } else {
+              itemLeft = curX + idx * (scaledW + scaledHGap) + (grp.key === 'MAB_10' && idx >= 5 ? scaledExtra5 : 0);
+              itemTop = baselineY - scaledH;
+            }
+
+            try {
+              inst.setWidth(scaledW);
+              inst.setHeight(scaledH);
+              inst.setLeft(itemLeft);
+              inst.setTop(itemTop);
+            } catch (posErr) {}
+          }
+
+          curX += (grp.rawW * scale) + scaledGroupGap;
         }
       }
     }

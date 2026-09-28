@@ -216,6 +216,28 @@ export const SECTION_DEFS = {
             { id: 'instructions', label: 'Instructions:', type: 'text', default: 'Skip count by 6s.' }
         ]
     },
+    'sectNumberMAB': {
+        title: 'Number - MAB blocks',
+        shortDesc: 'Identify number from MAB blocks',
+        icon: 'fa-cubes',
+        color: 'text-amber-600',
+        bg: 'bg-amber-100',
+        type: 'mixed',
+        workspace: 'numeracy',
+        hasTitleSlideOptions: true,
+        templateTag: '[numberMAB]',
+        contentTag: '{{content}}',
+        description: 'Students identify a number from images of MAB blocks',
+        weeklyFields: [
+            { id: 'maxPlaceValue', label: 'Maximum Place value', type: 'number', min: 1, max: 4, default: 2 },
+            { id: 'slidesPerDay', label: 'Slides per day', type: 'number', min: 1, max: 20, default: 6 },
+            { id: 'easyMode', label: 'Easy mode (lower numbers, no zeros)', type: 'checkbox', default: false },
+            { id: 'instructions', label: 'Instruction', type: 'text', default: 'What is the number?' }
+        ],
+        dailyFields: [
+            { id: 'numbers', label: 'Target numbers', type: 'text', default: '', placeholder: 'Target numbers - comma separated, e.g. "12, 22, 14"' }
+        ]
+    },
     'customisable': {
         title: 'Customisable Section', shortDesc: 'specify your own slide', icon: 'fa-sliders', color: 'text-indigo-500', bg: 'bg-indigo-100', type: 'weekly', hasTitleSlideOptions: true,
         description: 'Use this activity to specify and customise any new slide in your template. The template tag and content tags (if used) must match your template.',

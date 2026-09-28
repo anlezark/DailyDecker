@@ -188,7 +188,7 @@ function resetModalState() {
         btn.classList.remove('hidden');
         btn.disabled = false;
         btn.className = "bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg text-sm shrink-0 cursor-pointer";
-        btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Send to Google Slides`;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Assemble in Google Slides`;
     }
 }
 
@@ -383,7 +383,7 @@ export function renderLibrary() {
         if (startersCountEl) startersCountEl.textContent = '0';
 
         // Numeracy Workspace: Populate All Activities
-        const numeracySectionKeys = ['mainIntro', 'sectHundredsChart', 'numeracyPlaceholder'];
+        const numeracySectionKeys = ['mainIntro', 'sectHundredsChart', 'sectNumberMAB', 'numeracyPlaceholder'];
         if (allSectionsCountEl) allSectionsCountEl.textContent = numeracySectionKeys.length;
 
         if (allSectionsList) {

@@ -21,7 +21,8 @@ import {
     hasUnexpectedPhonemeSymbol,
     getHundredsChartInstruction,
     getHundredsChartMultiplesList,
-    getHundredsChartDefaultRange
+    getHundredsChartDefaultRange,
+    generateMabSmartFillNumbers
 } from '../utils/helpers.js';
 import { renderTimeline, addTimelineItem } from './timeline.js';
 import { 
@@ -29,6 +30,7 @@ import {
     getPreviewSlideCount,
     setPreviewSubIndex,
     getPreviewSubIndex,
+    setPreviewDay,
     getPreviewDay
 } from './preview.js';
 
@@ -358,13 +360,6 @@ export function renderInspector() {
                         </button>
                     </div>
                 </div>
-
-                <div class="pt-2 border-t border-slate-100">
-                    <h3 class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Google Drive Destination</h3>
-                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Target Folder ID (Optional)</label>
-                    <input type="text" id="g-folderId" value="${globalSettings.folderId || ''}" placeholder="e.g. 1wbKRkTXB6M6szi-yeCYiU1kyKJgTfIdK" class="w-full text-xs font-mono p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                    <p class="text-[10px] text-slate-400 mt-1 leading-normal">Folder ID from Google Drive URL. Leave blank for root.</p>
-                </div>
             </div>
         `;
 
@@ -393,10 +388,6 @@ export function renderInspector() {
         });
         document.getElementById('g-week').addEventListener('input', (e) => {
             globalSettings.week = parseInt(e.target.value) || 1;
-            saveState();
-        });
-        document.getElementById('g-folderId').addEventListener('input', (e) => {
-            globalSettings.folderId = e.target.value.trim();
             saveState();
         });
 
@@ -771,6 +762,74 @@ export function renderInspector() {
             `;
         }
 
+        // Number - MAB blocks custom UI
+        else if (item.defKey === 'sectNumberMAB') {
+            const rawPv = item.data.maxPlaceValue !== undefined ? item.data.maxPlaceValue : (item.data.weekly?.maxPlaceValue !== undefined ? item.data.weekly.maxPlaceValue : 2);
+            const maxPlaceValue = Math.min(4, Math.max(1, parseInt(rawPv, 10) || 2));
+
+            const rawSlidesPerDay = item.data.slidesPerDay !== undefined ? item.data.slidesPerDay : (item.data.weekly?.slidesPerDay !== undefined ? item.data.weekly.slidesPerDay : 6);
+            const slidesPerDay = Math.min(30, Math.max(1, parseInt(rawSlidesPerDay, 10) || 6));
+
+            const easyMode = item.data.easyMode !== undefined ? Boolean(item.data.easyMode) : (item.data.weekly?.easyMode !== undefined ? Boolean(item.data.weekly.easyMode) : false);
+            const instructions = item.data.instructions !== undefined ? item.data.instructions : (item.data.weekly?.instructions !== undefined ? item.data.weekly.instructions : 'What is the number?');
+
+            item.data.maxPlaceValue = maxPlaceValue;
+            item.data.slidesPerDay = slidesPerDay;
+            item.data.easyMode = easyMode;
+            item.data.instructions = instructions;
+
+            const activeDays = DAYS.filter(d => globalSettings.activeDays[d] && (!item.includedDays || item.includedDays[d] !== false));
+
+            contentHtml += `
+                <div class="space-y-3.5 border-t border-slate-200 pt-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <label for="mab-max-pv" class="text-xs font-semibold text-slate-600">Maximum Place value</label>
+                        <input type="number" id="mab-max-pv" min="1" max="4" value="${maxPlaceValue}" class="w-16 text-xs font-bold text-center p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:bg-white focus:border-amber-500 focus:outline-none">
+                    </div>
+
+                    <div class="flex items-center justify-between gap-3">
+                        <label for="mab-slides-per-day" class="text-xs font-semibold text-slate-600">Slides per day</label>
+                        <input type="number" id="mab-slides-per-day" min="1" max="30" value="${slidesPerDay}" class="w-16 text-xs font-bold text-center p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:bg-white focus:border-amber-500 focus:outline-none">
+                    </div>
+
+                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer py-0.5">
+                        <input type="checkbox" id="mab-easy-mode" ${easyMode ? 'checked' : ''} class="rounded text-amber-600 focus:ring-amber-500">
+                        <span>Easy mode (lower numbers, no zeros)</span>
+                    </label>
+
+                    <div>
+                        <label for="mab-instructions" class="block text-xs font-semibold text-slate-600 mb-1">Instruction</label>
+                        <input type="text" id="mab-instructions" value="${instructions}" placeholder="What is the number?" class="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:bg-white focus:border-amber-500 focus:outline-none">
+                    </div>
+
+                    <div class="pt-1">
+                        <button type="button" id="btn-mab-smart-fill" class="w-full py-2 px-3 bg-amber-50 hover:bg-amber-100/90 text-amber-900 border border-amber-300/90 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-2xs cursor-pointer">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                            <span>Smart Fill</span>
+                        </button>
+                    </div>
+
+                    ${activeDays.length > 0 ? `
+                        <div class="space-y-2.5 border-t border-slate-200 pt-3">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Daily Content</h4>
+                            ${activeDays.map(day => {
+                                const dayData = (item.data && item.data[day]) || {};
+                                const val = dayData.numbers !== undefined ? dayData.numbers : '';
+                                return `
+                                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                                        <div class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> ${day}
+                                        </div>
+                                        <input type="text" data-day="${day}" value="${val.replace(/"/g, '&quot;')}" placeholder='Target numbers - comma separated, e.g. "12, 22, 14"' class="mab-daily-numbers w-full text-xs p-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:border-amber-500 focus:outline-none transition">
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
         // Weekly fields
         else if (def.fields && def.type === 'weekly') {
             contentHtml += `<div class="space-y-3 border-t border-slate-200 pt-3">`;
@@ -805,7 +864,7 @@ export function renderInspector() {
         }
 
         // Mixed weekly fields
-        if (def.weeklyFields && def.type === 'mixed') {
+        if (def.weeklyFields && def.type === 'mixed' && item.defKey !== 'sectNumberMAB') {
             contentHtml += `<div class="space-y-3 border-t border-slate-200 pt-3">`;
             def.weeklyFields.forEach(f => {
                 const val = item.data[f.id] !== undefined ? item.data[f.id] : (f.default !== undefined ? f.default : '');
@@ -838,7 +897,7 @@ export function renderInspector() {
         }
 
         // Daily fields
-        if (def.type === 'daily' || def.type === 'mixed') {
+        if ((def.type === 'daily' || def.type === 'mixed') && item.defKey !== 'sectNumberMAB') {
             const activeDays = DAYS.filter(d => globalSettings.activeDays[d] && (!item.includedDays || item.includedDays[d] !== false));
             if (activeDays.length > 0) {
                 contentHtml += `<div class="space-y-3 border-t border-slate-200 pt-3"><h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Daily Content</h4>`;
@@ -1621,6 +1680,123 @@ export function renderInspector() {
                 item.data.weekly.instructions = val;
                 saveState();
                 refreshInspectorSlidePreview();
+            });
+        }
+
+        // Number - MAB blocks listeners
+        if (item.defKey === 'sectNumberMAB') {
+            const inputPv = content.querySelector('#mab-max-pv');
+            const inputSlides = content.querySelector('#mab-slides-per-day');
+            const chkEasy = content.querySelector('#mab-easy-mode');
+            const inputInst = content.querySelector('#mab-instructions');
+            const btnSmartFill = content.querySelector('#btn-mab-smart-fill');
+            const dailyInputs = content.querySelectorAll('.mab-daily-numbers');
+
+            inputPv?.addEventListener('input', (e) => {
+                let val = parseInt(e.target.value, 10);
+                if (!isNaN(val)) {
+                    val = Math.min(4, Math.max(1, val));
+                    item.data.maxPlaceValue = val;
+                    if (!item.data.weekly) item.data.weekly = {};
+                    item.data.weekly.maxPlaceValue = val;
+                    saveState();
+                    refreshInspectorSlidePreview();
+                }
+            });
+
+            inputPv?.addEventListener('blur', (e) => {
+                let val = parseInt(e.target.value, 10);
+                val = isNaN(val) ? 2 : Math.min(4, Math.max(1, val));
+                e.target.value = String(val);
+                item.data.maxPlaceValue = val;
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.maxPlaceValue = val;
+                saveState();
+                refreshInspectorSlidePreview();
+            });
+
+            inputSlides?.addEventListener('input', (e) => {
+                let val = parseInt(e.target.value, 10);
+                if (!isNaN(val)) {
+                    val = Math.min(30, Math.max(1, val));
+                    item.data.slidesPerDay = val;
+                    if (!item.data.weekly) item.data.weekly = {};
+                    item.data.weekly.slidesPerDay = val;
+                    saveState();
+                }
+            });
+
+            inputSlides?.addEventListener('blur', (e) => {
+                let val = parseInt(e.target.value, 10);
+                val = isNaN(val) ? 6 : Math.min(30, Math.max(1, val));
+                e.target.value = String(val);
+                item.data.slidesPerDay = val;
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.slidesPerDay = val;
+                saveState();
+            });
+
+            chkEasy?.addEventListener('change', (e) => {
+                const checked = e.target.checked;
+                item.data.easyMode = checked;
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.easyMode = checked;
+                saveState();
+                refreshInspectorSlidePreview();
+            });
+
+            inputInst?.addEventListener('input', (e) => {
+                const val = e.target.value;
+                item.data.instructions = val;
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.instructions = val;
+                saveState();
+                refreshInspectorSlidePreview();
+            });
+
+            btnSmartFill?.addEventListener('click', () => {
+                const pv = Math.min(4, Math.max(1, parseInt(inputPv?.value, 10) || item.data.maxPlaceValue || 2));
+                const slidesCount = Math.min(30, Math.max(1, parseInt(inputSlides?.value, 10) || item.data.slidesPerDay || 6));
+                const easy = chkEasy ? chkEasy.checked : Boolean(item.data.easyMode);
+
+                DAYS.forEach(day => {
+                    if (!item.data[day]) item.data[day] = {};
+                    item.data[day].numbers = generateMabSmartFillNumbers(pv, slidesCount, easy);
+                });
+
+                dailyInputs.forEach(inp => {
+                    const d = inp.dataset.day;
+                    if (d && item.data[d]) {
+                        inp.value = item.data[d].numbers || '';
+                    }
+                });
+
+                setPreviewSubIndex(0);
+                saveState();
+                refreshInspectorSlidePreview();
+                showToast('Daily numbers populated with Smart Fill', 'fa-wand-magic-sparkles text-amber-400');
+            });
+
+            dailyInputs.forEach(inp => {
+                inp.addEventListener('focus', (e) => {
+                    const d = e.target.dataset.day;
+                    if (d) {
+                        setPreviewDay(d);
+                        setPreviewSubIndex(0);
+                        refreshInspectorSlidePreview();
+                    }
+                });
+
+                inp.addEventListener('input', (e) => {
+                    const d = e.target.dataset.day;
+                    if (d) {
+                        if (!item.data[d]) item.data[d] = {};
+                        item.data[d].numbers = e.target.value;
+                        setPreviewDay(d);
+                        saveState();
+                        refreshInspectorSlidePreview();
+                    }
+                });
             });
         }
 

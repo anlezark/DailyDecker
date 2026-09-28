@@ -80,6 +80,13 @@ export function addTimelineItem(defKey, index = -1, skipSelectAndRender = false)
         newItem.data.instructions = 'Skip count by 6s.';
     }
 
+    if (defKey === 'sectNumberMAB') {
+        newItem.data.maxPlaceValue = 2;
+        newItem.data.slidesPerDay = 6;
+        newItem.data.easyMode = false;
+        newItem.data.instructions = 'What is the number?';
+    }
+
     if (def.hasTitleSlideOptions) {
         let defaultTitle = def.title.includes(': ') ? def.title.split(': ')[1] : def.title;
         let defaultInstructions = '';
