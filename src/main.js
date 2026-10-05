@@ -383,7 +383,18 @@ export function renderLibrary() {
         if (startersCountEl) startersCountEl.textContent = '0';
 
         // Numeracy Workspace: Populate All Activities
-        const numeracySectionKeys = ['mainIntro', 'sectHundredsChart', 'sectNumberMAB', 'numeracyPlaceholder'];
+        const numeracySectionKeys = [
+            'mainIntro',
+            'expectations',
+            'dayDivider',
+            'dayDividerPlain',
+            'sectHundredsChart',
+            'sectNumberMAB',
+            'sectNumberTenFrame',
+            'sectFriendsOf10',
+            'sectWordProblem',
+            'numeracyPlaceholder'
+        ];
         if (allSectionsCountEl) allSectionsCountEl.textContent = numeracySectionKeys.length;
 
         if (allSectionsList) {

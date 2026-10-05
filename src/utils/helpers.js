@@ -315,3 +315,165 @@ export function decomposeMabNumber(num) {
     };
 }
 
+/**
+ * Standardized Ten Frame Utilities
+ * Reusable across any Ten Frame activity (Write/Say the number, Friends of 10, Addition, Subitising, etc.)
+ */
+export function getTenFrameNumberRange(minFrames = 1, maxFrames = 2) {
+    let minF = Math.min(10, Math.max(1, parseInt(minFrames, 10) || 1));
+    let maxF = Math.min(10, Math.max(1, parseInt(maxFrames, 10) || 2));
+    if (minF > maxF) {
+        const tmp = minF;
+        minF = maxF;
+        maxF = tmp;
+    }
+    const minNum = (minF - 1) * 10 + 1;
+    const maxNum = maxF * 10;
+    return {
+        minFrames: minF,
+        maxFrames: maxF,
+        minNum,
+        maxNum
+    };
+}
+
+export function generateTenFrameSmartFillNumbers(minFrames = 1, maxFrames = 2, slidesPerDay = 6) {
+    const { minNum, maxNum } = getTenFrameNumberRange(minFrames, maxFrames);
+    const count = Math.min(30, Math.max(1, parseInt(slidesPerDay, 10) || 6));
+    const poolSize = Math.max(1, maxNum - minNum + 1);
+
+    const numbers = [];
+    const used = new Set();
+
+    for (let i = 0; i < count; i++) {
+        if (used.size >= poolSize) {
+            used.clear();
+        }
+        let candidate = Math.floor(Math.random() * poolSize) + minNum;
+        let attempts = 0;
+        while (used.has(candidate) && attempts < 40) {
+            candidate = Math.floor(Math.random() * poolSize) + minNum;
+            attempts++;
+        }
+        used.add(candidate);
+        numbers.push(candidate);
+    }
+
+    return numbers.join(', ');
+}
+
+export function parseTenFrameNumbersList(rawStr) {
+    if (rawStr === undefined || rawStr === null) return [];
+    const str = String(rawStr).trim();
+    if (!str) return [];
+
+    return str
+        .split(',')
+        .map(part => {
+            const cleaned = part.replace(/[^0-9]/g, '');
+            if (!cleaned) return null;
+            const val = parseInt(cleaned, 10);
+            if (isNaN(val) || val <= 0) return null;
+            return Math.min(100, val);
+        })
+        .filter(val => val !== null);
+}
+
+export function buildDailyTenFrameOrientations(count = 6, orientationPref = 'horizontal') {
+    const total = Math.max(1, parseInt(count, 10) || 1);
+    const pref = String(orientationPref || 'horizontal').toLowerCase();
+
+    if (pref === 'vertical') {
+        return Array(total).fill('vertical');
+    }
+    if (pref === 'horizontal') {
+        return Array(total).fill('horizontal');
+    }
+
+    // Balanced random: ~half horizontal and ~half vertical across the daily set
+    const half = Math.floor(total / 2);
+    const list = [];
+    for (let i = 0; i < half; i++) {
+        list.push('horizontal');
+        list.push('vertical');
+    }
+    if (total % 2 === 1) {
+        list.push(Math.random() < 0.5 ? 'horizontal' : 'vertical');
+    }
+    return shuffleArray(list);
+}
+
+export function getTenFrameCellCoordinates(dotIndex, orientation = 'horizontal', fillMode = 'standard') {
+    const idx = Math.min(9, Math.max(0, parseInt(dotIndex, 10) || 0));
+    const isVertical = String(orientation).toLowerCase() === 'vertical';
+    const mode = String(fillMode || 'standard').toLowerCase();
+
+    if (mode === 'pairwise') {
+        if (isVertical) {
+            return { row: Math.floor(idx / 2), col: idx % 2 };
+        }
+        return { row: idx % 2, col: Math.floor(idx / 2) };
+    }
+
+    // Standard fill:
+    // Horizontal (5 cols x 2 rows): 1..5 top row left-to-right, 6..10 bottom row left-to-right
+    // Vertical (2 cols x 5 rows): 1..5 left col top-to-bottom, 6..10 right col top-to-bottom
+    if (isVertical) {
+        return {
+            row: idx % 5,
+            col: Math.floor(idx / 5)
+        };
+    }
+    return {
+        row: Math.floor(idx / 5),
+        col: idx % 5
+    };
+}
+
+export function buildStandardTenFramesForNumber(num, options = {}) {
+    const n = Math.min(100, Math.max(1, parseInt(num, 10) || 1));
+    const frameCount = Math.max(1, Math.ceil(n / 10));
+    const color = options.color || '#ef4444';
+    const frames = [];
+    let remaining = n;
+
+    for (let f = 0; f < frameCount; f++) {
+        const dots = Math.min(10, Math.max(0, remaining));
+        frames.push({
+            count: dots,
+            color
+        });
+        remaining -= dots;
+    }
+
+    return frames;
+}
+
+export const TEN_FRAME_BLUE = '#3b82f6';
+export const TEN_FRAME_ORANGE = '#f97316';
+
+export function buildFriendsOf10TenFrames(firstNum, secondNum) {
+    const a = Math.min(10, Math.max(0, parseInt(firstNum, 10) || 0));
+    const b = Math.min(10, Math.max(0, parseInt(secondNum, 10) || 0));
+
+    const combinedCells = [];
+    for (let i = 0; i < a && combinedCells.length < 10; i++) {
+        combinedCells.push(TEN_FRAME_BLUE);
+    }
+    for (let j = 0; j < b && combinedCells.length < 10; j++) {
+        combinedCells.push(TEN_FRAME_ORANGE);
+    }
+
+    return {
+        a,
+        b,
+        sum: a + b,
+        equation: `${a} + ${b} = ${a + b}`,
+        zone01Frame: { count: a, color: TEN_FRAME_BLUE },
+        zone02Frame: { count: b, color: TEN_FRAME_ORANGE },
+        zone03Frame: { cells: combinedCells, color: TEN_FRAME_BLUE }
+    };
+}
+
+
+

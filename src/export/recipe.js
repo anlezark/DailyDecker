@@ -2,7 +2,7 @@
 import { SECTION_DEFS } from '../data/sections.js';
 import { DAYS, SENTENCE_TYPE_DEFINITIONS, SOUNDS_WRITE_LEVELS } from '../data/constants.js';
 import { getPhonicsPoolInfo } from '../data/phonics.js';
-import { shuffleArray, randomizeCasing, parseWordWithPhonemes, formatPhonemeSymbols, getItemIncludedDays, getHundredsChartInstruction, getHundredsChartHighlightedNumbers, getHundredsChartDefaultRange, parseMabNumbersList, decomposeMabNumber, generateMabSmartFillNumbers } from '../utils/helpers.js';
+import { shuffleArray, randomizeCasing, parseWordWithPhonemes, formatPhonemeSymbols, getItemIncludedDays, getHundredsChartInstruction, getHundredsChartHighlightedNumbers, getHundredsChartDefaultRange, parseMabNumbersList, decomposeMabNumber, generateMabSmartFillNumbers, getTenFrameNumberRange, generateTenFrameSmartFillNumbers, parseTenFrameNumbersList, buildDailyTenFrameOrientations, buildStandardTenFramesForNumber, buildFriendsOf10TenFrames } from '../utils/helpers.js';
 
 export function buildPyramid(sentence) {
     const words = (sentence || '').trim().split(/\s+/).filter(w => w);
@@ -806,6 +806,14 @@ export function buildPresentationRecipe(globalSettings, timelineItems, exportPpt
                 });
             }
 
+            else if (item.defKey === 'sectWordProblem') {
+                const text = data[day]?.problemText || data[day]?.word || "Johnny had six apples...";
+                recipe.slides.push({
+                    noteId: "[generic_stimulus]",
+                    replacements: { "{{content}}": text }
+                });
+            }
+
             else if (item.defKey === 'sectHundredsChart') {
                 const rawChartSize = data.chartSize || data.weekly?.chartSize || '1–100';
                 const chartSize = String(rawChartSize).includes('120') ? '1–120' : '1–100';
@@ -892,6 +900,96 @@ export function buildPresentationRecipe(globalSettings, timelineItems, exportPpt
                                     MAB_10: parts.tens,
                                     MAB_1: parts.ones
                                 }
+                            }
+                        ]
+                    });
+                });
+            }
+
+            else if (item.defKey === 'sectNumberTenFrame') {
+                const rawMinF = data.minFrames !== undefined ? data.minFrames : (data.weekly?.minFrames !== undefined ? data.weekly.minFrames : 1);
+                const rawMaxF = data.maxFrames !== undefined ? data.maxFrames : (data.weekly?.maxFrames !== undefined ? data.weekly.maxFrames : 2);
+                const { minFrames, maxFrames } = getTenFrameNumberRange(rawMinF, rawMaxF);
+
+                const rawSlidesPerDay = data.slidesPerDay !== undefined ? data.slidesPerDay : (data.weekly?.slidesPerDay !== undefined ? data.weekly.slidesPerDay : 6);
+                const slidesPerDay = Math.min(30, Math.max(1, parseInt(rawSlidesPerDay, 10) || 6));
+
+                const instructions = data.instructions !== undefined ? data.instructions : (data.weekly?.instructions !== undefined ? data.weekly.instructions : 'What is the number?');
+                const rawOrient = data.orientation || data.weekly?.orientation || 'horizontal';
+                const orientationPref = ['horizontal', 'vertical', 'random'].includes(String(rawOrient).toLowerCase()) ? String(rawOrient).toLowerCase() : 'horizontal';
+
+                let rawDayStr = data[day]?.numbers;
+                if (!rawDayStr || !String(rawDayStr).trim()) {
+                    rawDayStr = generateTenFrameSmartFillNumbers(minFrames, maxFrames, slidesPerDay);
+                }
+
+                const dayNumbers = parseTenFrameNumbersList(rawDayStr);
+                const slideOrientations = buildDailyTenFrameOrientations(dayNumbers.length, orientationPref);
+
+                dayNumbers.forEach((num, idx) => {
+                    const slideOrientation = slideOrientations[idx] || 'horizontal';
+                    const frames = buildStandardTenFramesForNumber(num, { color: '#ef4444' });
+
+                    recipe.slides.push({
+                        noteId: "[numberTenFrame]",
+                        replacements: {
+                            "{{content}}": instructions,
+                            "{content}": instructions
+                        },
+                        actions: [
+                            {
+                                target: "tenFrameLayout",
+                                zoneTag: "content_zone",
+                                number: num,
+                                orientation: slideOrientation,
+                                fillMode: "standard",
+                                frames: frames
+                            }
+                        ]
+                    });
+                });
+            }
+
+            else if (item.defKey === 'sectFriendsOf10') {
+                const rawOrder = data.order || data.weekly?.order || 'inOrder';
+                const isRandom = String(rawOrder) === 'random';
+
+                let firstNums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                if (isRandom) {
+                    firstNums = shuffleArray(firstNums);
+                }
+
+                firstNums.forEach(a => {
+                    const b = 10 - a;
+                    const f10 = buildFriendsOf10TenFrames(a, b);
+
+                    recipe.slides.push({
+                        noteId: "[equationTenFrame]",
+                        replacements: {
+                            "{{content}}": f10.equation,
+                            "{content}": f10.equation
+                        },
+                        actions: [
+                            {
+                                target: "tenFrameLayout",
+                                zoneTag: "zone01",
+                                orientation: "vertical",
+                                fillMode: "standard",
+                                frames: [f10.zone01Frame]
+                            },
+                            {
+                                target: "tenFrameLayout",
+                                zoneTag: "zone02",
+                                orientation: "vertical",
+                                fillMode: "standard",
+                                frames: [f10.zone02Frame]
+                            },
+                            {
+                                target: "tenFrameLayout",
+                                zoneTag: "zone03",
+                                orientation: "vertical",
+                                fillMode: "standard",
+                                frames: [f10.zone03Frame]
                             }
                         ]
                     });

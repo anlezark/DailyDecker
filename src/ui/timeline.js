@@ -87,6 +87,30 @@ export function addTimelineItem(defKey, index = -1, skipSelectAndRender = false)
         newItem.data.instructions = 'What is the number?';
     }
 
+    if (defKey === 'sectNumberTenFrame') {
+        newItem.data.minFrames = 1;
+        newItem.data.maxFrames = 2;
+        newItem.data.slidesPerDay = 6;
+        newItem.data.instructions = 'What is the number?';
+        newItem.data.orientation = 'horizontal';
+    }
+
+    if (defKey === 'sectFriendsOf10') {
+        newItem.data.order = 'inOrder';
+    }
+
+    if (defKey === 'sectWordProblem') {
+        newItem.data.targetStage = 'Stage 1';
+        DAYS.forEach(day => {
+            newItem.data[day] = {
+                contentArea: 'Addition',
+                equation: '',
+                includeExtension: false,
+                problemText: 'Johnny had six apples and gave two to Aarav. How many apples does Johnny have left?'
+            };
+        });
+    }
+
     if (def.hasTitleSlideOptions) {
         let defaultTitle = def.title.includes(': ') ? def.title.split(': ')[1] : def.title;
         let defaultInstructions = '';
@@ -95,6 +119,22 @@ export function addTimelineItem(defKey, index = -1, skipSelectAndRender = false)
         if (defKey === 'sectHundredsChart') {
             defaultTitle = 'Multiples';
             defaultInstructions = 'We are learning to skip count';
+        }
+        if (defKey === 'sectNumberMAB') {
+            defaultTitle = "What's the number?";
+            defaultInstructions = 'We are learning about place value.';
+        }
+        if (defKey === 'sectNumberTenFrame') {
+            defaultTitle = 'What the number?';
+            defaultInstructions = 'We are learning to spot numbers with ten frames.';
+        }
+        if (defKey === 'sectFriendsOf10') {
+            defaultTitle = 'Friends of 10';
+            defaultInstructions = 'I can say my Friends of Ten';
+        }
+        if (defKey === 'sectWordProblem') {
+            defaultTitle = 'Word Problem';
+            defaultInstructions = 'We are learning to use mathematical techniques to solve problems.';
         }
         const defaultInclude = defKey !== 'sectSimpleCompound' && defKey !== 'sectSentenceTypes';
         

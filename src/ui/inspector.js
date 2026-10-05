@@ -22,8 +22,11 @@ import {
     getHundredsChartInstruction,
     getHundredsChartMultiplesList,
     getHundredsChartDefaultRange,
-    generateMabSmartFillNumbers
+    generateMabSmartFillNumbers,
+    generateTenFrameSmartFillNumbers,
+    getTenFrameNumberRange
 } from '../utils/helpers.js';
+import { generateFallbackProblem } from '../utils/mathFallback.js';
 import { renderTimeline, addTimelineItem } from './timeline.js';
 import { 
     generateSlidePreviewHtml, 
@@ -636,15 +639,46 @@ export function renderInspector() {
                     defaultTitle = 'Multiples';
                     defaultInstructions = 'We are learning to skip count';
                 }
+                if (item.defKey === 'sectNumberMAB') {
+                    defaultTitle = "What's the number?";
+                    defaultInstructions = 'We are learning about place value.';
+                }
+                if (item.defKey === 'sectNumberTenFrame') {
+                    defaultTitle = 'What the number?';
+                    defaultInstructions = 'We are learning to spot numbers with ten frames.';
+                }
+                if (item.defKey === 'sectFriendsOf10') {
+                    defaultTitle = 'Friends of 10';
+                    defaultInstructions = 'I can say my Friends of Ten';
+                }
+                if (item.defKey === 'sectWordProblem') {
+                    defaultTitle = 'Word Problem';
+                    defaultInstructions = 'We are learning to use mathematical techniques to solve problems.';
+                }
                 const defaultInclude = item.defKey !== 'sectSimpleCompound' && item.defKey !== 'sectSentenceTypes';
                 item.data.titleSettings = {
                     include: defaultInclude,
-                    title: item.customTitle || defaultTitle,
+                    title: (item.defKey === 'sectNumberMAB' || item.defKey === 'sectNumberTenFrame' || item.defKey === 'sectFriendsOf10' || item.defKey === 'sectHundredsChart' || item.defKey === 'sectWordProblem') ? defaultTitle : (item.customTitle || defaultTitle),
                     instructions: defaultInstructions
                 };
             } else if (item.defKey === 'sectHundredsChart' && item.data.titleSettings.title === 'Hundreds Chart' && !item.data.titleSettings.instructions) {
                 item.data.titleSettings.title = 'Multiples';
                 item.data.titleSettings.instructions = 'We are learning to skip count';
+            } else if (item.defKey === 'sectNumberMAB' && (item.data.titleSettings.title === 'Number - MAB blocks' || item.data.titleSettings.title === 'Write/Say the number - MAB blocks') && !item.data.titleSettings.instructions) {
+                item.data.titleSettings.title = "What's the number?";
+                item.data.titleSettings.instructions = 'We are learning about place value.';
+            } else if (item.defKey === 'sectNumberTenFrame' && item.data.titleSettings.title === 'Write/Say the number - Ten frames' && !item.data.titleSettings.instructions) {
+                item.data.titleSettings.title = 'What the number?';
+                item.data.titleSettings.instructions = 'We are learning to spot numbers with ten frames.';
+            } else if (item.defKey === 'sectFriendsOf10' && item.data.titleSettings.title === 'Friends of 10 - Ten frames' && !item.data.titleSettings.instructions) {
+                item.data.titleSettings.title = 'Friends of 10';
+                item.data.titleSettings.instructions = 'I can say my Friends of Ten';
+            } else if (item.defKey === 'sectWordProblem' && !item.data.titleSettings.instructions) {
+                item.data.titleSettings.title = 'Word Problem';
+                item.data.titleSettings.instructions = 'We are learning to use mathematical techniques to solve problems.';
+            }
+            if (item.customTitle === 'Number - MAB blocks') {
+                item.customTitle = 'Write/Say the number - MAB blocks';
             }
             if (item.data.titleSettings.title === 'Generic Section') {
                 item.data.titleSettings.title = 'Placeholder';
@@ -830,6 +864,220 @@ export function renderInspector() {
             `;
         }
 
+        // Write/Say the number - Ten frames custom UI
+        else if (item.defKey === 'sectNumberTenFrame') {
+            const rawMinF = item.data.minFrames !== undefined ? item.data.minFrames : (item.data.weekly?.minFrames !== undefined ? item.data.weekly.minFrames : 1);
+            const rawMaxF = item.data.maxFrames !== undefined ? item.data.maxFrames : (item.data.weekly?.maxFrames !== undefined ? item.data.weekly.maxFrames : 2);
+            const { minFrames, maxFrames } = getTenFrameNumberRange(rawMinF, rawMaxF);
+
+            const rawSlidesPerDay = item.data.slidesPerDay !== undefined ? item.data.slidesPerDay : (item.data.weekly?.slidesPerDay !== undefined ? item.data.weekly.slidesPerDay : 6);
+            const slidesPerDay = Math.min(30, Math.max(1, parseInt(rawSlidesPerDay, 10) || 6));
+
+            const instructions = item.data.instructions !== undefined ? item.data.instructions : (item.data.weekly?.instructions !== undefined ? item.data.weekly.instructions : 'What is the number?');
+            const rawOrient = item.data.orientation || item.data.weekly?.orientation || 'horizontal';
+            const orientation = ['horizontal', 'vertical', 'random'].includes(String(rawOrient).toLowerCase()) ? String(rawOrient).toLowerCase() : 'horizontal';
+
+            item.data.minFrames = minFrames;
+            item.data.maxFrames = maxFrames;
+            item.data.slidesPerDay = slidesPerDay;
+            item.data.instructions = instructions;
+            item.data.orientation = orientation;
+
+            const activeDays = DAYS.filter(d => globalSettings.activeDays[d] && (!item.includedDays || item.includedDays[d] !== false));
+            const orientOptions = [
+                { id: 'horizontal', label: 'Horizontal' },
+                { id: 'vertical', label: 'Vertical' },
+                { id: 'random', label: 'Random' }
+            ];
+
+            contentHtml += `
+                <div class="space-y-3.5 border-t border-slate-200 pt-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Number of ten frames</label>
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
+                                <span class="text-[11px] font-semibold text-slate-500">Min</span>
+                                <input type="number" id="tf-min-frames" min="1" max="10" value="${minFrames}" class="w-12 text-xs font-bold text-center p-1 bg-white border border-slate-200 rounded-md text-slate-800 focus:border-amber-500 focus:outline-none">
+                            </div>
+                            <div class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
+                                <span class="text-[11px] font-semibold text-slate-500">Max</span>
+                                <input type="number" id="tf-max-frames" min="1" max="10" value="${maxFrames}" class="w-12 text-xs font-bold text-center p-1 bg-white border border-slate-200 rounded-md text-slate-800 focus:border-amber-500 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-3">
+                        <label for="tf-slides-per-day" class="text-xs font-semibold text-slate-600">Slides per day</label>
+                        <input type="number" id="tf-slides-per-day" min="1" max="30" value="${slidesPerDay}" class="w-16 text-xs font-bold text-center p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:bg-white focus:border-amber-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label for="tf-instructions" class="block text-xs font-semibold text-slate-600 mb-1">Instruction</label>
+                        <input type="text" id="tf-instructions" value="${instructions}" placeholder="What is the number?" class="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:bg-white focus:border-amber-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Orientation</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            ${orientOptions.map(opt => {
+                                const isSelected = orientation === opt.id;
+                                return `
+                                    <button type="button" data-orientation="${opt.id}" class="tf-orientation-card text-left p-2 rounded-xl border transition-all flex items-center gap-2 cursor-pointer ${isSelected ? 'border-amber-500 bg-amber-50/70 ring-1 ring-amber-400/40 shadow-2xs' : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100/70'}">
+                                        <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? 'border-amber-600 bg-amber-500 text-white' : 'border-slate-300 bg-white'}">
+                                            ${isSelected ? '<span class="w-1.5 h-1.5 rounded-full bg-white"></span>' : ''}
+                                        </span>
+                                        <span class="text-[11px] font-bold ${isSelected ? 'text-amber-950' : 'text-slate-700'} truncate">${opt.label}</span>
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    <div class="pt-1">
+                        <button type="button" id="btn-tf-smart-fill" class="w-full py-2 px-3 bg-amber-50 hover:bg-amber-100/90 text-amber-900 border border-amber-300/90 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-2xs cursor-pointer">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                            <span>Smart Fill</span>
+                        </button>
+                    </div>
+
+                    ${activeDays.length > 0 ? `
+                        <div class="space-y-2.5 border-t border-slate-200 pt-3">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Daily Content</h4>
+                            ${activeDays.map(day => {
+                                const dayData = (item.data && item.data[day]) || {};
+                                const val = dayData.numbers !== undefined ? dayData.numbers : '';
+                                return `
+                                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                                        <div class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> ${day}
+                                        </div>
+                                        <input type="text" data-day="${day}" value="${val.replace(/"/g, '&quot;')}" placeholder='Target numbers - comma separated, e.g. "12, 22, 14"' class="tf-daily-numbers w-full text-xs p-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:border-amber-500 focus:outline-none transition">
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Friends of 10 - Ten frames custom UI
+        else if (item.defKey === 'sectFriendsOf10') {
+            const rawOrder = item.data.order || item.data.weekly?.order || 'inOrder';
+            const order = String(rawOrder) === 'random' ? 'random' : 'inOrder';
+            item.data.order = order;
+
+            const orderOptions = [
+                { id: 'inOrder', label: 'In Order' },
+                { id: 'random', label: 'Random' }
+            ];
+
+            contentHtml += `
+                <div class="space-y-3.5 border-t border-slate-200 pt-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Order</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            ${orderOptions.map(opt => {
+                                const isSelected = order === opt.id;
+                                return `
+                                    <button type="button" data-order="${opt.id}" class="f10-order-card text-left p-2.5 rounded-xl border transition-all flex items-center gap-2.5 cursor-pointer ${isSelected ? 'border-amber-500 bg-amber-50/70 ring-1 ring-amber-400/40 shadow-2xs' : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100/70'}">
+                                        <span class="w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? 'border-amber-600 bg-amber-500 text-white' : 'border-slate-300 bg-white'}">
+                                            ${isSelected ? '<span class="w-1.5 h-1.5 rounded-full bg-white"></span>' : ''}
+                                        </span>
+                                        <span class="text-xs font-bold ${isSelected ? 'text-amber-950' : 'text-slate-700'}">${opt.label}</span>
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Word Problem custom UI
+        else if (item.defKey === 'sectWordProblem') {
+            const rawStage = item.data.targetStage || item.data.weekly?.targetStage || 'Stage 1';
+            const stageOptions = ['Early Stage 1', 'Stage 1', 'Stage 2', 'Stage 3'];
+            const targetStage = stageOptions.includes(rawStage) ? rawStage : 'Stage 1';
+            item.data.targetStage = targetStage;
+
+            const activeDays = DAYS.filter(d => globalSettings.activeDays[d] && (!item.includedDays || item.includedDays[d] !== false));
+            const contentAreaOptions = ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Fractions', 'Chance', 'Data'];
+
+            contentHtml += `
+                <div class="space-y-4 border-t border-slate-200 pt-3">
+                    <div>
+                        <label for="wp-target-stage" class="block text-xs font-semibold text-slate-600 mb-1">Target stage</label>
+                        <select id="wp-target-stage" class="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-semibold focus:border-amber-500 focus:outline-none">
+                            ${stageOptions.map(stg => `<option value="${stg}" ${targetStage === stg ? 'selected' : ''}>${stg}</option>`).join('')}
+                        </select>
+                        <p class="text-[10px] text-slate-400 mt-1">Informs the NSW curriculum prompt sent to the AI API.</p>
+                    </div>
+
+                    <div class="pt-0.5">
+                        <button type="button" id="btn-wp-smart-fill-all" class="w-full py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-2xs cursor-pointer">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                            <span>Smart Fill All Active Days</span>
+                        </button>
+                    </div>
+
+                    ${activeDays.length > 0 ? `
+                        <div class="space-y-3.5 border-t border-slate-200 pt-3">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Daily Word Problems</h4>
+                            ${activeDays.map(day => {
+                                const dayData = (item.data && item.data[day]) || {};
+                                const area = dayData.contentArea || 'Addition';
+                                const eq = dayData.equation || '';
+                                const ext = Boolean(dayData.includeExtension);
+                                const textVal = dayData.problemText !== undefined ? dayData.problemText : 'Johnny had six apples...';
+                                const engineVal = dayData.engine || (textVal && textVal !== 'Johnny had six apples...' ? 'ai' : 'js');
+
+                                return `
+                                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+                                        <div class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> ${day}
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Content Area</label>
+                                            <select data-day="${day}" class="wp-content-area w-full text-xs p-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 focus:border-amber-500 focus:outline-none">
+                                                ${contentAreaOptions.map(opt => `<option value="${opt}" ${area === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Or specify Equation <span class="font-normal text-slate-400">(optional)</span></label>
+                                            <input type="text" data-day="${day}" value="${eq.replace(/"/g, '&quot;')}" placeholder="E.g. 50+18" class="wp-equation w-full text-xs p-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 focus:border-amber-500 focus:outline-none">
+                                        </div>
+
+                                        <label class="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer pt-0.5">
+                                            <input type="checkbox" data-day="${day}" ${ext ? 'checked' : ''} class="wp-extension rounded text-amber-600 focus:ring-amber-500">
+                                            <span>Include extension</span>
+                                        </label>
+
+                                        <div class="pt-1">
+                                            <button type="button" class="btn-word-problem-smartfill w-full py-1.5 px-3 bg-amber-100/70 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition shadow-2xs cursor-pointer" data-day="${day}">
+                                                <i class="fa-solid fa-wand-magic-sparkles text-amber-600"></i>
+                                                <span>Smart Fill</span>
+                                            </button>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Problem Text</label>
+                                            <textarea data-day="${day}" rows="4" placeholder="Johnny had six apples..." class="wp-problem-text w-full text-xs p-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:border-amber-500 focus:outline-none transition leading-relaxed">${textVal}</textarea>
+                                            <div class="flex items-center justify-end pt-1">
+                                                <span class="text-[10px] font-mono text-slate-400">engine: <strong class="wp-engine-code font-bold uppercase ${engineVal === 'ai' ? 'text-purple-600' : 'text-slate-500'}" data-day="${day}">${engineVal}</strong></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
         // Weekly fields
         else if (def.fields && def.type === 'weekly') {
             contentHtml += `<div class="space-y-3 border-t border-slate-200 pt-3">`;
@@ -864,7 +1112,7 @@ export function renderInspector() {
         }
 
         // Mixed weekly fields
-        if (def.weeklyFields && def.type === 'mixed' && item.defKey !== 'sectNumberMAB') {
+        if (def.weeklyFields && def.type === 'mixed' && item.defKey !== 'sectNumberMAB' && item.defKey !== 'sectNumberTenFrame' && item.defKey !== 'sectWordProblem') {
             contentHtml += `<div class="space-y-3 border-t border-slate-200 pt-3">`;
             def.weeklyFields.forEach(f => {
                 const val = item.data[f.id] !== undefined ? item.data[f.id] : (f.default !== undefined ? f.default : '');
@@ -897,7 +1145,7 @@ export function renderInspector() {
         }
 
         // Daily fields
-        if ((def.type === 'daily' || def.type === 'mixed') && item.defKey !== 'sectNumberMAB') {
+        if ((def.type === 'daily' || def.type === 'mixed') && item.defKey !== 'sectNumberMAB' && item.defKey !== 'sectNumberTenFrame' && item.defKey !== 'sectWordProblem') {
             const activeDays = DAYS.filter(d => globalSettings.activeDays[d] && (!item.includedDays || item.includedDays[d] !== false));
             if (activeDays.length > 0) {
                 contentHtml += `<div class="space-y-3 border-t border-slate-200 pt-3"><h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Daily Content</h4>`;
@@ -1797,6 +2045,308 @@ export function renderInspector() {
                         refreshInspectorSlidePreview();
                     }
                 });
+            });
+        }
+
+        // Write/Say the number - Ten frames listeners
+        if (item.defKey === 'sectNumberTenFrame') {
+            const inputMinF = content.querySelector('#tf-min-frames');
+            const inputMaxF = content.querySelector('#tf-max-frames');
+            const inputSlides = content.querySelector('#tf-slides-per-day');
+            const inputInst = content.querySelector('#tf-instructions');
+            const orientCards = content.querySelectorAll('.tf-orientation-card');
+            const btnSmartFill = content.querySelector('#btn-tf-smart-fill');
+            const dailyInputs = content.querySelectorAll('.tf-daily-numbers');
+
+            const syncFrameBounds = (changedMin) => {
+                let minVal = parseInt(inputMinF?.value, 10);
+                let maxVal = parseInt(inputMaxF?.value, 10);
+                minVal = isNaN(minVal) ? 1 : Math.min(10, Math.max(1, minVal));
+                maxVal = isNaN(maxVal) ? 2 : Math.min(10, Math.max(1, maxVal));
+
+                if (changedMin && minVal > maxVal) {
+                    maxVal = minVal;
+                } else if (!changedMin && maxVal < minVal) {
+                    minVal = maxVal;
+                }
+
+                if (inputMinF) inputMinF.value = String(minVal);
+                if (inputMaxF) inputMaxF.value = String(maxVal);
+
+                item.data.minFrames = minVal;
+                item.data.maxFrames = maxVal;
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.minFrames = minVal;
+                item.data.weekly.maxFrames = maxVal;
+                saveState();
+                refreshInspectorSlidePreview();
+            };
+
+            inputMinF?.addEventListener('change', () => syncFrameBounds(true));
+            inputMaxF?.addEventListener('change', () => syncFrameBounds(false));
+
+            inputSlides?.addEventListener('input', (e) => {
+                let val = parseInt(e.target.value, 10);
+                if (!isNaN(val)) {
+                    val = Math.min(30, Math.max(1, val));
+                    item.data.slidesPerDay = val;
+                    if (!item.data.weekly) item.data.weekly = {};
+                    item.data.weekly.slidesPerDay = val;
+                    saveState();
+                }
+            });
+
+            inputSlides?.addEventListener('blur', (e) => {
+                let val = parseInt(e.target.value, 10);
+                val = isNaN(val) ? 6 : Math.min(30, Math.max(1, val));
+                e.target.value = String(val);
+                item.data.slidesPerDay = val;
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.slidesPerDay = val;
+                saveState();
+            });
+
+            inputInst?.addEventListener('input', (e) => {
+                const val = e.target.value;
+                item.data.instructions = val;
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.instructions = val;
+                saveState();
+                refreshInspectorSlidePreview();
+            });
+
+            orientCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const newOrient = card.dataset.orientation || 'horizontal';
+                    item.data.orientation = newOrient;
+                    if (!item.data.weekly) item.data.weekly = {};
+                    item.data.weekly.orientation = newOrient;
+                    saveState();
+                    renderInspector();
+                });
+            });
+
+            btnSmartFill?.addEventListener('click', () => {
+                const minF = Math.min(10, Math.max(1, parseInt(inputMinF?.value, 10) || item.data.minFrames || 1));
+                const maxF = Math.min(10, Math.max(minF, parseInt(inputMaxF?.value, 10) || item.data.maxFrames || 2));
+                const slidesCount = Math.min(30, Math.max(1, parseInt(inputSlides?.value, 10) || item.data.slidesPerDay || 6));
+
+                DAYS.forEach(day => {
+                    if (!item.data[day]) item.data[day] = {};
+                    item.data[day].numbers = generateTenFrameSmartFillNumbers(minF, maxF, slidesCount);
+                });
+
+                dailyInputs.forEach(inp => {
+                    const d = inp.dataset.day;
+                    if (d && item.data[d]) {
+                        inp.value = item.data[d].numbers || '';
+                    }
+                });
+
+                saveState();
+                refreshInspectorSlidePreview();
+                showToast('Daily numbers populated with Smart Fill', 'fa-wand-magic-sparkles text-amber-400');
+            });
+
+            dailyInputs.forEach(inp => {
+                inp.addEventListener('focus', (e) => {
+                    const d = e.target.dataset.day;
+                    if (d) {
+                        setPreviewDay(d);
+                        refreshInspectorSlidePreview();
+                    }
+                });
+
+                inp.addEventListener('input', (e) => {
+                    const d = e.target.dataset.day;
+                    if (d) {
+                        if (!item.data[d]) item.data[d] = {};
+                        item.data[d].numbers = e.target.value;
+                        setPreviewDay(d);
+                        saveState();
+                        refreshInspectorSlidePreview();
+                    }
+                });
+            });
+        }
+
+        // Friends of 10 - Ten frames listeners
+        if (item.defKey === 'sectFriendsOf10') {
+            const orderCards = content.querySelectorAll('.f10-order-card');
+            orderCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const newOrder = card.dataset.order || 'inOrder';
+                    item.data.order = newOrder;
+                    if (!item.data.weekly) item.data.weekly = {};
+                    item.data.weekly.order = newOrder;
+                    saveState();
+                    renderInspector();
+                });
+            });
+        }
+
+        // Word Problem listeners
+        if (item.defKey === 'sectWordProblem') {
+            const selStage = content.querySelector('#wp-target-stage');
+            selStage?.addEventListener('change', (e) => {
+                item.data.targetStage = e.target.value;
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.targetStage = e.target.value;
+                saveState();
+            });
+
+            // Content Area changes
+            content.querySelectorAll('.wp-content-area').forEach(sel => {
+                sel.addEventListener('change', (e) => {
+                    const d = e.target.dataset.day;
+                    if (d) {
+                        if (!item.data[d]) item.data[d] = {};
+                        item.data[d].contentArea = e.target.value;
+                        saveState();
+                    }
+                });
+            });
+
+            // Equation changes
+            content.querySelectorAll('.wp-equation').forEach(inp => {
+                inp.addEventListener('input', (e) => {
+                    const d = e.target.dataset.day;
+                    if (d) {
+                        if (!item.data[d]) item.data[d] = {};
+                        item.data[d].equation = e.target.value;
+                        saveState();
+                    }
+                });
+            });
+
+            // Extension checkbox changes
+            content.querySelectorAll('.wp-extension').forEach(chk => {
+                chk.addEventListener('change', (e) => {
+                    const d = e.target.dataset.day;
+                    if (d) {
+                        if (!item.data[d]) item.data[d] = {};
+                        item.data[d].includeExtension = e.target.checked;
+                        saveState();
+                    }
+                });
+            });
+
+            // Problem text changes
+            content.querySelectorAll('.wp-problem-text').forEach(txt => {
+                txt.addEventListener('focus', (e) => {
+                    const d = e.target.dataset.day;
+                    if (d) {
+                        setPreviewDay(d);
+                        refreshInspectorSlidePreview();
+                    }
+                });
+
+                txt.addEventListener('input', (e) => {
+                    const d = e.target.dataset.day;
+                    if (d) {
+                        if (!item.data[d]) item.data[d] = {};
+                        item.data[d].problemText = e.target.value;
+                        setPreviewDay(d);
+                        saveState();
+                        refreshInspectorSlidePreview();
+                    }
+                });
+            });
+
+            // Helper to generate a single day's problem
+            async function generateForDay(day, btnEl) {
+                if (!item.data[day]) item.data[day] = {};
+                const dayData = item.data[day];
+                const stage = item.data.targetStage || 'Stage 1';
+                const contentArea = dayData.contentArea || 'Addition';
+                const equation = dayData.equation || '';
+                const includeExtension = Boolean(dayData.includeExtension);
+
+                const origHtml = btnEl ? btnEl.innerHTML : '';
+                if (btnEl) {
+                    btnEl.disabled = true;
+                    btnEl.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-amber-500"></i> <span>Generating...</span>`;
+                }
+
+                try {
+                    const res = await fetch('/api/generate-word-problem', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ stage, contentArea, equation, includeExtension })
+                    });
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json && json.text) {
+                            const engineUsed = (json.source === 'ai') ? 'ai' : 'js';
+                            dayData.problemText = json.text;
+                            dayData.engine = engineUsed;
+                            const textarea = content.querySelector(`.wp-problem-text[data-day="${day}"]`);
+                            if (textarea) textarea.value = json.text;
+                            const codeEl = content.querySelector(`.wp-engine-code[data-day="${day}"]`);
+                            if (codeEl) {
+                                codeEl.textContent = engineUsed.toUpperCase();
+                                codeEl.className = `wp-engine-code font-bold uppercase ${engineUsed === 'ai' ? 'text-purple-600' : 'text-slate-500'}`;
+                            }
+                            saveState();
+                            setPreviewDay(day);
+                            refreshInspectorSlidePreview();
+                            showToast(`Generated problem for ${day} (${engineUsed.toUpperCase()})`, 'fa-wand-magic-sparkles text-amber-500');
+                            return;
+                        }
+                    }
+                    throw new Error('API route unavailable or error returned');
+                } catch (err) {
+                    console.warn('Word problem API call failed, generating via local generator:', err);
+                    const localText = generateFallbackProblem(stage, contentArea, equation, includeExtension);
+                    dayData.problemText = localText;
+                    dayData.engine = 'js';
+                    const textarea = content.querySelector(`.wp-problem-text[data-day="${day}"]`);
+                    if (textarea) textarea.value = localText;
+                    const codeEl = content.querySelector(`.wp-engine-code[data-day="${day}"]`);
+                    if (codeEl) {
+                        codeEl.textContent = 'JS';
+                        codeEl.className = 'wp-engine-code font-bold uppercase text-slate-500';
+                    }
+                    saveState();
+                    setPreviewDay(day);
+                    refreshInspectorSlidePreview();
+                    showToast(`Generated problem for ${day} (JS)`, 'fa-wand-magic-sparkles text-amber-500');
+                } finally {
+                    if (btnEl) {
+                        btnEl.disabled = false;
+                        btnEl.innerHTML = origHtml;
+                    }
+                }
+            }
+
+            // Single day Smart Fill button
+            content.querySelectorAll('.btn-word-problem-smartfill').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const d = e.currentTarget.dataset.day;
+                    if (d) {
+                        generateForDay(d, e.currentTarget);
+                    }
+                });
+            });
+
+            // Smart Fill All Days button
+            const btnSmartFillAll = content.querySelector('#btn-wp-smart-fill-all');
+            btnSmartFillAll?.addEventListener('click', async () => {
+                const activeDays = DAYS.filter(d => globalSettings.activeDays[d] && (!item.includedDays || item.includedDays[d] !== false));
+                if (activeDays.length === 0) return;
+
+                const origHtml = btnSmartFillAll.innerHTML;
+                btnSmartFillAll.disabled = true;
+                btnSmartFillAll.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-amber-500"></i> <span>Generating all days...</span>`;
+
+                for (const d of activeDays) {
+                    const dayBtn = content.querySelector(`.btn-word-problem-smartfill[data-day="${d}"]`);
+                    await generateForDay(d, dayBtn);
+                }
+
+                btnSmartFillAll.disabled = false;
+                btnSmartFillAll.innerHTML = origHtml;
+                showToast('All daily word problems populated!', 'fa-wand-magic-sparkles text-amber-500');
             });
         }
 

@@ -3,7 +3,7 @@ import { SECTION_DEFS } from '../data/sections.js';
 import { DAYS, SENTENCE_TYPE_DEFINITIONS, SOUNDS_WRITE_LEVELS } from '../data/constants.js';
 import { getPhonicsPoolInfo } from '../data/phonics.js';
 import { buildPyramid } from '../export/recipe.js';
-import { parseWordWithPhonemes, formatPhonemeSymbols, randomizeCasing, getHundredsChartInstruction, getHundredsChartHighlightedNumbers, getHundredsChartMax, getHundredsChartMultiplesList, getHundredsChartDefaultRange, parseMabNumbersList, decomposeMabNumber } from '../utils/helpers.js';
+import { parseWordWithPhonemes, formatPhonemeSymbols, randomizeCasing, getHundredsChartInstruction, getHundredsChartHighlightedNumbers, getHundredsChartMax, getHundredsChartMultiplesList, getHundredsChartDefaultRange, parseMabNumbersList, decomposeMabNumber, getTenFrameNumberRange, parseTenFrameNumbersList, getTenFrameCellCoordinates, buildStandardTenFramesForNumber, buildFriendsOf10TenFrames } from '../utils/helpers.js';
 import { currentWorkspace } from '../state/state.js';
 
 let currentPreviewDay = 'Monday';
@@ -166,6 +166,12 @@ export function generateSlidePreviewHtml(itemOrDefKey, isLibrary = false, global
             return renderHundredsChartPreview(data, customTitle);
         case 'sectNumberMAB':
             return renderNumberMABPreview(data, dayData, day, subIdx, customTitle);
+        case 'sectNumberTenFrame':
+            return renderNumberTenFramePreview(data, dayData, day, customTitle);
+        case 'sectFriendsOf10':
+            return renderFriendsOf10Preview(data, customTitle);
+        case 'sectWordProblem':
+            return renderWordProblemPreview(dayData, customTitle, data, day);
         case 'customisable':
             return renderCustomisablePreview(data, customTitle);
         case 'finished':
@@ -1704,6 +1710,35 @@ function renderGenericPreview(dayData, customTitle, data = {}, day = 'Monday') {
     `;
 }
 
+function renderWordProblemPreview(dayData, customTitle, data = {}, day = 'Monday') {
+    const content = (dayData?.problemText !== undefined && dayData.problemText !== '') 
+        ? dayData.problemText 
+        : (dayData?.word || data?.Monday?.problemText || 'Johnny had six apples...');
+
+    return `
+        <div class="w-full h-full flex flex-col justify-between p-4 select-none bg-white relative overflow-hidden">
+            <!-- Top Right: Apply Sticker -->
+            <div class="w-full flex justify-end shrink-0">
+                <div class="flex items-center gap-1.5 bg-blue-50 border border-blue-200/90 px-2.5 py-0.5 rounded-full shadow-2xs">
+                    <div class="w-4 h-4 rounded-full bg-blue-500 text-white flex items-center justify-center text-[7.5px] shadow-xs">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </div>
+                    <span class="text-[8.5px] font-bold text-blue-950 edu-font leading-none">Apply</span>
+                </div>
+            </div>
+
+            <!-- Vertically centered & left-aligned text -->
+            <div class="flex-1 flex items-center justify-center w-full max-w-[90%] mx-auto px-1 py-1">
+                <p class="text-xs sm:text-[13px] font-semibold text-slate-800 edu-font leading-relaxed whitespace-pre-wrap text-left w-full">
+                    ${content}
+                </p>
+            </div>
+
+            <div class="h-2 shrink-0"></div>
+        </div>
+    `;
+}
+
 function renderCustomisablePreview(data, customTitle) {
     const tag = data.templateTag || '[custom_slide]';
 
@@ -1912,7 +1947,7 @@ function renderMabSvgBlock(type, scale = 1) {
     `;
 }
 
-function renderNumberMABPreview(data = {}, dayData = {}, day = 'Monday', subIdx = 0, customTitle = 'Number - MAB blocks') {
+function renderNumberMABPreview(data = {}, dayData = {}, day = 'Monday', subIdx = 0, customTitle = 'Write/Say the number - MAB blocks') {
     const rawPv = data.maxPlaceValue !== undefined ? data.maxPlaceValue : (data.weekly?.maxPlaceValue !== undefined ? data.weekly.maxPlaceValue : 2);
     const maxPv = Math.min(4, Math.max(1, parseInt(rawPv, 10) || 2));
     const instructions = data.instructions !== undefined ? data.instructions : (data.weekly?.instructions !== undefined ? data.weekly.instructions : 'What is the number?');
@@ -2003,6 +2038,195 @@ function renderNumberMABPreview(data = {}, dayData = {}, day = 'Monday', subIdx 
             <div class="w-full text-center pt-1">
                 <div class="text-sm sm:text-[15px] font-bold text-slate-900 edu-font leading-tight truncate px-2">
                     ${instructions || 'What is the number?'}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Standardized SVG Ten Frame Renderer
+ * Reusable across any Ten Frame activity preview (supports horizontal/vertical, standard/pairwise/custom cell colors)
+ */
+export function renderTenFrameSvg(frame = {}, options = {}) {
+    const orientation = String(options.orientation || frame.orientation || 'horizontal').toLowerCase() === 'vertical' ? 'vertical' : 'horizontal';
+    const fillMode = options.fillMode || frame.fillMode || 'standard';
+    const cellSize = Math.max(8, Number(options.cellSize) || 18);
+    const cols = orientation === 'vertical' ? 2 : 5;
+    const rows = orientation === 'vertical' ? 5 : 2;
+    const width = cols * cellSize;
+    const height = rows * cellSize;
+    const defaultColor = frame.color || options.color || '#ef4444';
+
+    // Map occupied cells: key "r,c" -> color
+    const cellMap = {};
+    if (Array.isArray(frame.cells)) {
+        frame.cells.forEach((cellColor, idx) => {
+            if (cellColor && idx < 10) {
+                const { row, col } = getTenFrameCellCoordinates(idx, orientation, fillMode);
+                cellMap[`${row},${col}`] = typeof cellColor === 'string' ? cellColor : defaultColor;
+            }
+        });
+    } else {
+        const count = Math.min(10, Math.max(0, parseInt(frame.count, 10) || 0));
+        for (let idx = 0; idx < count; idx++) {
+            const { row, col } = getTenFrameCellCoordinates(idx, orientation, fillMode);
+            cellMap[`${row},${col}`] = defaultColor;
+        }
+    }
+
+    let gridSvg = `<rect x="0.75" y="0.75" width="${width - 1.5}" height="${height - 1.5}" fill="#ffffff" stroke="#1e293b" stroke-width="1.5"/>`;
+    for (let c = 1; c < cols; c++) {
+        const x = c * cellSize;
+        gridSvg += `<line x1="${x}" y1="0" x2="${x}" y2="${height}" stroke="#1e293b" stroke-width="1.25"/>`;
+    }
+    for (let r = 1; r < rows; r++) {
+        const y = r * cellSize;
+        gridSvg += `<line x1="0" y1="${y}" x2="${width}" y2="${y}" stroke="#1e293b" stroke-width="1.25"/>`;
+    }
+
+    let dotsSvg = '';
+    const radius = cellSize * 0.33;
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const color = cellMap[`${r},${c}`];
+            if (color) {
+                const cx = c * cellSize + cellSize / 2;
+                const cy = r * cellSize + cellSize / 2;
+                dotsSvg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${radius.toFixed(1)}" fill="${color}" stroke="#1e293b" stroke-width="0.9"/>`;
+            }
+        }
+    }
+
+    return `
+        <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0 shadow-2xs">
+            ${gridSvg}
+            ${dotsSvg}
+        </svg>
+    `;
+}
+
+function renderNumberTenFramePreview(data = {}, dayData = {}, day = 'Monday', customTitle = 'Write/Say the number - Ten frames') {
+    const rawMinF = data.minFrames !== undefined ? data.minFrames : (data.weekly?.minFrames !== undefined ? data.weekly.minFrames : 1);
+    const rawMaxF = data.maxFrames !== undefined ? data.maxFrames : (data.weekly?.maxFrames !== undefined ? data.weekly.maxFrames : 2);
+    const { minFrames, maxFrames, minNum, maxNum } = getTenFrameNumberRange(rawMinF, rawMaxF);
+
+    const instructions = data.instructions !== undefined ? data.instructions : (data.weekly?.instructions !== undefined ? data.weekly.instructions : 'What is the number?');
+    const rawOrient = data.orientation || data.weekly?.orientation || 'horizontal';
+    const orientPref = ['horizontal', 'vertical', 'random'].includes(String(rawOrient).toLowerCase()) ? String(rawOrient).toLowerCase() : 'horizontal';
+    const previewOrientation = orientPref === 'vertical' ? 'vertical' : 'horizontal';
+
+    let dayNumbers = parseTenFrameNumbersList(dayData?.numbers);
+    if (dayNumbers.length === 0 && data?.Monday?.numbers) {
+        dayNumbers = parseTenFrameNumbersList(data.Monday.numbers);
+    }
+
+    // Pick a sample number inside [minNum, maxNum] (or use first number in the day's list if it falls in range)
+    const inRangeDayNum = dayNumbers.find(n => n >= minNum && n <= maxNum);
+    const defaultSample = Math.min(maxNum, Math.max(minNum, (maxFrames - 1) * 10 + (maxFrames === 1 ? 7 : 4)));
+    const sampleNumber = inRangeDayNum || (dayNumbers.length > 0 ? dayNumbers[0] : defaultSample);
+
+    const frames = buildStandardTenFramesForNumber(sampleNumber, { color: '#ef4444' });
+    const numFrames = frames.length;
+
+    // Calculate optimal cellSize and grid columns to fit cleanly inside the preview zone
+    const availW = 215;
+    const availH = 105;
+    const fCols = previewOrientation === 'vertical' ? 2 : 5;
+    const fRows = previewOrientation === 'vertical' ? 5 : 2;
+
+    let bestCellSize = 10;
+    let bestGridCols = 1;
+
+    for (let gCols = 1; gCols <= numFrames; gCols++) {
+        const gRows = Math.ceil(numFrames / gCols);
+        const gap = 6;
+        const maxCellW = (availW - (gCols - 1) * gap) / (gCols * fCols);
+        const maxCellH = (availH - (gRows - 1) * gap) / (gRows * fRows);
+        const candidateSize = Math.floor(Math.min(maxCellW, maxCellH, 22));
+        if (candidateSize > bestCellSize) {
+            bestCellSize = candidateSize;
+            bestGridCols = gCols;
+        }
+    }
+    bestCellSize = Math.max(7, bestCellSize);
+
+    const framesHtml = frames.map(f => renderTenFrameSvg(f, {
+        orientation: previewOrientation,
+        cellSize: bestCellSize,
+        fillMode: 'standard'
+    })).join('');
+
+    return `
+        <div class="w-full h-full flex flex-col items-center justify-between p-2.5 select-none bg-white relative overflow-hidden">
+            <!-- Top-left sample indicator + Top-right Recite Badge -->
+            <div class="w-full flex items-start justify-between z-10">
+                <span class="text-[8.5px] font-semibold text-slate-400">
+                    Sample: ${sampleNumber} (${orientPref === 'random' ? 'Random H/V' : previewOrientation})
+                </span>
+                <div class="w-6 h-6 rounded-full bg-amber-300 flex flex-col items-center justify-center text-slate-900 shadow-2xs border border-amber-400/60 shrink-0">
+                    <i class="fa-solid fa-users text-[7px] leading-none"></i>
+                    <span class="text-[4px] font-bold edu-font leading-none mt-0.5">Recite</span>
+                </div>
+            </div>
+
+            <!-- Content Zone with Ten Frames -->
+            <div class="flex-1 flex items-center justify-center my-auto max-w-full overflow-hidden px-2">
+                <div class="grid gap-1.5 items-center justify-items-center" style="grid-template-columns: repeat(${bestGridCols}, minmax(0, auto));">
+                    ${framesHtml}
+                </div>
+            </div>
+
+            <!-- Bottom {{content}} Instruction -->
+            <div class="w-full text-center pt-1">
+                <div class="text-sm sm:text-[15px] font-bold text-slate-900 edu-font leading-tight truncate px-2">
+                    ${instructions || 'What is the number?'}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderFriendsOf10Preview(data = {}, customTitle = 'Friends of 10 - Ten frames') {
+    const rawOrder = data.order || data.weekly?.order || 'inOrder';
+    const isRandom = String(rawOrder) === 'random';
+
+    // Show a clear representative equation (e.g. 4 + 6 = 10 or 7 + 3 = 10 when Random is toggled)
+    const sampleA = isRandom ? 7 : 4;
+    const sampleB = 10 - sampleA;
+    const f10 = buildFriendsOf10TenFrames(sampleA, sampleB);
+    const cellSize = 16;
+
+    const frame1Html = renderTenFrameSvg(f10.zone01Frame, { orientation: 'vertical', cellSize, fillMode: 'standard' });
+    const frame2Html = renderTenFrameSvg(f10.zone02Frame, { orientation: 'vertical', cellSize, fillMode: 'standard' });
+    const frame3Html = renderTenFrameSvg(f10.zone03Frame, { orientation: 'vertical', cellSize, fillMode: 'standard' });
+
+    return `
+        <div class="w-full h-full flex flex-col items-center justify-between p-2.5 select-none bg-white relative overflow-hidden">
+            <!-- Top-left sample indicator + Top-right Recite Badge -->
+            <div class="w-full flex items-start justify-between z-10">
+                <span class="text-[8.5px] font-semibold text-slate-400">
+                    11 slides (${isRandom ? 'Random order' : 'In Order: 0+10 to 10+0'})
+                </span>
+                <div class="w-6 h-6 rounded-full bg-amber-300 flex flex-col items-center justify-center text-slate-900 shadow-2xs border border-amber-400/60 shrink-0">
+                    <i class="fa-solid fa-users text-[7px] leading-none"></i>
+                    <span class="text-[4px] font-bold edu-font leading-none mt-0.5">Recite</span>
+                </div>
+            </div>
+
+            <!-- 3 Vertical Ten Frames: zone01 + zone02 = zone03 -->
+            <div class="flex-1 flex items-center justify-center gap-3 sm:gap-4 my-auto max-w-full overflow-hidden px-2">
+                ${frame1Html}
+                <span class="text-base sm:text-lg font-extrabold text-slate-900 edu-font select-none">+</span>
+                ${frame2Html}
+                <span class="text-base sm:text-lg font-extrabold text-slate-900 edu-font select-none">=</span>
+                ${frame3Html}
+            </div>
+
+            <!-- Bottom {{content}} Equation -->
+            <div class="w-full text-center pt-1">
+                <div class="text-sm sm:text-[15px] font-bold text-slate-900 edu-font leading-tight truncate px-2">
+                    ${f10.equation}
                 </div>
             </div>
         </div>

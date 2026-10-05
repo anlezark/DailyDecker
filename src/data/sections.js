@@ -217,7 +217,7 @@ export const SECTION_DEFS = {
         ]
     },
     'sectNumberMAB': {
-        title: 'Number - MAB blocks',
+        title: 'Write/Say the number - MAB blocks',
         shortDesc: 'Identify number from MAB blocks',
         icon: 'fa-cubes',
         color: 'text-amber-600',
@@ -236,6 +236,67 @@ export const SECTION_DEFS = {
         ],
         dailyFields: [
             { id: 'numbers', label: 'Target numbers', type: 'text', default: '', placeholder: 'Target numbers - comma separated, e.g. "12, 22, 14"' }
+        ]
+    },
+    'sectNumberTenFrame': {
+        title: 'Write/Say the number - Ten frames',
+        shortDesc: 'Identify number from ten frames',
+        icon: 'fa-Border-all fa-table-cells-large',
+        color: 'text-amber-600',
+        bg: 'bg-amber-100',
+        type: 'mixed',
+        workspace: 'numeracy',
+        hasTitleSlideOptions: true,
+        templateTag: '[numberTenFrame]',
+        contentTag: '{{content}}',
+        description: 'Students are shown a set of ten frames and must write or say the number.',
+        weeklyFields: [
+            { id: 'minFrames', label: 'Min Ten Frames', type: 'number', min: 1, max: 10, default: 1 },
+            { id: 'maxFrames', label: 'Max Ten Frames', type: 'number', min: 1, max: 10, default: 2 },
+            { id: 'slidesPerDay', label: 'Slides per day', type: 'number', min: 1, max: 20, default: 6 },
+            { id: 'instructions', label: 'Instruction', type: 'text', default: 'What is the number?' },
+            { id: 'orientation', label: 'Orientation', type: 'select', options: ['horizontal', 'vertical', 'random'], default: 'horizontal' }
+        ],
+        dailyFields: [
+            { id: 'numbers', label: 'Target numbers', type: 'text', default: '', placeholder: 'Target numbers - comma separated, e.g. "7, 14, 19"' }
+        ]
+    },
+    'sectFriendsOf10': {
+        title: 'Friends of 10 - Ten frames',
+        shortDesc: 'Friends of 10 in ten frames',
+        icon: 'fa-handshake-simple',
+        color: 'text-amber-600',
+        bg: 'bg-amber-100',
+        type: 'weekly',
+        workspace: 'numeracy',
+        hasTitleSlideOptions: true,
+        templateTag: '[equationTenFrame]',
+        contentTag: '{{content}}',
+        description: 'Set of slides to review Friends of 10 using tenframes. Choose "In Order" to practise as a chant. Choose "Random" to review out of order.',
+        fields: [
+            { id: 'order', label: 'Order', type: 'select', options: ['inOrder', 'random'], default: 'inOrder' }
+        ]
+    },
+    'sectWordProblem': {
+        title: 'Word Problem',
+        shortDesc: 'Show a maths word problem.',
+        icon: 'fa-lightbulb',
+        color: 'text-amber-600',
+        bg: 'bg-amber-100',
+        type: 'mixed',
+        workspace: 'numeracy',
+        hasTitleSlideOptions: true,
+        templateTag: '[generic_stimulus]',
+        contentTag: '{{content}}',
+        description: 'Present a maths word problem each day for students.',
+        weeklyFields: [
+            { id: 'targetStage', label: 'Target stage', type: 'select', options: ['Early Stage 1', 'Stage 1', 'Stage 2', 'Stage 3'], default: 'Stage 1' }
+        ],
+        dailyFields: [
+            { id: 'contentArea', label: 'Content Area', type: 'select', options: ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Fractions', 'Chance', 'Data'], default: 'Addition' },
+            { id: 'equation', label: 'Or specify Equation (optional)', type: 'text', placeholder: 'E.g. 50+18' },
+            { id: 'includeExtension', label: 'Include extension', type: 'checkbox', default: false },
+            { id: 'problemText', label: 'Problem text', type: 'textarea', default: 'Johnny had six apples...', placeholder: 'Johnny had six apples...' }
         ]
     },
     'customisable': {

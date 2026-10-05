@@ -90,7 +90,7 @@ function doPost(e) {
 
         // If there are actions/mutations to apply to this slide (table fills, shape colors, hiding elements, etc.)
         if (instruction.actions && instruction.actions.length > 0) {
-          applySlideActions(newSlide, instruction.actions);
+          applySlideActions(newSlide, instruction.actions, presentation);
         }
 
         // Backward compatibility: If we need to highlight numbers in a table (Hundreds Chart)
@@ -316,7 +316,7 @@ function handleContactSubmission(requestData) {
  * - Shapes/Images/Groups: Fill background, border stroke, text color, replace text, or remove elements by Alt Text Title/Description.
  * - Shapes by token/text: Fill or remove shapes containing specific marker text.
  */
-function applySlideActions(newSlide, actions) {
+function applySlideActions(newSlide, actions, presentation) {
   if (!actions || !actions.length) return;
 
   for (var a = 0; a < actions.length; a++) {
@@ -510,7 +510,9 @@ function applySlideActions(newSlide, actions) {
 
       var pageWidth = 720;
       try {
-        pageWidth = newSlide.getParentPresentation().getPageWidth() || 720;
+        if (presentation && typeof presentation.getPageWidth === 'function') {
+          pageWidth = presentation.getPageWidth() || 720;
+        }
       } catch (pwErr) {}
       var maxAllowedWidth = pageWidth * 0.86;
 
@@ -564,7 +566,7 @@ function applySlideActions(newSlide, actions) {
       }
 
       if (activeGroups.length > 0) {
-        var baseGroupGap = 28;
+        var baseGroupGap = 38;
         var totalRawWidth = 0;
         var maxRawHeight = 0;
 
@@ -632,7 +634,228 @@ function applySlideActions(newSlide, actions) {
         }
       }
     }
+
+    // 6. Target: Standardized Ten Frame Layout Engine (Reusable across any Ten Frame activity)
+    // Example: { target: 'tenFrameLayout', zoneTag: 'content_zone', orientation: 'horizontal', fillMode: 'standard', frames: [{ count: 10, color: '#ef4444' }, { count: 4, color: '#ef4444' }] }
+    else if (targetType === 'tenFrameLayout') {
+      var zoneTag = String(act.zoneTag || 'content_zone').trim().toLowerCase();
+      var orientation = String(act.orientation || 'horizontal').toLowerCase() === 'vertical' ? 'vertical' : 'horizontal';
+      var fillMode = String(act.fillMode || 'standard').toLowerCase();
+      var defaultColor = act.counterColor || '#ef4444';
+      var frames = act.frames || [];
+
+      if ((!frames || frames.length === 0) && act.number !== undefined) {
+        var numVal = Math.min(100, Math.max(1, parseInt(act.number, 10) || 1));
+        var rem = numVal;
+        frames = [];
+        while (rem > 0) {
+          var c = Math.min(10, rem);
+          frames.push({ count: c, color: defaultColor });
+          rem -= c;
+        }
+      }
+
+      var allElements = getAllSlideElements(newSlide);
+      var zoneEl = null;
+      for (var e = 0; e < allElements.length; e++) {
+        var el = allElements[e];
+        var title = (el.getTitle() || '').trim().toLowerCase();
+        var desc = (el.getDescription() || '').trim().toLowerCase();
+        if (title === zoneTag || desc === zoneTag || title === 'ten_frame_zone' || desc === 'ten_frame_zone') {
+          zoneEl = el;
+          break;
+        }
+      }
+
+      var pageWidth = 720;
+      var pageHeight = 405;
+      try {
+        if (presentation && typeof presentation.getPageWidth === 'function') {
+          pageWidth = presentation.getPageWidth() || 720;
+          pageHeight = presentation.getPageHeight() || 405;
+        }
+      } catch (dimErr) {}
+
+      var zoneLeft = pageWidth * 0.08;
+      var zoneTop = pageHeight * 0.10;
+      var zoneWidth = pageWidth * 0.75;
+      var zoneHeight = pageHeight * 0.65;
+
+      if (zoneEl) {
+        try {
+          zoneLeft = zoneEl.getLeft();
+          zoneTop = zoneEl.getTop();
+          zoneWidth = zoneEl.getWidth();
+          zoneHeight = zoneEl.getHeight();
+          zoneEl.remove();
+        } catch (zErr) {}
+      }
+
+      var numFrames = frames.length;
+      if (numFrames > 0) {
+        var fCols = orientation === 'vertical' ? 2 : 5;
+        var fRows = orientation === 'vertical' ? 5 : 2;
+        var gapFactor = 0.55;
+        var maxSingleCellCap = Math.max(zoneWidth, zoneHeight) * 0.22;
+        var widthScale = numFrames === 1 ? 0.98 : 0.94;
+        var heightScale = numFrames === 1 ? 0.98 : 0.92;
+
+        var bestCellSize = 8;
+        var bestGridCols = 1;
+
+        for (var gCols = 1; gCols <= numFrames; gCols++) {
+          var gRows = Math.ceil(numFrames / gCols);
+          var totalUnitsW = gCols * fCols + (gCols - 1) * gapFactor;
+          var totalUnitsH = gRows * fRows + (gRows - 1) * gapFactor;
+
+          var maxCellW = (zoneWidth * widthScale) / totalUnitsW;
+          var maxCellH = (zoneHeight * heightScale) / totalUnitsH;
+          var candidate = Math.min(maxCellW, maxCellH, maxSingleCellCap);
+
+          if (candidate > bestCellSize) {
+            bestCellSize = candidate;
+            bestGridCols = gCols;
+          }
+        }
+
+        var bestGridRows = Math.ceil(numFrames / bestGridCols);
+        var cellSize = bestCellSize;
+        var frameW = fCols * cellSize;
+        var frameH = fRows * cellSize;
+        var gapPx = gapFactor * cellSize;
+
+        var totalClusterW = bestGridCols * frameW + (bestGridCols - 1) * gapPx;
+        var totalClusterH = bestGridRows * frameH + (bestGridRows - 1) * gapPx;
+
+        var startX = zoneLeft + (zoneWidth - totalClusterW) / 2;
+        var startY = zoneTop + (zoneHeight - totalClusterH) / 2;
+
+        for (var fIdx = 0; fIdx < numFrames; fIdx++) {
+          var rGrid = Math.floor(fIdx / bestGridCols);
+          var cGrid = fIdx % bestGridCols;
+          var fLeft = startX + cGrid * (frameW + gapPx);
+          var fTop = startY + rGrid * (frameH + gapPx);
+
+          drawSingleTenFrameOnSlide(
+            newSlide,
+            fLeft,
+            fTop,
+            cellSize,
+            orientation,
+            frames[fIdx],
+            fillMode,
+            defaultColor
+          );
+        }
+      }
+    }
   }
+}
+
+/**
+ * Draws a single 10-cell Ten Frame and its counters using native vector shapes.
+ * Uses 4 overlapping rectangles for the 10-cell grid (60% fewer API calls than 10 individual cells)
+ * and ELLIPSE shapes for each counter.
+ */
+function drawSingleTenFrameOnSlide(slide, fLeft, fTop, cellSize, orientation, frameSpec, defaultFillMode, defaultColor) {
+  var isVertical = (orientation === 'vertical');
+  var fCols = isVertical ? 2 : 5;
+  var fRows = isVertical ? 5 : 2;
+  var frameW = fCols * cellSize;
+  var frameH = fRows * cellSize;
+  var borderWeight = Math.max(1.25, Math.min(2.25, cellSize * 0.045));
+
+  function styleGridRect(rect, isOuter) {
+    if (isOuter) {
+      rect.getFill().setSolidFill('#ffffff');
+    } else {
+      rect.getFill().setTransparent();
+    }
+    rect.getBorder().getLineFill().setSolidFill('#1e293b');
+    rect.getBorder().setWeight(borderWeight);
+  }
+
+  try {
+    // 1. Outer frame rectangle
+    var outerRect = slide.insertShape(SlidesApp.ShapeType.RECTANGLE, fLeft, fTop, frameW, frameH);
+    styleGridRect(outerRect, true);
+
+    if (isVertical) {
+      // Vertical (2 cols x 5 rows): left-half divider + row 1 & row 3 stripes
+      var leftColRect = slide.insertShape(SlidesApp.ShapeType.RECTANGLE, fLeft, fTop, cellSize, frameH);
+      styleGridRect(leftColRect, false);
+
+      var row1Rect = slide.insertShape(SlidesApp.ShapeType.RECTANGLE, fLeft, fTop + cellSize, frameW, cellSize);
+      styleGridRect(row1Rect, false);
+
+      var row3Rect = slide.insertShape(SlidesApp.ShapeType.RECTANGLE, fLeft, fTop + 3 * cellSize, frameW, cellSize);
+      styleGridRect(row3Rect, false);
+    } else {
+      // Horizontal (5 cols x 2 rows): top-half divider + col 1 & col 3 stripes
+      var topRowRect = slide.insertShape(SlidesApp.ShapeType.RECTANGLE, fLeft, fTop, frameW, cellSize);
+      styleGridRect(topRowRect, false);
+
+      var col1Rect = slide.insertShape(SlidesApp.ShapeType.RECTANGLE, fLeft + cellSize, fTop, cellSize, frameH);
+      styleGridRect(col1Rect, false);
+
+      var col3Rect = slide.insertShape(SlidesApp.ShapeType.RECTANGLE, fLeft + 3 * cellSize, fTop, cellSize, frameH);
+      styleGridRect(col3Rect, false);
+    }
+  } catch (gridErr) {}
+
+  // Determine cell colors to draw
+  var mode = String((frameSpec && frameSpec.fillMode) || defaultFillMode || 'standard').toLowerCase();
+  var baseColor = (frameSpec && frameSpec.color) || defaultColor || '#ef4444';
+  var cellEntries = [];
+
+  if (frameSpec && Array.isArray(frameSpec.cells)) {
+    for (var i = 0; i < frameSpec.cells.length && i < 10; i++) {
+      if (frameSpec.cells[i]) {
+        cellEntries.push({
+          idx: i,
+          color: typeof frameSpec.cells[i] === 'string' ? frameSpec.cells[i] : baseColor
+        });
+      }
+    }
+  } else {
+    var count = Math.min(10, Math.max(0, parseInt(frameSpec && frameSpec.count, 10) || 0));
+    for (var cIdx = 0; cIdx < count; cIdx++) {
+      cellEntries.push({ idx: cIdx, color: baseColor });
+    }
+  }
+
+  var dotDiameter = cellSize * 0.66;
+  var dotOffset = (cellSize - dotDiameter) / 2;
+
+  for (var d = 0; d < cellEntries.length; d++) {
+    var entry = cellEntries[d];
+    var coord = getTenFrameCellCoordInScript(entry.idx, isVertical, mode);
+    var dotLeft = fLeft + coord.col * cellSize + dotOffset;
+    var dotTop = fTop + coord.row * cellSize + dotOffset;
+
+    try {
+      var dot = slide.insertShape(SlidesApp.ShapeType.ELLIPSE, dotLeft, dotTop, dotDiameter, dotDiameter);
+      dot.getFill().setSolidFill(entry.color);
+      dot.getBorder().getLineFill().setSolidFill('#1e293b');
+      dot.getBorder().setWeight(Math.max(0.75, borderWeight * 0.55));
+    } catch (dotErr) {}
+  }
+}
+
+function getTenFrameCellCoordInScript(idx, isVertical, mode) {
+  if (mode === 'pairwise') {
+    if (isVertical) {
+      return { row: Math.floor(idx / 2), col: idx % 2 };
+    }
+    return { row: idx % 2, col: Math.floor(idx / 2) };
+  }
+  // Standard fill:
+  // Horizontal (5x2): 0..4 top row left-to-right, 5..9 bottom row left-to-right
+  // Vertical (2x5): 0..4 left col top-to-bottom, 5..9 right col top-to-bottom
+  if (isVertical) {
+    return { row: idx % 5, col: Math.floor(idx / 5) };
+  }
+  return { row: Math.floor(idx / 5), col: idx % 5 };
 }
 
 /**

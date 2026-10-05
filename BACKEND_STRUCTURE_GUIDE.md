@@ -146,6 +146,15 @@ The payload sent from `src/main.js` to `Code.gs` adheres to the following specif
 - **Shapes by Marker Token (`target: "shapeByText"`)**:
   - `matchText` / `token`: Marker string inside shape (e.g. `{{counter_1}}`).
   - `fill`, `stroke`, `clearText: true`, `text`, `textColor`, `remove`.
+- **MAB Blocks Dynamic Layout (`target: "mabLayout"`)**:
+  - `counts`: `{ MAB_1000, MAB_100, MAB_10, MAB_1 }` matching Alt Text tags on template seed images.
+  - Automatically removes unused block types, duplicates required blocks, scales proportionally, and centers left-to-right (Thousands $\rightarrow$ Hundreds $\rightarrow$ Tens $\rightarrow$ Ones).
+- **Standardized Ten Frame Generator (`target: "tenFrameLayout"`)**:
+  - `zoneTag`: Alt Text Title/Description of the bounding box rectangle on the slide (default `"content_zone"`).
+  - `orientation`: `"horizontal"` (5×2) or `"vertical"` (2×5).
+  - `fillMode`: `"standard"` (1–5 then 6–10) or `"pairwise"`.
+  - `frames`: Array of frame objects `{ count: 1..10, color: "#ef4444", cells: [...] }`.
+  - Removes the `content_zone` placeholder rectangle, calculates optimal grid layout & square cell sizing for 1–10 frames, and renders crisp vector Ten Frames and counters centered inside the zone.
 ```
 
 ### Backend Execution in `Code.gs`:
