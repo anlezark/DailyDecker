@@ -31,24 +31,36 @@ app.post('/api/generate-word-problem', async (req, res) => {
     });
 
     const apiKey = process.env.GEMINI_API_KEY;
+    console.log(`[API] Received word problem request. Stage: ${stageClean}, Area: ${areaClean}, Eq: ${eqClean}. API Key present: ${Boolean(apiKey)}`);
+    
     if (apiKey) {
-      try {
-        const ai = new GoogleGenAI({ apiKey });
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: prompt,
-        });
+      const candidateModels = ['gemini-3.1-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest'];
+      const ai = new GoogleGenAI({ apiKey });
 
-        const generatedText = response.text?.trim();
-        if (generatedText) {
-          return res.json({ success: true, text: generatedText, source: 'ai' });
+      for (const modelName of candidateModels) {
+        try {
+          console.log(`[API] Attempting generation with model: ${modelName}`);
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents: prompt,
+          });
+
+          const generatedText = response.text?.trim();
+          if (generatedText) {
+            console.log(`[API] Successfully generated text using ${modelName} (${generatedText.length} chars)`);
+            return res.json({ success: true, text: generatedText, source: 'ai', model: modelName });
+          }
+        } catch (aiErr) {
+          console.warn(`[API] Model ${modelName} call failed:`, aiErr.message || aiErr);
+          // Continue to next model in cascade
         }
-      } catch (aiErr) {
-        console.warn('Gemini API call failed, falling back to local curriculum generator:', aiErr.message || aiErr);
       }
+    } else {
+      console.warn('[API] GEMINI_API_KEY is not defined in process.env');
     }
 
     // High quality pedagogical fallback generator
+    console.log('[API] Falling back to JavaScript pedagogical generator');
     const fallbackText = generateFallbackProblem(stageClean, areaClean, eqClean, Boolean(includeExtension));
     return res.json({ success: true, text: fallbackText, source: 'js' });
   } catch (err) {
