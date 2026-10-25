@@ -216,6 +216,27 @@ export const SECTION_DEFS = {
             { id: 'instructions', label: 'Instructions:', type: 'text', default: 'Skip count by 6s.' }
         ]
     },
+    'sectSayNumeral': {
+        title: 'Say the Numeral',
+        shortDesc: 'Say the numeral',
+        icon: 'fa-arrow-up-9-1',
+        color: 'text-amber-600',
+        bg: 'bg-amber-100',
+        type: 'mixed',
+        workspace: 'numeracy',
+        hasTitleSlideOptions: true,
+        templateTag: '[number]',
+        contentTag: '{{n}}',
+        description: 'Students are shown a written numeral for them to say aloud.',
+        weeklyFields: [
+            { id: 'slidesPerDay', label: 'Slides per day', type: 'number', min: 1, max: 50, default: 6 },
+            { id: 'min', label: 'Min', type: 'number', default: 1 },
+            { id: 'max', label: 'Max', type: 'number', default: 29 }
+        ],
+        dailyFields: [
+            { id: 'numbers', label: 'Target numbers', type: 'text', default: '', placeholder: 'Target numbers - comma separated, e.g. "5, 12, 18, 22, 27, 29"' }
+        ]
+    },
     'sectNumberMAB': {
         title: 'Write/Say the number - MAB blocks',
         shortDesc: 'Identify number from MAB blocks',
@@ -275,6 +296,24 @@ export const SECTION_DEFS = {
         description: 'Set of slides to review Friends of 10 using tenframes. Choose "In Order" to practise as a chant. Choose "Random" to review out of order.',
         fields: [
             { id: 'order', label: 'Order', type: 'select', options: ['inOrder', 'random'], default: 'inOrder' }
+        ]
+    },
+    'sectFriendsOf20': {
+        title: 'Friends of 20 - Ten frames',
+        shortDesc: 'Friends of 20 in ten frames.',
+        icon: 'fa-handshake',
+        color: 'text-amber-600',
+        bg: 'bg-amber-100',
+        type: 'weekly',
+        workspace: 'numeracy',
+        hasTitleSlideOptions: true,
+        templateTag: '[numberTenFrame]',
+        contentTag: '{{content}}',
+        description: 'A daily set of slides to review Friends of 20 using tenframes. Choose "In Order" to practise as a chant. Choose "Random" to review out of order.',
+        fields: [
+            { id: 'order', label: 'Order', type: 'select', options: ['inOrder', 'random'], default: 'inOrder' },
+            { id: 'orientation', label: 'Orientation', type: 'select', options: ['horizontal', 'vertical', 'random'], default: 'horizontal' },
+            { id: 'slidesPerDay', label: 'Slides per day', type: 'number', min: 1, max: 21, default: 21 }
         ]
     },
     'sectWordProblem': {

@@ -3,7 +3,7 @@ import { SECTION_DEFS } from '../data/sections.js';
 import { DAYS, SENTENCE_TYPE_DEFINITIONS, SOUNDS_WRITE_LEVELS } from '../data/constants.js';
 import { getPhonicsPoolInfo } from '../data/phonics.js';
 import { buildPyramid } from '../export/recipe.js';
-import { parseWordWithPhonemes, formatPhonemeSymbols, randomizeCasing, getHundredsChartInstruction, getHundredsChartHighlightedNumbers, getHundredsChartMax, getHundredsChartMultiplesList, getHundredsChartDefaultRange, parseMabNumbersList, decomposeMabNumber, getTenFrameNumberRange, parseTenFrameNumbersList, getTenFrameCellCoordinates, buildStandardTenFramesForNumber, buildFriendsOf10TenFrames } from '../utils/helpers.js';
+import { parseWordWithPhonemes, formatPhonemeSymbols, randomizeCasing, getHundredsChartInstruction, getHundredsChartHighlightedNumbers, getHundredsChartMax, getHundredsChartMultiplesList, getHundredsChartDefaultRange, parseMabNumbersList, decomposeMabNumber, getTenFrameNumberRange, parseTenFrameNumbersList, getTenFrameCellCoordinates, buildStandardTenFramesForNumber, buildFriendsOf10TenFrames, buildFriendsOf20Frames, generateFriendsOf20Pairs, parseNumeralList } from '../utils/helpers.js';
 import { currentWorkspace } from '../state/state.js';
 
 let currentPreviewDay = 'Monday';
@@ -75,6 +75,16 @@ export function getPreviewSlideCount(itemOrDefKey, timelineItemData = null) {
         return ['cs_def', 'cs_stim'];
     }
 
+    if (defKey === 'sectSayNumeral') {
+        const day = currentPreviewDay || 'Monday';
+        const dayData = (data && data[day]) || (data && data.Monday) || {};
+        const parsed = parseNumeralList(dayData.numbers);
+        if (parsed.length > 1) {
+            return parsed.map(n => `Numeral: ${n}`);
+        }
+        return [];
+    }
+
     if (defKey === 'sectNumberMAB') {
         const day = currentPreviewDay || 'Monday';
         const dayData = (data && data[day]) || (data && data.Monday) || {};
@@ -84,6 +94,7 @@ export function getPreviewSlideCount(itemOrDefKey, timelineItemData = null) {
         }
         return [];
     }
+
 
     return [];
 }
@@ -164,12 +175,16 @@ export function generateSlidePreviewHtml(itemOrDefKey, isLibrary = false, global
             return renderGenericPreview(dayData, customTitle, data, day);
         case 'sectHundredsChart':
             return renderHundredsChartPreview(data, customTitle);
+        case 'sectSayNumeral':
+            return renderSayNumeralPreview(data, dayData, day, subIdx);
         case 'sectNumberMAB':
             return renderNumberMABPreview(data, dayData, day, subIdx, customTitle);
         case 'sectNumberTenFrame':
             return renderNumberTenFramePreview(data, dayData, day, customTitle);
         case 'sectFriendsOf10':
             return renderFriendsOf10Preview(data, customTitle);
+        case 'sectFriendsOf20':
+            return renderFriendsOf20Preview(data, customTitle);
         case 'sectWordProblem':
             return renderWordProblemPreview(dayData, customTitle, data, day);
         case 'customisable':
@@ -1828,6 +1843,29 @@ function renderHundredsChartPreview(data = {}, customTitle = 'Hundreds Chart') {
     `;
 }
 
+function renderSayNumeralPreview(data = {}, dayData = {}, day = 'Monday', subIdx = 0) {
+    let numeral = '34';
+    if (dayData && dayData.numbers) {
+        const parts = parseNumeralList(dayData.numbers);
+        if (parts.length > 0) {
+            const idx = (subIdx !== undefined && subIdx !== null && subIdx >= 0) ? Math.min(subIdx, parts.length - 1) : 0;
+            numeral = parts[idx] || parts[0];
+        }
+    } else if (data && data[day] && data[day].numbers) {
+        const parts = parseNumeralList(data[day].numbers);
+        if (parts.length > 0) {
+            const idx = (subIdx !== undefined && subIdx !== null && subIdx >= 0) ? Math.min(subIdx, parts.length - 1) : 0;
+            numeral = parts[idx] || parts[0];
+        }
+    }
+
+    return `
+        <div class="w-full h-full flex items-center justify-center select-none bg-white">
+            <span class="text-6xl text-slate-800 edu-font font-medium">${numeral}</span>
+        </div>
+    `;
+}
+
 function renderMabSvgBlock(type, scale = 1) {
     if (type === 1000) {
         const w = Math.max(18, Math.round(78 * scale));
@@ -2232,3 +2270,70 @@ function renderFriendsOf10Preview(data = {}, customTitle = 'Friends of 10 - Ten 
         </div>
     `;
 }
+
+function renderFriendsOf20Preview(data = {}, customTitle = 'Friends of 20 - Ten frames') {
+    const rawOrder = data.order || data.weekly?.order || 'inOrder';
+    const isRandom = String(rawOrder).toLowerCase() === 'random';
+
+    const rawOrient = data.orientation || data.weekly?.orientation || 'horizontal';
+    const orientPref = ['horizontal', 'vertical', 'random'].includes(String(rawOrient).toLowerCase()) ? String(rawOrient).toLowerCase() : 'horizontal';
+
+    const rawSlides = data.slidesPerDay !== undefined ? data.slidesPerDay : (data.weekly?.slidesPerDay !== undefined ? data.weekly.slidesPerDay : 21);
+    const countVal = (rawSlides === 'all' || rawSlides === '' || rawSlides === undefined || parseInt(rawSlides, 10) >= 21) ? 21 : Math.max(1, parseInt(rawSlides, 10) || 21);
+
+    // Single representative example: 14 + 6 = 20 (clearly displays both frames and the blue/red color division)
+    const sampleA = 14;
+    const sampleB = 6;
+
+    // Slide orientation for preview
+    const slideOrientation = orientPref === 'vertical' ? 'vertical' : 'horizontal';
+
+    const frames = buildFriendsOf20Frames(sampleA, sampleB);
+    const isVertical = slideOrientation === 'vertical';
+
+    // Cell size: fit 2 ten frames comfortably inside preview frame
+    // When horizontal: stacked one over the other (2 frames of 5x2 cells)
+    // When vertical: placed side by side (2 frames of 2x5 cells)
+    const cellSize = isVertical ? 15 : 14;
+
+    const frame1Html = renderTenFrameSvg(frames[0], { orientation: slideOrientation, cellSize, fillMode: 'standard' });
+    const frame2Html = renderTenFrameSvg(frames[1], { orientation: slideOrientation, cellSize, fillMode: 'standard' });
+
+    const orientLabel = orientPref === 'random' ? 'Random H/V' : (slideOrientation.charAt(0).toUpperCase() + slideOrientation.slice(1));
+    const slidesLabel = countVal === 21 
+        ? `21 slides (${isRandom ? 'Random order' : 'In order: 0+20 to 20+0'}) · ${orientLabel}`
+        : `${countVal} slides/day (${isRandom ? 'Random order' : 'In order'}) · ${orientLabel}`;
+
+    const containerLayoutClass = isVertical
+        ? 'flex-row items-center justify-center gap-3 sm:gap-4'
+        : 'flex-col items-center justify-center gap-2';
+
+    return `
+        <div class="w-full h-full flex flex-col items-center justify-between p-2.5 select-none bg-white relative overflow-hidden">
+            <!-- Top-left slide indicator + Top-right Recite Badge -->
+            <div class="w-full flex items-start justify-between z-10">
+                <span class="text-[8.5px] font-semibold text-slate-400">
+                    ${slidesLabel}
+                </span>
+                <div class="w-6 h-6 rounded-full bg-amber-300 flex flex-col items-center justify-center text-slate-900 shadow-2xs border border-amber-400/60 shrink-0">
+                    <i class="fa-solid fa-users text-[7px] leading-none"></i>
+                    <span class="text-[4px] font-bold edu-font leading-none mt-0.5">Recite</span>
+                </div>
+            </div>
+
+            <!-- Two Ten Frames with a blue dots & b red dots (horizontal stacked, vertical side-by-side) -->
+            <div class="flex-1 flex ${containerLayoutClass} my-auto max-w-full overflow-hidden px-2">
+                ${frame1Html}
+                ${frame2Html}
+            </div>
+
+            <!-- Bottom {{content}} Equation with matching colors for a (blue) and b (red) -->
+            <div class="w-full text-center pt-1">
+                <div class="text-sm sm:text-[15px] font-bold edu-font leading-tight truncate px-2 select-none tracking-wide">
+                    <span class="text-blue-600">${sampleA}</span> <span class="text-slate-800">+</span> <span class="text-red-500">${sampleB}</span> <span class="text-slate-800">= 20</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+

@@ -475,5 +475,129 @@ export function buildFriendsOf10TenFrames(firstNum, secondNum) {
     };
 }
 
+export function parseNumeralList(str) {
+    if (!str) return [];
+    return String(str)
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+}
 
+export function generateSayNumeralNumbers(count = 6, min = 1, max = 29) {
+    let minVal = parseInt(min, 10);
+    let maxVal = parseInt(max, 10);
+    if (isNaN(minVal)) minVal = 1;
+    if (isNaN(maxVal)) maxVal = 29;
+    if (minVal > maxVal) {
+        const tmp = minVal;
+        minVal = maxVal;
+        maxVal = tmp;
+    }
+    const numItems = Math.max(1, parseInt(count, 10) || 6);
+
+    const pool = [];
+    for (let i = minVal; i <= maxVal; i++) {
+        pool.push(i);
+    }
+
+    // Shuffle pool
+    for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+
+    if (pool.length >= numItems) {
+        return pool.slice(0, numItems);
+    }
+
+    // If pool is smaller than required count, repeat uniquely
+    const result = [...pool];
+    while (result.length < numItems) {
+        const rand = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal;
+        result.push(rand);
+    }
+    return result;
+}
+
+export const TEN_FRAME_RED = '#ef4444';
+
+export function buildFriendsOf20Frames(firstNum, secondNum) {
+    const a = Math.min(20, Math.max(0, parseInt(firstNum, 10) || 0));
+    const b = 20 - a;
+
+    // 2 ten frames, total 20 cells
+    // First 'a' cells are blue, remaining 'b' cells are red (using standard fill order)
+    const frame1Cells = [];
+    for (let i = 0; i < 10; i++) {
+        frame1Cells.push(i < a ? TEN_FRAME_BLUE : TEN_FRAME_RED);
+    }
+
+    const frame2Cells = [];
+    for (let i = 0; i < 10; i++) {
+        frame2Cells.push((10 + i) < a ? TEN_FRAME_BLUE : TEN_FRAME_RED);
+    }
+
+    return [
+        { cells: frame1Cells, fillMode: 'standard', color: TEN_FRAME_BLUE },
+        { cells: frame2Cells, fillMode: 'standard', color: TEN_FRAME_BLUE }
+    ];
+}
+
+export function generateFriendsOf20Pairs(count = 21, order = 'inOrder') {
+    let numCount = count === 'all' || count === undefined || count === null ? 21 : parseInt(count, 10);
+    if (isNaN(numCount)) numCount = 21;
+    numCount = Math.min(21, Math.max(1, numCount));
+
+    const isRandomOrder = String(order || 'inOrder').toLowerCase() === 'random';
+
+    let pairs = [];
+
+    if (numCount >= 21) {
+        // All 21 pairs: (0,20) to (20,0)
+        for (let i = 0; i <= 20; i++) {
+            pairs.push({ a: i, b: 20 - i });
+        }
+    } else if (numCount <= 11) {
+        // Pick numCount distinct unordered pairs from the 11 sum pairs {0,20}..{10,10}
+        const baseIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        const shuffled = shuffleArray(baseIndices);
+        const selected = shuffled.slice(0, numCount);
+
+        selected.forEach(x => {
+            if (x === 10) {
+                pairs.push({ a: 10, b: 10 });
+            } else {
+                const flip = Math.random() < 0.5;
+                pairs.push(flip ? { a: x, b: 20 - x } : { a: 20 - x, b: x });
+            }
+        });
+    } else {
+        // numCount > 11: Must include all 11 distinct unordered pairs first, then add (numCount - 11) inverse pairs
+        const inversePool = [];
+        for (let x = 0; x < 10; x++) {
+            const flip = Math.random() < 0.5;
+            if (flip) {
+                pairs.push({ a: x, b: 20 - x });
+                inversePool.push({ a: 20 - x, b: x });
+            } else {
+                pairs.push({ a: 20 - x, b: x });
+                inversePool.push({ a: x, b: 20 - x });
+            }
+        }
+        pairs.push({ a: 10, b: 10 }); // 11th pair
+
+        const neededInverses = numCount - 11;
+        const shuffledInverses = shuffleArray(inversePool);
+        for (let i = 0; i < neededInverses; i++) {
+            pairs.push(shuffledInverses[i]);
+        }
+    }
+
+    if (isRandomOrder) {
+        return shuffleArray(pairs);
+    }
+
+    // In order: sort by 'a' ascending
+    return pairs.sort((p1, p2) => p1.a - p2.a);
+}
 

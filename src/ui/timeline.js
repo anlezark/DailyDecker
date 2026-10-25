@@ -14,7 +14,7 @@ import {
     currentWorkspace,
     saveState 
 } from '../state/state.js';
-import { getLimitedDaysBadge } from '../utils/helpers.js';
+import { getLimitedDaysBadge, generateSayNumeralNumbers } from '../utils/helpers.js';
 import { renderInspector, updateLibrarySelection } from './inspector.js';
 
 export function selectItem(id, isLibrary = false) {
@@ -111,6 +111,17 @@ export function addTimelineItem(defKey, index = -1, skipSelectAndRender = false)
         });
     }
 
+    if (defKey === 'sectSayNumeral') {
+        newItem.data.slidesPerDay = 6;
+        newItem.data.min = 1;
+        newItem.data.max = 29;
+        DAYS.forEach(day => {
+            newItem.data[day] = {
+                numbers: generateSayNumeralNumbers(6, 1, 29).join(', ')
+            };
+        });
+    }
+
     if (def.hasTitleSlideOptions) {
         let defaultTitle = def.title.includes(': ') ? def.title.split(': ')[1] : def.title;
         let defaultInstructions = '';
@@ -119,6 +130,10 @@ export function addTimelineItem(defKey, index = -1, skipSelectAndRender = false)
         if (defKey === 'sectHundredsChart') {
             defaultTitle = 'Multiples';
             defaultInstructions = 'We are learning to skip count';
+        }
+        if (defKey === 'sectSayNumeral') {
+            defaultTitle = 'Say the Numeral';
+            defaultInstructions = 'We are learning to identify numerals';
         }
         if (defKey === 'sectNumberMAB') {
             defaultTitle = "What's the number?";
@@ -131,6 +146,10 @@ export function addTimelineItem(defKey, index = -1, skipSelectAndRender = false)
         if (defKey === 'sectFriendsOf10') {
             defaultTitle = 'Friends of 10';
             defaultInstructions = 'I can say my Friends of Ten';
+        }
+        if (defKey === 'sectFriendsOf20') {
+            defaultTitle = 'Friends of 20';
+            defaultInstructions = 'I can say my friends of 20.';
         }
         if (defKey === 'sectWordProblem') {
             defaultTitle = 'Word Problem';

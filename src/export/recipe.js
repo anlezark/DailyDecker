@@ -2,7 +2,7 @@
 import { SECTION_DEFS } from '../data/sections.js';
 import { DAYS, SENTENCE_TYPE_DEFINITIONS, SOUNDS_WRITE_LEVELS } from '../data/constants.js';
 import { getPhonicsPoolInfo } from '../data/phonics.js';
-import { shuffleArray, randomizeCasing, parseWordWithPhonemes, formatPhonemeSymbols, getItemIncludedDays, getHundredsChartInstruction, getHundredsChartHighlightedNumbers, getHundredsChartDefaultRange, parseMabNumbersList, decomposeMabNumber, generateMabSmartFillNumbers, getTenFrameNumberRange, generateTenFrameSmartFillNumbers, parseTenFrameNumbersList, buildDailyTenFrameOrientations, buildStandardTenFramesForNumber, buildFriendsOf10TenFrames } from '../utils/helpers.js';
+import { shuffleArray, randomizeCasing, parseWordWithPhonemes, formatPhonemeSymbols, getItemIncludedDays, getHundredsChartInstruction, getHundredsChartHighlightedNumbers, getHundredsChartDefaultRange, parseMabNumbersList, decomposeMabNumber, generateMabSmartFillNumbers, getTenFrameNumberRange, generateTenFrameSmartFillNumbers, parseTenFrameNumbersList, buildDailyTenFrameOrientations, buildStandardTenFramesForNumber, buildFriendsOf10TenFrames, buildFriendsOf20Frames, generateFriendsOf20Pairs, parseNumeralList, generateSayNumeralNumbers } from '../utils/helpers.js';
 
 export function buildPyramid(sentence) {
     const words = (sentence || '').trim().split(/\s+/).filter(w => w);
@@ -867,6 +867,28 @@ export function buildPresentationRecipe(globalSettings, timelineItems, exportPpt
                 }
             }
 
+            else if (item.defKey === 'sectSayNumeral') {
+                const rawSlidesPerDay = data.slidesPerDay !== undefined ? data.slidesPerDay : (data.weekly?.slidesPerDay !== undefined ? data.weekly.slidesPerDay : 6);
+                const slidesPerDay = Math.min(50, Math.max(1, parseInt(rawSlidesPerDay, 10) || 6));
+                const minVal = parseInt(data.min !== undefined ? data.min : (data.weekly?.min !== undefined ? data.weekly.min : 1), 10) || 1;
+                const maxVal = parseInt(data.max !== undefined ? data.max : (data.weekly?.max !== undefined ? data.weekly.max : 29), 10) || 29;
+
+                let rawDayStr = data[day]?.numbers;
+                if (!rawDayStr || !String(rawDayStr).trim()) {
+                    rawDayStr = generateSayNumeralNumbers(slidesPerDay, minVal, maxVal).join(', ');
+                }
+
+                const numerals = parseNumeralList(rawDayStr);
+                numerals.forEach(num => {
+                    recipe.slides.push({
+                        noteId: "[number]",
+                        replacements: {
+                            "{{n}}": String(num)
+                        }
+                    });
+                });
+            }
+
             else if (item.defKey === 'sectNumberMAB') {
                 const rawPv = data.maxPlaceValue !== undefined ? data.maxPlaceValue : (data.weekly?.maxPlaceValue !== undefined ? data.weekly.maxPlaceValue : 2);
                 const maxPv = Math.min(4, Math.max(1, parseInt(rawPv, 10) || 2));
@@ -990,6 +1012,42 @@ export function buildPresentationRecipe(globalSettings, timelineItems, exportPpt
                                 orientation: "vertical",
                                 fillMode: "standard",
                                 frames: [f10.zone03Frame]
+                            }
+                        ]
+                    });
+                });
+            }
+
+            else if (item.defKey === 'sectFriendsOf20') {
+                const rawOrder = data.order || data.weekly?.order || 'inOrder';
+                const rawOrient = data.orientation || data.weekly?.orientation || 'horizontal';
+                const orientationPref = ['horizontal', 'vertical', 'random'].includes(String(rawOrient).toLowerCase()) ? String(rawOrient).toLowerCase() : 'horizontal';
+
+                const rawSlidesPerDay = data.slidesPerDay !== undefined ? data.slidesPerDay : (data.weekly?.slidesPerDay !== undefined ? data.weekly.slidesPerDay : 21);
+                const countVal = (rawSlidesPerDay === 'all' || rawSlidesPerDay === '' || rawSlidesPerDay === undefined || parseInt(rawSlidesPerDay, 10) >= 21) ? 21 : Math.max(1, parseInt(rawSlidesPerDay, 10) || 21);
+
+                const pairs = generateFriendsOf20Pairs(countVal, rawOrder);
+                const slideOrientations = buildDailyTenFrameOrientations(pairs.length, orientationPref);
+
+                pairs.forEach((pair, idx) => {
+                    const slideOrientation = slideOrientations[idx] || 'horizontal';
+                    const frames = buildFriendsOf20Frames(pair.a, pair.b);
+                    const equationStr = `${pair.a} + ${pair.b} = 20`;
+
+                    recipe.slides.push({
+                        noteId: "[numberTenFrame]",
+                        replacements: {
+                            "{{content}}": equationStr,
+                            "{content}": equationStr
+                        },
+                        actions: [
+                            {
+                                target: "tenFrameLayout",
+                                zoneTag: "content_zone",
+                                orientation: slideOrientation,
+                                layout: slideOrientation === 'horizontal' ? 'stacked' : 'sideBySide',
+                                fillMode: "standard",
+                                frames: frames
                             }
                         ]
                     });

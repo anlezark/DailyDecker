@@ -33,10 +33,10 @@ Act as an expert NSW Primary Math Pedagogy assistant. Generate a math word probl
 - If using currency, values MUST follow Australian 5c rounding. If [EXPRESSION] contains non-5c amounts, DO NOT use money—default to countable items instead.
 
 3. INCLUSIVITY:
-- If names are used, blend common Anglo-Australian, Indian, and Afghan names.
+- If names are used, select common Anglo-Australian, Indian, and Afghan names.
 
 4. EXTENSION:
-- If [INCLUDE_EXTENSION] is "Yes", add a low-floor, high-ceiling open-ended task with multiple possible solutions or strategies. Otherwise, omit.
+- If [INCLUDE_EXTENSION] is "Yes", add a low-floor, high-ceiling open-ended extension step with multiple possible solutions or strategies. Otherwise, omit.
 
 5. OUTPUT:
 - Output ONLY student-facing text under 100 words total.`;

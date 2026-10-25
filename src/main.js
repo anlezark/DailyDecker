@@ -389,9 +389,11 @@ export function renderLibrary() {
             'dayDivider',
             'dayDividerPlain',
             'sectHundredsChart',
+            'sectSayNumeral',
             'sectNumberMAB',
             'sectNumberTenFrame',
             'sectFriendsOf10',
+            'sectFriendsOf20',
             'sectWordProblem',
             'numeracyPlaceholder'
         ];

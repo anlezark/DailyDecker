@@ -24,7 +24,8 @@ import {
     getHundredsChartDefaultRange,
     generateMabSmartFillNumbers,
     generateTenFrameSmartFillNumbers,
-    getTenFrameNumberRange
+    getTenFrameNumberRange,
+    generateSayNumeralNumbers
 } from '../utils/helpers.js';
 import { generateFallbackProblem } from '../utils/mathFallback.js';
 import { renderTimeline, addTimelineItem } from './timeline.js';
@@ -130,6 +131,7 @@ function updatePreviewSubDots(itemOrDefKey, itemData = null) {
         else if (slide === 'ss_stim') title = 'Slide 2: Simple Sentence';
         else if (slide === 'cs_def') title = 'Slide 1: Definition';
         else if (slide === 'cs_stim') title = 'Slide 2: Compound Sentence';
+        else if (typeof slide === 'string' && (slide.startsWith('Numeral:') || slide.startsWith('Number:'))) title = slide;
         return `
             <button type="button" class="btn-preview-sub-dot w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${idx === currentIdx ? 'bg-blue-600 scale-125 shadow-2xs' : 'bg-slate-300 hover:bg-slate-400'}" data-index="${idx}" title="${title}"></button>
         `;
@@ -655,15 +657,22 @@ export function renderInspector() {
                     defaultTitle = 'Word Problem';
                     defaultInstructions = 'We are learning to use mathematical techniques to solve problems.';
                 }
+                if (item.defKey === 'sectSayNumeral') {
+                    defaultTitle = 'Say the Numeral';
+                    defaultInstructions = 'We are learning to identify numerals';
+                }
                 const defaultInclude = item.defKey !== 'sectSimpleCompound' && item.defKey !== 'sectSentenceTypes';
                 item.data.titleSettings = {
                     include: defaultInclude,
-                    title: (item.defKey === 'sectNumberMAB' || item.defKey === 'sectNumberTenFrame' || item.defKey === 'sectFriendsOf10' || item.defKey === 'sectHundredsChart' || item.defKey === 'sectWordProblem') ? defaultTitle : (item.customTitle || defaultTitle),
+                    title: (item.defKey === 'sectNumberMAB' || item.defKey === 'sectNumberTenFrame' || item.defKey === 'sectFriendsOf10' || item.defKey === 'sectHundredsChart' || item.defKey === 'sectWordProblem' || item.defKey === 'sectSayNumeral') ? defaultTitle : (item.customTitle || defaultTitle),
                     instructions: defaultInstructions
                 };
             } else if (item.defKey === 'sectHundredsChart' && item.data.titleSettings.title === 'Hundreds Chart' && !item.data.titleSettings.instructions) {
                 item.data.titleSettings.title = 'Multiples';
                 item.data.titleSettings.instructions = 'We are learning to skip count';
+            } else if (item.defKey === 'sectSayNumeral' && !item.data.titleSettings.instructions) {
+                item.data.titleSettings.title = 'Say the Numeral';
+                item.data.titleSettings.instructions = 'We are learning to identify numerals';
             } else if (item.defKey === 'sectNumberMAB' && (item.data.titleSettings.title === 'Number - MAB blocks' || item.data.titleSettings.title === 'Write/Say the number - MAB blocks') && !item.data.titleSettings.instructions) {
                 item.data.titleSettings.title = "What's the number?";
                 item.data.titleSettings.instructions = 'We are learning about place value.';
@@ -792,6 +801,68 @@ export function renderInspector() {
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Instructions:</label>
                         <input type="text" id="hc-instructions" value="${instructions}" placeholder="Skip count by 6s." class="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800">
                     </div>
+                </div>
+            `;
+        }
+
+        // Say the Numeral custom UI
+        else if (item.defKey === 'sectSayNumeral') {
+            const rawSlidesPerDay = item.data.slidesPerDay !== undefined ? item.data.slidesPerDay : (item.data.weekly?.slidesPerDay !== undefined ? item.data.weekly.slidesPerDay : 6);
+            const slidesPerDay = Math.min(50, Math.max(1, parseInt(rawSlidesPerDay, 10) || 6));
+            const minVal = item.data.min !== undefined ? item.data.min : (item.data.weekly?.min !== undefined ? item.data.weekly.min : 1);
+            const maxVal = item.data.max !== undefined ? item.data.max : (item.data.weekly?.max !== undefined ? item.data.weekly.max : 29);
+
+            item.data.slidesPerDay = slidesPerDay;
+            item.data.min = minVal;
+            item.data.max = maxVal;
+
+            const activeDays = DAYS.filter(d => globalSettings.activeDays[d] && (!item.includedDays || item.includedDays[d] !== false));
+
+            contentHtml += `
+                <div class="space-y-3.5 border-t border-slate-200 pt-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <label for="sn-slides-per-day" class="text-xs font-semibold text-slate-600">Slides per day</label>
+                        <input type="number" id="sn-slides-per-day" min="1" max="50" value="${slidesPerDay}" class="w-16 text-xs font-bold text-center p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:bg-white focus:border-amber-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Number Range</label>
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
+                                <span class="text-[11px] font-semibold text-slate-500">Min</span>
+                                <input type="number" id="sn-min" value="${minVal}" class="w-16 text-xs font-bold text-center p-1 bg-white border border-slate-200 rounded-md text-slate-800 focus:border-amber-500 focus:outline-none">
+                            </div>
+                            <div class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
+                                <span class="text-[11px] font-semibold text-slate-500">Max</span>
+                                <input type="number" id="sn-max" value="${maxVal}" class="w-16 text-xs font-bold text-center p-1 bg-white border border-slate-200 rounded-md text-slate-800 focus:border-amber-500 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-1">
+                        <button type="button" id="btn-say-numeral-smart-fill" class="w-full py-2 px-3 bg-amber-50 hover:bg-amber-100/90 text-amber-900 border border-amber-300/90 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-2xs cursor-pointer">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                            <span>Smart Fill</span>
+                        </button>
+                    </div>
+
+                    ${activeDays.length > 0 ? `
+                        <div class="space-y-2.5 border-t border-slate-200 pt-3">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Daily Numerals</h4>
+                            ${activeDays.map(day => {
+                                const dayData = (item.data && item.data[day]) || {};
+                                const val = dayData.numbers !== undefined ? dayData.numbers : '';
+                                return `
+                                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                                        <div class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> ${day}
+                                        </div>
+                                        <input type="text" data-day="${day}" value="${val.replace(/"/g, '&quot;')}" placeholder='Comma separated numbers, e.g. "5, 12, 18, 22, 27, 29"' class="sn-daily-numbers w-full text-xs p-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:border-amber-500 focus:outline-none transition">
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }
@@ -994,6 +1065,109 @@ export function renderInspector() {
             `;
         }
 
+        // Friends of 20 - Ten frames custom UI
+        else if (item.defKey === 'sectFriendsOf20') {
+            const rawOrder = item.data.order || item.data.weekly?.order || 'inOrder';
+            const order = String(rawOrder) === 'random' ? 'random' : 'inOrder';
+            item.data.order = order;
+
+            const rawOrient = item.data.orientation || item.data.weekly?.orientation || 'horizontal';
+            const orientPref = ['horizontal', 'vertical', 'random'].includes(String(rawOrient).toLowerCase()) ? String(rawOrient).toLowerCase() : 'horizontal';
+            item.data.orientation = orientPref;
+
+            const rawSlides = item.data.slidesPerDay !== undefined ? item.data.slidesPerDay : (item.data.weekly?.slidesPerDay !== undefined ? item.data.weekly.slidesPerDay : 21);
+            const isAll = rawSlides === 'all' || rawSlides === '' || rawSlides === undefined || parseInt(rawSlides, 10) >= 21;
+            const currentSlidesVal = isAll ? 21 : Math.min(21, Math.max(1, parseInt(rawSlides, 10) || 21));
+            item.data.slidesPerDay = isAll ? 'all' : currentSlidesVal;
+
+            const orderOptions = [
+                { id: 'inOrder', label: 'In Order' },
+                { id: 'random', label: 'Random' }
+            ];
+
+            const orientOptions = [
+                { id: 'horizontal', label: 'Horizontal' },
+                { id: 'vertical', label: 'Vertical' },
+                { id: 'random', label: 'Random' }
+            ];
+
+            let statusMessage = "All 21 pairs included (0+20 to 20+0)";
+            if (!isAll) {
+                statusMessage = `${currentSlidesVal} slides per day (prioritising new pairs before inverses)`;
+            }
+
+            contentHtml += `
+                <div class="space-y-4 border-t border-slate-200 pt-3">
+                    <!-- Order Cards -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Order</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            ${orderOptions.map(opt => {
+                                const isSelected = order === opt.id;
+                                return `
+                                    <button type="button" data-order="${opt.id}" class="f20-order-card text-left p-2.5 rounded-xl border transition-all flex items-center gap-2.5 cursor-pointer ${isSelected ? 'border-amber-500 bg-amber-50/70 ring-1 ring-amber-400/40 shadow-2xs' : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100/70'}">
+                                        <span class="w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? 'border-amber-600 bg-amber-500 text-white' : 'border-slate-300 bg-white'}">
+                                            ${isSelected ? '<span class="w-1.5 h-1.5 rounded-full bg-white"></span>' : ''}
+                                        </span>
+                                        <span class="text-xs font-bold ${isSelected ? 'text-amber-950' : 'text-slate-700'}">${opt.label}</span>
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Orientation Cards -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Orientation</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            ${orientOptions.map(opt => {
+                                const isSelected = orientPref === opt.id;
+                                return `
+                                    <button type="button" data-orientation="${opt.id}" class="f20-orientation-card text-left p-2 rounded-xl border transition-all flex items-center gap-2 cursor-pointer ${isSelected ? 'border-amber-500 bg-amber-50/70 ring-1 ring-amber-400/40 shadow-2xs' : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100/70'}">
+                                        <span class="w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? 'border-amber-600 bg-amber-500 text-white' : 'border-slate-300 bg-white'}">
+                                            ${isSelected ? '<span class="w-1.5 h-1.5 rounded-full bg-white"></span>' : ''}
+                                        </span>
+                                        <span class="text-[11px] font-bold ${isSelected ? 'text-amber-950' : 'text-slate-700'} truncate">${opt.label}</span>
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Slides Per Day Slider -->
+                    <div>
+                        <div class="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-2xs space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-700">Slides per day</span>
+                                <span id="f20-count-badge" class="bg-amber-100/90 text-amber-900 border border-amber-200/80 px-2.5 py-0.5 rounded-lg font-bold text-xs shadow-2xs">
+                                    ${isAll ? 'All' : currentSlidesVal}
+                                </span>
+                            </div>
+
+                            <div class="space-y-1.5 pt-0.5">
+                                <input 
+                                    type="range" 
+                                    id="f20-slider" 
+                                    min="1" 
+                                    max="21" 
+                                    value="${currentSlidesVal}" 
+                                    step="1" 
+                                    class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                                >
+                                <div class="flex justify-between text-[10px] text-slate-400 font-semibold px-0.5">
+                                    <span>1</span>
+                                    <span>All (21)</span>
+                                </div>
+                                <div id="f20-status-desc" class="text-center text-[11px] font-medium text-slate-500 pt-0.5">
+                                    ${statusMessage}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         // Word Problem custom UI
         else if (item.defKey === 'sectWordProblem') {
             const rawStage = item.data.targetStage || item.data.weekly?.targetStage || 'Stage 1';
@@ -1112,7 +1286,7 @@ export function renderInspector() {
         }
 
         // Mixed weekly fields
-        if (def.weeklyFields && def.type === 'mixed' && item.defKey !== 'sectNumberMAB' && item.defKey !== 'sectNumberTenFrame' && item.defKey !== 'sectWordProblem') {
+        if (def.weeklyFields && def.type === 'mixed' && item.defKey !== 'sectNumberMAB' && item.defKey !== 'sectNumberTenFrame' && item.defKey !== 'sectWordProblem' && item.defKey !== 'sectSayNumeral') {
             contentHtml += `<div class="space-y-3 border-t border-slate-200 pt-3">`;
             def.weeklyFields.forEach(f => {
                 const val = item.data[f.id] !== undefined ? item.data[f.id] : (f.default !== undefined ? f.default : '');
@@ -1145,7 +1319,7 @@ export function renderInspector() {
         }
 
         // Daily fields
-        if ((def.type === 'daily' || def.type === 'mixed') && item.defKey !== 'sectNumberMAB' && item.defKey !== 'sectNumberTenFrame' && item.defKey !== 'sectWordProblem') {
+        if ((def.type === 'daily' || def.type === 'mixed') && item.defKey !== 'sectNumberMAB' && item.defKey !== 'sectNumberTenFrame' && item.defKey !== 'sectWordProblem' && item.defKey !== 'sectSayNumeral') {
             const activeDays = DAYS.filter(d => globalSettings.activeDays[d] && (!item.includedDays || item.includedDays[d] !== false));
             if (activeDays.length > 0) {
                 contentHtml += `<div class="space-y-3 border-t border-slate-200 pt-3"><h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Daily Content</h4>`;
@@ -1931,6 +2105,79 @@ export function renderInspector() {
             });
         }
 
+        // Say the Numeral listeners
+        if (item.defKey === 'sectSayNumeral') {
+            const inpSlides = content.querySelector('#sn-slides-per-day');
+            const inpMin = content.querySelector('#sn-min');
+            const inpMax = content.querySelector('#sn-max');
+            const btnSmart = content.querySelector('#btn-say-numeral-smart-fill');
+
+            inpSlides?.addEventListener('input', (e) => {
+                const count = Math.min(50, Math.max(1, parseInt(e.target.value, 10) || 6));
+                item.data.slidesPerDay = count;
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.slidesPerDay = count;
+                saveState();
+            });
+
+            inpMin?.addEventListener('input', (e) => {
+                const min = parseInt(e.target.value, 10);
+                item.data.min = isNaN(min) ? 1 : min;
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.min = item.data.min;
+                saveState();
+            });
+
+            inpMax?.addEventListener('input', (e) => {
+                const max = parseInt(e.target.value, 10);
+                item.data.max = isNaN(max) ? 29 : max;
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.max = item.data.max;
+                saveState();
+            });
+
+            btnSmart?.addEventListener('click', () => {
+                const slides = Math.min(50, Math.max(1, parseInt(item.data.slidesPerDay, 10) || 6));
+                const minVal = parseInt(item.data.min, 10) || 1;
+                const maxVal = parseInt(item.data.max, 10) || 29;
+
+                const activeDays = DAYS.filter(d => globalSettings.activeDays[d] && (!item.includedDays || item.includedDays[d] !== false));
+                activeDays.forEach(day => {
+                    const nums = generateSayNumeralNumbers(slides, minVal, maxVal);
+                    if (!item.data[day]) item.data[day] = {};
+                    item.data[day].numbers = nums.join(', ');
+                    const inputEl = content.querySelector(`.sn-daily-numbers[data-day="${day}"]`);
+                    if (inputEl) inputEl.value = item.data[day].numbers;
+                });
+
+                saveState();
+                refreshInspectorSlidePreview();
+                updatePreviewSubDots(item, item.data);
+                showToast(`Smart filled numerals for ${activeDays.length} active days!`, 'fa-wand-magic-sparkles text-amber-500');
+            });
+
+            content.querySelectorAll('.sn-daily-numbers').forEach(input => {
+                input.addEventListener('focus', (e) => {
+                    const day = e.target.dataset.day;
+                    if (day) {
+                        setPreviewDay(day);
+                        refreshInspectorSlidePreview();
+                        updatePreviewSubDots(item, item.data);
+                    }
+                });
+
+                input.addEventListener('input', (e) => {
+                    const day = e.target.dataset.day;
+                    if (!item.data[day]) item.data[day] = {};
+                    item.data[day].numbers = e.target.value;
+                    setPreviewDay(day);
+                    saveState();
+                    refreshInspectorSlidePreview();
+                    updatePreviewSubDots(item, item.data);
+                });
+            });
+        }
+
         // Number - MAB blocks listeners
         if (item.defKey === 'sectNumberMAB') {
             const inputPv = content.querySelector('#mab-max-pv');
@@ -2183,6 +2430,62 @@ export function renderInspector() {
                     renderInspector();
                 });
             });
+        }
+
+        // Friends of 20 - Ten frames listeners
+        if (item.defKey === 'sectFriendsOf20') {
+            const orderCards = content.querySelectorAll('.f20-order-card');
+            orderCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const newOrder = card.dataset.order || 'inOrder';
+                    item.data.order = newOrder;
+                    if (!item.data.weekly) item.data.weekly = {};
+                    item.data.weekly.order = newOrder;
+                    saveState();
+                    renderInspector();
+                    refreshInspectorSlidePreview();
+                });
+            });
+
+            const orientCards = content.querySelectorAll('.f20-orientation-card');
+            orientCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const newOrient = card.dataset.orientation || 'horizontal';
+                    item.data.orientation = newOrient;
+                    if (!item.data.weekly) item.data.weekly = {};
+                    item.data.weekly.orientation = newOrient;
+                    saveState();
+                    renderInspector();
+                    refreshInspectorSlidePreview();
+                });
+            });
+
+            const slider = content.querySelector('#f20-slider');
+            const badge = content.querySelector('#f20-count-badge');
+            const statusDesc = content.querySelector('#f20-status-desc');
+
+            const handleSlider = (e) => {
+                const val = parseInt(e.target.value, 10);
+                const isAllVal = val >= 21;
+                item.data.slidesPerDay = isAllVal ? 'all' : val;
+                if (!item.data.weekly) item.data.weekly = {};
+                item.data.weekly.slidesPerDay = isAllVal ? 'all' : val;
+
+                if (badge) {
+                    badge.textContent = isAllVal ? 'All' : String(val);
+                }
+                if (statusDesc) {
+                    statusDesc.textContent = isAllVal
+                        ? 'All 21 pairs included (0+20 to 20+0)'
+                        : `${val} slides per day (prioritising new pairs before inverses)`;
+                }
+                saveState();
+                updatePreviewSubDots(item, item.data);
+                refreshInspectorSlidePreview();
+            };
+
+            slider?.addEventListener('input', handleSlider);
+            slider?.addEventListener('change', handleSlider);
         }
 
         // Word Problem listeners
